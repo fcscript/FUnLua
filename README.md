@@ -26,6 +26,7 @@
   2. 重新启动你的UE工程
 
 # 更多示例
+  * [01_HelloWorld](Content/Script) 快速开始的例子
   * 暂无
 
 # 模块说明
