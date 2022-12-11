@@ -1,0 +1,36 @@
+#include "FCDynamicClassDesc.h"
+
+// 注册所有的反射接口
+
+int Class_Index(lua_State* L);
+int Class_NewIndex(lua_State* L);
+int BindScript_GetBPObject(lua_State* L);
+int BindScript_Index(lua_State* L);
+int BindScript_NewIndex(lua_State* L);
+int BindScript_Equal(lua_State* L);
+int Global_GetUProperty(lua_State* L);
+int Global_SetUProperty(lua_State* L);
+int UObject_Identical(lua_State* L);
+int UObject_Delete(lua_State* L);
+int Class_StaticClass(lua_State* L);
+int Class_Cast(lua_State* L);
+int BindScript_Overridden(lua_State* L);
+int BindScript_CallOverridenFunction(lua_State* L);
+
+int Class_CallLatentFunction(lua_State* L);
+int Class_CallFunction(lua_State* L);
+int Class_CallGetLibFunction(lua_State* L);
+int Class_CallSetLibFunction(lua_State* L);
+
+void  PushUObject(lua_State* L, UObject* InObject);
+
+
+void SetTableForClass(lua_State* L, const char* Name);
+void   RunTimeRegisterScript(FCScriptContext *Context);
+// 一个闭包调用
+int   Class_CallFunction(lua_State* L);
+int   Class_CallLatentFunction(lua_State* L);
+int   WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FCDynamicFunction  *DynamicFunc, uint8 *Buffer, int BufferSize, FNativeFuncPtr NativeFuncPtr);
+int32  QueryLuaRef(lua_State* L);
+
+void   TestDynamicObject();
