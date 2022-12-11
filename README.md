@@ -1,6 +1,11 @@
 
 # 概述
 **FUnLua**是适用于UE的一个高度优化的**Lua脚本解决方案**。它解决Unlua的一些安全性的问题，相对于UnLua, 它更安全，更高效。
+# 与UnLua的差异
+* 安全，无循环引用，lua中对所有UObject的属性缓存，在UObject释放后，继续访问不会引起Crash
+* 任意的UObject对象都可以绑定脚本，无需蓝图对象，同一个类型的对象，可以绑定N个不同的脚本，没有同类限制
+* 委托，不管是DelegateEvent还是MulticastDelegateEvent，都可以实现多播，接口统一，自动识别，自动防止重复添加，也无需释放。
+* GC问题，所有LUA中引用的UE对象，不需要手动释放，这个完全走UE的GC，lua中引用UE对象，不会自动增加GC计数
 
 # 在UE中使用Lua
 * 直接访问所有的UCLASS, UPROPERTY, UFUNCTION, USTRUCT, UENUM，无须胶水代码。
