@@ -46,7 +46,7 @@ end
 function UMG_MainPanel:OnClickPrint()
     UEPrint("[Unlua]UMG_MainPanel:OnClickPrint")    
     local UIManager = require "UnLua.Script.UI.UIManager"
-	local ClassName = "/UnLua/UI/UMG/UMG_Profile"    
+	local ClassName = "/Game/UnLua/UI/UMG/UMG_Profile"    
 	local world = self:GetWorld()
     UIManager.OpenPanel(world, ClassName)
 end

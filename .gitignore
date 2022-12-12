@@ -1,0 +1,10 @@
+# 忽略指定文件夹
+.vs
+Intermediate
+Saved
+DerivedDataCache
+Binaries
+
+# 忽略指定类型
+*.sln
+*.obj

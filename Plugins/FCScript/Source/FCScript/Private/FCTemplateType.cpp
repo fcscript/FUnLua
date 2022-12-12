@@ -246,7 +246,7 @@ FProperty  *CreateClassProperty(const char *InClassName)
 	{
 		if (DynamicClass->m_Struct)
 		{
-			// ע��һ�£������Structһ����UScriptStruct
+			// 注明一下，这里的Struct一定是UScriptStruct
 			FProperty* Property = NewUEStructProperty((UScriptStruct *)DynamicClass->m_Struct, GetGlbScriptStruct());
 			InClassName = DynamicClass->m_UEClassName.c_str();
 			GClassPropertyNameMap[InClassName] = Property;
@@ -445,7 +445,7 @@ struct FCTMapDynamicProperty : public FCDynamicProperty
 	{
 		if(MapProperty)
 		{
-			delete MapProperty;
+			//delete MapProperty; // 这个不能释放，UE会自动释放，不然就会Crash
 		}
 	}
 };
@@ -513,7 +513,7 @@ FSetProperty* CreateTSetProperty(lua_State* L, const char* ClassName)
 
 FCDynamicProperty* GetTSetDynamicProperty(lua_State* L)
 {
-    // ˵��������TMap��TArray�Ĳ�����һ�������Բ��������ͬ��TemplateID, ���ﹲ��һ��ģ���б���
+    // 说明，由于TMap与TArray的参数不一样，所以不会存在相同的TemplateID, 这里共用一个模板列表吧
 	const char* KeyTypeName = GetPropertyType(L, 2);
     CTempalteDynamicPropertyMap::iterator itProperty = GTempalteDynamicPropertyMap.find(KeyTypeName);
     if (itProperty != GTempalteDynamicPropertyMap.end())
@@ -536,9 +536,9 @@ FCDynamicProperty* GetTSetDynamicProperty(lua_State* L)
 
 void ReleaseTempalteProperty()
 {
-	// ˵����UProperty�������ͷţ����ֻ����ȫ�ֹ����ģ���UE�ͷ�
+	// 说明：UProperty对象不能释放，这个只能是全局管理的，由UE释放
 	//ReleasePtrMap(GClassPropertyNameMap);
-	GClassPropertyNameMap.clear(); // UE���Զ��ͷţ����Բ�����
+	GClassPropertyNameMap.clear(); // UE会自动释放，所以不能留
 
 	ReleasePtrMap(GTempalteDynamicPropertyMap);
 	ReleasePtrMap(GStructDynamicPropertyMap);

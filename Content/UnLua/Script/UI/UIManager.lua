@@ -22,7 +22,7 @@ end
 function UIManager.OpenPanel(WorldContext, className)
     local self = UIManager
     if self.Root == nil then
-        local rootClassName = "/UnLua/UI/UMG_Root.UMG_Root_C"
+        local rootClassName = "/Game/UnLua/UI/UMG_Root.UMG_Root_C"
         local assetRootObj = UE4.UClass.Load(rootClassName)
         local rootPanel = UE4.UWidgetBlueprintLibrary.Create(WorldContext, assetRootObj ,nil)
         self.RootPanel = rootPanel
