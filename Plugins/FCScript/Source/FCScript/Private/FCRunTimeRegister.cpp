@@ -150,6 +150,50 @@ const char* GetUETypeNameFromLua(lua_State* L, int Idx)
     }
 }
 
+const char* GetPropertyType(lua_State* L, int Idx)
+{
+    int32 Type = lua_type(L, Idx);
+    switch (Type)
+    {
+    case LUA_TBOOLEAN:
+        return "bool";
+    case LUA_TNUMBER:
+        return lua_isinteger(L, Idx) > 0 ? "int" : "float";
+    case LUA_TSTRING:
+    {
+        const char* Name = lua_tostring(L, Idx);
+        if (Name == NULL || Name[0] == 0)
+            return "FString";
+        return Name;
+    }
+    case LUA_TTABLE:
+    {
+        lua_pushstring(L, "__name");
+        Type = lua_rawget(L, Idx);
+        if (Type == LUA_TSTRING)
+        {
+            const char* Name = lua_tostring(L, -1);
+            lua_pop(L, 1);
+            return Name;
+        }
+        lua_pop(L, 1);
+    }
+    case LUA_TUSERDATA:
+    {
+        FCObjRef *ObjRef = (FCObjRef *)FCScript::GetObjRefPtr(L, Idx);
+        if(ObjRef && ObjRef->ClassDesc)
+        {
+            return ObjRef->ClassDesc->m_UEClassName.c_str();
+        }
+        break;
+    }
+    break;
+    default:
+        break;
+    }
+    return "FString";   
+}
+
 int ScriptStruct_New(lua_State* L)
 {
     FCDynamicClassDesc* ClassDesc = (FCDynamicClassDesc*)lua_touserdata(L, lua_upvalueindex(1));

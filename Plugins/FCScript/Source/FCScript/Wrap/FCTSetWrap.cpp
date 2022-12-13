@@ -4,6 +4,7 @@
 
 #include "FCObjectManager.h"
 #include "FCGetObj.h"
+#include "FCRunTimeRegister.h"
 #include "FTMapKeyValueBuffer.h"
 #include "../LuaCore/LuaContext.h"
 
@@ -43,7 +44,8 @@ int FCTSetWrap::LibOpen_wrap(lua_State* L)
 
 int FCTSetWrap::obj_new(lua_State* L)
 {
-    FCDynamicProperty* DynamicProperty = GetTSetDynamicProperty(L);
+    const char* KeyTypeName = GetPropertyType(L, 2);
+    FCDynamicProperty* DynamicProperty = GetTSetDynamicProperty(KeyTypeName);
     if (DynamicProperty)
     {
         FScriptSet* ScriptMap = new FScriptSet();

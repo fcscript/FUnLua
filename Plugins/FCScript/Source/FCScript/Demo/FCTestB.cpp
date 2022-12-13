@@ -157,26 +157,3 @@ void  PushStringToArray(int64 ObjID, const char* AttribName, const char* InStr)
 		new(ValudAddr) FString(InName);
 	}
 }
-
-void   TestDynamicObject()
-{
-	//FVector  v(1.0f, 2.0f, 3.0f);
-	//FCScriptContext *Context = GetClientScriptContext();
-	//FCDynamicClassDesc *DynamicClass = Context->RegisterUClass("UFCTest");
-	//if(DynamicClass)
-	//{
-	//	FCDynamicFunction *DynamicFunction = DynamicClass->RegisterUEFunc("NotifyAll");
-	//	if(DynamicFunction)
-	//	{
-	//		UFunction *Function = DynamicFunction->Function;
-	//		FCUEFunctionStack FuncionStack(DynamicFunction);
-	//		char   buffer[64];
-	//		FuncionStack.m_ParamBuffer = buffer;
-	//		PushAnyUEParam(&FuncionStack, 1, v);
-	//		FFrame  Stack(nullptr, Function, buffer, nullptr, nullptr);
-	//		Function->Invoke(nullptr, Stack, nullptr);
-	//	}
-	//}
-
-	int iiii = 0;
-}

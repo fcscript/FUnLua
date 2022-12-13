@@ -12,12 +12,11 @@ function FCMainPanel:ReceiveBeginPlay()
 	if localPlayerControler ~= nil then
 		localPlayerControler.bShowMouseCursor = 1
 	end
-	self.MapName:SetText(world:GetName())
 	print("[FCTestScript]FCMainPanel:ReceiveBeginPlay, world=", world, ",localPlayerControler=", localPlayerControler)
 end
 
 function FCMainPanel:ReceiveBeginDestroy()
-
+	print("[FCTestScript]FCMainPanel:ReceiveBeginDestroy")
 end
 
 function FCMainPanel:OnButtonClicked()

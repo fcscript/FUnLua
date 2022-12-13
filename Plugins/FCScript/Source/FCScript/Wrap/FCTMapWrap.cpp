@@ -4,6 +4,7 @@
 
 #include "FCObjectManager.h"
 #include "FCGetObj.h"
+#include "FCRunTimeRegister.h"
 #include "FCTMapIteratorWrap.h"
 #include "FTMapKeyValueBuffer.h"
 #include "../LuaCore/LuaContext.h"
@@ -45,7 +46,9 @@ int FCTMapWrap::obj_new(lua_State* L)
 	// FScriptArray *ScriptArray = new FScriptArray;
 	// 这个还是不要让动态构建的好了
 	// 因为不管怎么样，就算是相同的，也是需要拷贝的
-	FCDynamicProperty *DynamicProperty = GetTMapDynamicProperty(L);
+    const char* KeyTypeName = GetPropertyType(L, 2);
+    const char* ValueTypeName = GetPropertyType(L, 3);
+	FCDynamicProperty *DynamicProperty = GetTMapDynamicProperty(KeyTypeName, ValueTypeName);
 	if(DynamicProperty)
 	{
 		FScriptMap *ScriptMap = new FScriptMap();

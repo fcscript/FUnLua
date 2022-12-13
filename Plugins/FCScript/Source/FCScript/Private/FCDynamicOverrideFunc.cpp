@@ -36,13 +36,7 @@ UFunction  *FirstNative(UObject* Context, FFrame& TheStack, bool &bUnpackParams)
 
 void FCDynamicOverrideNative(UObject* Context, FFrame& TheStack, RESULT_DECL)
 {
-	// 参照代码 FLuaInvoker::execCallLua
-	// 第一步，根据Context查找，该Class没有关联注册
-
-	// 查找FCScriptContext
-
 	// 从FCScriptContext中查找到注册的Context对象, 如果有就调用对应的事件
-
 	// 如果没有找到，就对所有的FCScriptContext广播
 	UObject  *Object = TheStack.Object;
 
@@ -194,11 +188,6 @@ int64 FCDynamicBindScript(UObject* InObject)
 		LoopTable(L, TableIdx, UnLuaOverride_Callback, &CallInfo);
 		lua_rawgeti(L, LUA_REGISTRYINDEX, BindInfo->m_ScriptIns);
 
-		//lua_pushstring(L, "GetBPObject");                   // 2  对不存在的索引(成员变量)访问时触发
-		//lua_pushlightuserdata(L, (void*)BindInfo->m_ObjRefID);
-		//lua_pushcclosure(L, BindScript_GetBPObject, 1);      // closure
-		//lua_rawset(L, -3);
-
         // 记录__index
         lua_pushstring(L, "__index");
         lua_rawget(L, -2);
@@ -226,20 +215,7 @@ int64 FCDynamicBindScript(UObject* InObject)
 		lua_pushcfunction(L, BindScript_Equal);
 		lua_rawset(L, -3);
 
-		lua_pushstring(L, "ClassDesc");                 // Key
-		lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
-		lua_rawset(L, -3);
-
-		lua_pushstring(L, "StaticClass");               // Key
-		lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
-		lua_pushcclosure(L, Class_StaticClass, 1);      // closure
-		lua_rawset(L, -3);
-
-		//lua_pushstring(L, "Overridden");
-		//lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
-		//lua_pushlightuserdata(L, (void*)BindInfo->m_ObjRefID);
-		//lua_pushcclosure(L, BindScript_Overridden, 2);  // closure
-		//lua_rawset(L, -3);
+        // StaticClass, Overridden 转到UObject对象了
 
 		lua_pushstring(L, "__ObjectRefID");             // 不要脚本层修改这个变量
 		lua_pushinteger(L, BindInfo->m_ObjRefID);

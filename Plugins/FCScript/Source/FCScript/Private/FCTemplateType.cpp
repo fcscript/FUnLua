@@ -316,15 +316,15 @@ FCDynamicProperty* GetDynamicPropertyByUEProperty(FProperty* InProperty)
 	return DynamicPropery;
 }
 
-FProperty *QueryTempalteProperty(lua_State* L, const char* InClassName)
+FProperty *QueryTempalteProperty(const char* InClassName)
 {
 	FProperty *Property = CreateClassProperty(InClassName);
 	return Property;
 }
 
-FArrayProperty* CreateTArrayProperty(lua_State* L, const char* InPropertyType)
+FArrayProperty* CreateTArrayProperty(const char* InPropertyType)
 {
-	FProperty *Property = QueryTempalteProperty(L, InPropertyType);
+	FProperty *Property = QueryTempalteProperty(InPropertyType);
 	if(!Property)
 	{
 		return nullptr;
@@ -354,70 +354,32 @@ typedef stdext::hash_map<FCDoubleKey, FCDynamicProperty*> CMapTempalteDynamicPro
 CTempalteDynamicPropertyMap   GTempalteDynamicPropertyMap;
 CMapTempalteDynamicPropertyMap GMapTemplateDynamicPropertyMap;
 
-const char *GetPropertyType(lua_State* L, int Idx)
+FCDynamicProperty* GetTArrayDynamicProperty(const char* InPropertyType)
 {
-    int32 Type = lua_type(L, Idx);
-    switch (Type)
-    {
-    case LUA_TBOOLEAN:
-        return "bool";
-    case LUA_TNUMBER:
-        return lua_isinteger(L, Idx) > 0 ? "int" : "float";
-    case LUA_TSTRING:
-        {
-            const char *Name = lua_tostring(L, Idx);
-            if(Name == NULL || Name[0] == 0)
-                return "FString";
-            return Name;
-        }
-    case LUA_TTABLE:
-        {
-            lua_pushstring(L, "__name");
-            Type = lua_rawget(L, Idx);
-            if (Type == LUA_TSTRING)
-            {
-                const char *Name = lua_tostring(L, -1);
-                lua_pop(L, 1);
-                return Name;
-            }
-            lua_pop(L, 1);
-        case LUA_TUSERDATA:
-            break;
-        }
-        break;
-    default:
-        break;
-    }
-    return "FString";
-}
-
-FCDynamicProperty* GetTArrayDynamicProperty(lua_State* L)
-{
-    const char *PropertyName = GetPropertyType(L, 2);
-	CTempalteDynamicPropertyMap::iterator itProperty = GTempalteDynamicPropertyMap.find(PropertyName);
+	CTempalteDynamicPropertyMap::iterator itProperty = GTempalteDynamicPropertyMap.find(InPropertyType);
 	if(itProperty != GTempalteDynamicPropertyMap.end())
 	{
 		return itProperty->second;
 	}
-	PropertyName = GetConstName(PropertyName);
-	FArrayProperty* ArrayProperty = CreateTArrayProperty(L, PropertyName);
+    InPropertyType = GetConstName(InPropertyType);
+	FArrayProperty* ArrayProperty = CreateTArrayProperty(InPropertyType);
 	if(!ArrayProperty)
 	{
-		GTempalteDynamicPropertyMap[PropertyName] = nullptr;
+		GTempalteDynamicPropertyMap[InPropertyType] = nullptr;
 		return nullptr;
 	}
 	FCTArrayDynamicProperty  *DynamicProperty = new FCTArrayDynamicProperty(ArrayProperty);
 	DynamicProperty->InitProperty(ArrayProperty);
-	GTempalteDynamicPropertyMap[PropertyName] = DynamicProperty;
+	GTempalteDynamicPropertyMap[InPropertyType] = DynamicProperty;
 	return DynamicProperty;
 }
 
 //---------------------------------------------------------------------
 
-FMapProperty* CreateTMapProperty(lua_State* L, const char *KeyType, const char *ValueType)
+FMapProperty* CreateTMapProperty(const char *KeyType, const char *ValueType)
 {
-	FProperty *KeyProperty = QueryTempalteProperty(L, KeyType);
-	FProperty *ValueProperty = QueryTempalteProperty(L, ValueType);
+	FProperty *KeyProperty = QueryTempalteProperty(KeyType);
+	FProperty *ValueProperty = QueryTempalteProperty(ValueType);
 	if(!KeyProperty || !ValueProperty)
 	{
 		return nullptr;
@@ -450,10 +412,8 @@ struct FCTMapDynamicProperty : public FCDynamicProperty
 	}
 };
 
-FCDynamicProperty *GetTMapDynamicProperty(lua_State* L)
+FCDynamicProperty *GetTMapDynamicProperty(const char* KeyTypeName, const char* ValueTypeName)
 {
-	const char* KeyTypeName = GetPropertyType(L, 2);
-	const char* ValueTypeName = GetPropertyType(L, 3);
 	FCDoubleKey  MapKey(KeyTypeName, ValueTypeName);
 	CMapTempalteDynamicPropertyMap::iterator itProperty = GMapTemplateDynamicPropertyMap.find(MapKey);
 	if(itProperty != GMapTemplateDynamicPropertyMap.end())
@@ -464,7 +424,7 @@ FCDynamicProperty *GetTMapDynamicProperty(lua_State* L)
 	ValueTypeName = GetConstName(ValueTypeName);
 	MapKey = FCDoubleKey(KeyTypeName, ValueTypeName);
 
-	FMapProperty  *MapProperty = CreateTMapProperty(L, KeyTypeName, ValueTypeName);
+	FMapProperty  *MapProperty = CreateTMapProperty(KeyTypeName, ValueTypeName);
 	if(!MapProperty)
 	{
 		GMapTemplateDynamicPropertyMap[MapKey] = nullptr;
@@ -487,15 +447,15 @@ struct FCTSetDynamicProperty : public FCDynamicProperty
     {
         if (SetProperty)
         {
-            delete SetProperty;
+            //delete SetProperty; // 这个不能释放，UE会自动释放，不然就会Crash
         }
     }
 };
 
 //-----------------------------------------------
-FSetProperty* CreateTSetProperty(lua_State* L, const char* ClassName)
+FSetProperty* CreateTSetProperty(const char* ClassName)
 {
-    FProperty* ElementProp = QueryTempalteProperty(L, ClassName);
+    FProperty* ElementProp = QueryTempalteProperty(ClassName);
     if (!ElementProp)
     {
         return nullptr;
@@ -511,17 +471,16 @@ FSetProperty* CreateTSetProperty(lua_State* L, const char* ClassName)
     return SetProperty;
 }
 
-FCDynamicProperty* GetTSetDynamicProperty(lua_State* L)
+FCDynamicProperty* GetTSetDynamicProperty(const char* KeyTypeName)
 {
     // 说明，由于TMap与TArray的参数不一样，所以不会存在相同的TemplateID, 这里共用一个模板列表吧
-	const char* KeyTypeName = GetPropertyType(L, 2);
     CTempalteDynamicPropertyMap::iterator itProperty = GTempalteDynamicPropertyMap.find(KeyTypeName);
     if (itProperty != GTempalteDynamicPropertyMap.end())
     {
         return itProperty->second;
     }
 	KeyTypeName = GetConstName(KeyTypeName);
-    FSetProperty* SetProperty = CreateTSetProperty(L, KeyTypeName);
+    FSetProperty* SetProperty = CreateTSetProperty(KeyTypeName);
     if (!SetProperty)
     {
         GTempalteDynamicPropertyMap[KeyTypeName] = nullptr;

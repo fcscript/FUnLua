@@ -1,5 +1,5 @@
 
-local FCTestPanel = {}
+local FCTestPanel = LuaUnrealClass("UIPanelBase")
 
 function FCTestPanel:ReceiveBeginPlay()
 	print("[FCTestScript]FCTestPanel:ReceiveBeginPlay, self=", self, ",__TableAddr=", self.__TableAddr)
@@ -8,7 +8,8 @@ function FCTestPanel:ReceiveBeginPlay()
 	self.Button_1.OnClicked:AddListener(FCTestPanel.OnButton2Clicked, self)
 	self.ButtonLuaGC.OnClicked:AddListener(FCTestPanel.OnButtonLuaGCClicked, self)
 	self.ButtonUEGC.OnClicked:AddListener(FCTestPanel.OnButtonUEGCClicked, self)
-	print("[FCTestScript]FCTestPanel:ReceiveBeginPlay, suc...")
+	self:SetPanelName("FCTestPanel")
+	print("[FCTestScript]FCTestPanel:ReceiveBeginPlay, suc, PlaneName:", self:GetPanelName())
 end
 
 function FCTestPanel:ReceiveBeginDestroy()
@@ -37,9 +38,7 @@ function FCTestPanel:OnButton2Clicked()
 	print("[FCTestScript]FCTestPanel:OnButton2Clicked")
 	self.ID = self.ID + 1
 	self.Type = "Type" .. self.ID
-	-- print("[FCTestScript]FCTestPanel:OnButton2Clicked, ID=", self.ID, ",Type=", self.Type)
 	self:CallBlueprintFunc2()
-	-- self.Overridden:OnButtonEvent2(self.ID, self.Type)
 end
 
 function FCTestPanel:OnButtonLuaGCClicked()
@@ -63,12 +62,31 @@ function FCTestPanel:OnMouseButtonDown(MyGeometry, MouseEvent)
 	return UWidgetBlueprintLibrary.Handled()
 end
 
+local BuildParams = function (...)
+    local args = {}
+	for i = 1, select('#', ...) do 
+        local arg = tostring(select(i, ...)) 
+        args[i] = arg
+    end  
+    return table.concat(args, " ")
+end
+
+function FCTestPanel:PrintInfo(...)
+    local StrLog = BuildParams(...)
+    local world = self:GetWorld()    
+	local color = FLinearColor()
+	color.A = 1	
+	color.G = 1
+    UEPrint(StrLog)
+	UKismetSystemLibrary.PrintString(world, StrLog, true, false, color, 3.0)
+end
+
 function FCTestPanel:OnButtonEvent1(Name)
 	print("[FCTestScript]FCTestPanel:OnButtonEvent1, Name:", Name)
 end
 
 function FCTestPanel:OnButtonEvent2(ID, Type)
-	print("[FCTestScript]FCTestPanel:OnButtonEvent2, ID=", ID, ",Type=", Type)
+	self:PrintInfo("[FCTestScript]脚本Overriden蓝图函数, ID=", ID, ",Type=", Type)
 	self.Overridden:OnButtonEvent2(ID, Type)
 end
 

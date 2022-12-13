@@ -27,13 +27,13 @@ FCDynamicProperty *GetCppDynamicProperty(const char *InClassName);
 FCDynamicProperty* GetStructDynamicProperty(UStruct* Struct);
 FCDynamicProperty* GetDynamicPropertyByUEProperty(FProperty* InProperty);
 
-FArrayProperty* CreateTArrayProperty(lua_State* L, const char *InPropertyType);
+FArrayProperty* CreateTArrayProperty(const char *InPropertyType);
 
-FCDynamicProperty *GetTArrayDynamicProperty(lua_State* L);
+FCDynamicProperty *GetTArrayDynamicProperty(const char* InPropertyType);
 
-FCDynamicProperty *GetTMapDynamicProperty(lua_State* L);
+FCDynamicProperty *GetTMapDynamicProperty(const char *KeyTypeName, const char *ValueTypeName );
 
-FCDynamicProperty* GetTSetDynamicProperty(lua_State* L);
+FCDynamicProperty* GetTSetDynamicProperty(const char* KeyTypeName);
 
 void ReleaseTempalteProperty();
 

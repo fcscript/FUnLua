@@ -25,6 +25,8 @@ void FCUEUtilWrap::Register(lua_State* L)
         ClassDesc->RegisterWrapLibAttrib("__GameObjectAddr", DoGetObjectAddr_wrap, nullptr);
         ClassDesc->RegisterWrapLibAttrib("__ObjectRefID", DoGetObjectRefID_wrap, nullptr);
         ClassDesc->RegisterWrapLibAttrib("Overridden", DoOverridden_wrap, nullptr);
+        //ClassDesc->RegisterWrapLibAttrib("ClassDesc", DoGetClassDesc_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("StaticClass", DoGetStaticClass_wrap, nullptr);
     }
 
     lua_register(L, "NewObject", NewObject_wrap);
@@ -192,6 +194,36 @@ int FCUEUtilWrap::DoOverridden_wrap(lua_State* L, void* ObjRefPtr, UObject* This
     lua_setmetatable(L, -2);
 
     lua_pushvalue(L, -1);
+    return 1;
+}
+
+int FCUEUtilWrap::DoGetClassDesc_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    FCObjRef* ObjRef = (FCObjRef*)ObjRefPtr;
+    if(ObjRef && ObjRef->IsValid())
+    {
+        if(ObjRef->ClassDesc)
+        {
+            FCScript::SetArgValue(L, ObjRef->ClassDesc->m_Class);
+            return 1;
+        }
+    }
+    lua_pushnil(L);
+    return 1;
+}
+
+int FCUEUtilWrap::DoGetStaticClass_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    FCObjRef* ObjRef = (FCObjRef*)ObjRefPtr;
+    if (ObjRef && ObjRef->IsValid())
+    {
+        if (ObjRef->ClassDesc)
+        {
+            FCScript::SetArgValue(L, ObjRef->ClassDesc->m_Class);
+            return 1;
+        }
+    }
+    lua_pushnil(L);
     return 1;
 }
 

@@ -4,6 +4,7 @@
 
 #include "FCObjectManager.h"
 #include "FCGetObj.h"
+#include "FCRunTimeRegister.h"
 #include "../LuaCore/LuaContext.h"
 
 void FCTArrayWrap::Register(lua_State* L)
@@ -88,7 +89,8 @@ int FCTArrayWrap::obj_new(lua_State* L)
 	// FScriptArray *ScriptArray = new FScriptArray;
 	// 这个还是不要让动态构建的好了
 	// 因为不管怎么样，就算是相同的，也是需要拷贝的
-	FCDynamicProperty *DynamicProperty = GetTArrayDynamicProperty(L);
+    const char* PropertyName = GetPropertyType(L, 2);
+	FCDynamicProperty *DynamicProperty = GetTArrayDynamicProperty(PropertyName);
 	if(DynamicProperty)
 	{
 		FScriptArray *ScriptArray = new FScriptArray();

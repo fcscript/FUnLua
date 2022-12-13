@@ -22,15 +22,11 @@ int Class_CallFunction(lua_State* L);
 int Class_CallGetLibFunction(lua_State* L);
 int Class_CallSetLibFunction(lua_State* L);
 
-void  PushUObject(lua_State* L, UObject* InObject);
-
-
 void SetTableForClass(lua_State* L, const char* Name);
-void   RunTimeRegisterScript(FCScriptContext *Context);
+void RunTimeRegisterScript(FCScriptContext *Context);
 // 一个闭包调用
-int   Class_CallFunction(lua_State* L);
-int   Class_CallLatentFunction(lua_State* L);
-int   WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FCDynamicFunction  *DynamicFunc, uint8 *Buffer, int BufferSize, FNativeFuncPtr NativeFuncPtr);
-int32  QueryLuaRef(lua_State* L);
+int  Class_CallFunction(lua_State* L);
+int  Class_CallLatentFunction(lua_State* L);
+int  WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FCDynamicFunction  *DynamicFunc, uint8 *Buffer, int BufferSize, FNativeFuncPtr NativeFuncPtr);
 
-void   TestDynamicObject();
+const char* GetPropertyType(lua_State* L, int Idx);
