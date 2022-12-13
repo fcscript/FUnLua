@@ -174,7 +174,6 @@ int64 FCDynamicBindScript(UObject* InObject)
 			return 0;
 		}
 
-		int nTop1 = lua_gettop(L);
 		if (ClassDesc->m_Super)
 		{
 			const char* InSuperClassName = ClassDesc->m_SuperName.c_str();
@@ -200,16 +199,27 @@ int64 FCDynamicBindScript(UObject* InObject)
 		//lua_pushcclosure(L, BindScript_GetBPObject, 1);      // closure
 		//lua_rawset(L, -3);
 
+        // 记录__index
+        lua_pushstring(L, "__index");
+        lua_rawget(L, -2);
+        BindInfo->m_SuperIndex = luaL_ref(L, LUA_REGISTRYINDEX);
+
+        lua_pushstring(L, "__newindex");
+        lua_rawget(L, -2);
+        BindInfo->m_SuperNewIndex = luaL_ref(L, LUA_REGISTRYINDEX);
+
 		lua_pushstring(L, "__index");                   // 2  对不存在的索引(成员变量)访问时触发
 		lua_pushlightuserdata(L, (void*)BindInfo->m_ObjRefID);
 		lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
-		lua_pushcclosure(L, BindScript_Index, 2);      // closure
+        lua_pushinteger(L, BindInfo->m_SuperIndex);
+		lua_pushcclosure(L, BindScript_Index, 3);      // closure
 		lua_rawset(L, -3);
 
 		lua_pushstring(L, "__newindex");                // 2  对不存在的索引(成员变量)赋值时触发
 		lua_pushlightuserdata(L, (void*)BindInfo->m_ObjRefID);
 		lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
-		lua_pushcclosure(L, BindScript_NewIndex, 2);           // 3
+        lua_pushinteger(L, BindInfo->m_SuperNewIndex);
+		lua_pushcclosure(L, BindScript_NewIndex, 3);           // 3
 		lua_rawset(L, -3);
 
 		lua_pushstring(L, "__eq");

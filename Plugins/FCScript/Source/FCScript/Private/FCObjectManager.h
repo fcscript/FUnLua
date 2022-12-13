@@ -8,11 +8,13 @@ struct FBindObjectInfo
 	int32 Index;
 	int64    m_ScriptIns;
 	int64    m_ObjRefID;
+    int      m_SuperIndex;
+    int      m_SuperNewIndex;
 	const char*  m_ScriptName;
-	FBindObjectInfo() :Object(nullptr), Index(0), m_ScriptIns(0), m_ObjRefID(0)
+	FBindObjectInfo() :Object(nullptr), Index(0), m_ScriptIns(0), m_ObjRefID(0), m_SuperIndex(-1), m_SuperNewIndex(-1), m_ScriptName(nullptr)
 	{
 	}
-	FBindObjectInfo(const UObjectBaseUtility *InObject, int32 InIndex, const char *InScriptName) :Object(InObject), Index(InIndex), m_ScriptIns(0), m_ScriptName(InScriptName)
+	FBindObjectInfo(const UObjectBaseUtility *InObject, int32 InIndex, const char *InScriptName) :Object(InObject), Index(InIndex), m_ScriptIns(0), m_ObjRefID(0), m_SuperIndex(-1), m_SuperNewIndex(-1), m_ScriptName(InScriptName)
 	{
 	}
 	void  Set(const UObjectBaseUtility *InObject, int32 InIndex, const char *InScriptName)
