@@ -577,9 +577,9 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
         DynamicProperty->Property->InitializeValue(ValueAddr);
         if(LatentPropertyIndex == DynamicProperty->PropertyIndex)
         {
-            //int32 ThreadRef = QueryLuaRef(L);
-            //FLatentActionInfo LatentActionInfo(ThreadRef, GetTypeHash(FGuid::NewGuid()), TEXT("OnLatentActionCompleted"), (UObject*)GLuaCxt->GetManager());
-            //DynamicProperty->Property->CopySingleValue(ValueAddr, &LatentActionInfo);
+            int32 ThreadRef = GetScriptContext()->QueryLuaRef(L);
+            FLatentActionInfo LatentActionInfo(ThreadRef, GetTypeHash(FGuid::NewGuid()), TEXT("OnLatentActionCompleted"), GetScriptContext()->m_Ticker);
+            DynamicProperty->Property->CopySingleValue(ValueAddr, &LatentActionInfo);
         }
         DynamicProperty->m_ReadScriptFunc(L, Index, DynamicProperty, ValueAddr, nullptr, nullptr);
     }
@@ -720,35 +720,6 @@ int   Class_CallGetLibFunction(lua_State* L)
 int   Class_CallSetLibFunction(lua_State* L)
 {
     return Class_CallLibFunction(L, false);
-}
-
-typedef  stdext::hash_map<lua_State*, int32>   ThreadToRefMap;
-typedef  stdext::hash_map<int32, lua_State*>   RefToThreadMap;
-ThreadToRefMap  GThreadToRef;
-RefToThreadMap  GRefToThread;
-
-int  QueryLuaRef(lua_State* L)
-{
-    ThreadToRefMap::iterator itRef = GThreadToRef.find(L);
-    int32 ThreadRef = 0;
-    if (itRef == GThreadToRef.end())
-    {
-        int32 Value = lua_pushthread(L);
-        if (Value == 1)
-        {
-            lua_pop(L, 1);
-            //UNLUA_LOGERROR(L, LogUnLua, Warning, TEXT("%s: Can't call latent action in main lua thread!"), ANSI_TO_TCHAR(__FUNCTION__));
-            return 0;
-        }
-        ThreadRef = luaL_ref(L, LUA_REGISTRYINDEX);
-        GThreadToRef[L] = ThreadRef;
-        GRefToThread[ThreadRef] = L;
-    }
-    else
-    {
-        ThreadRef = itRef->second;
-    }
-    return ThreadRef;
 }
 
 // sleep这类的，需要将当前脚本挂起

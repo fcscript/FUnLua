@@ -7,6 +7,12 @@
 #include "Tickable.h"
 #include "FCTicker.generated.h"
 
+USTRUCT(noexport)
+struct FLuaPropertyCollector
+{
+};
+
+
 UCLASS()
 class UFCTicker : public UObject, public FTickableGameObject 
 {
@@ -16,4 +22,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual bool IsTickable() const override;
 	virtual TStatId GetStatId() const override;
+
+    UFUNCTION()
+    void OnLatentActionCompleted(int32 LinkID);
 };

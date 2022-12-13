@@ -86,7 +86,7 @@ UScriptStruct   *GetGlbScriptStruct()
 {
 	if(!GScriptStruct)
 	{
-		GScriptStruct = FindObject<UScriptStruct>(ANY_PACKAGE, TEXT("PropertyCollector"));
+		GScriptStruct = FindObject<UScriptStruct>(ANY_PACKAGE, TEXT("LuaPropertyCollector"));
 	}
 	return GScriptStruct;
 }

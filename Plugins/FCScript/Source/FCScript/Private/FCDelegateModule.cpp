@@ -73,6 +73,7 @@ void FFCDelegateModule::OnPostWorldInitialization(UWorld *World, const UWorld::I
 			{
 				Ticker = NewObject<UFCTicker>(GameInstance);
 				Ticker->AddToRoot();
+                GetScriptContext()->m_Ticker = Ticker;
 			}
 		}
 	}
@@ -136,6 +137,7 @@ void FFCDelegateModule::PostPIEStarted(bool bIsSimulating)
 		{
 			Ticker = NewObject<UFCTicker>(GameInstance);
 			Ticker->AddToRoot();
+            GetScriptContext()->m_Ticker = Ticker;
 		}
 	}
 }

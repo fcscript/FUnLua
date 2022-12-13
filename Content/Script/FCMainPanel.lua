@@ -20,6 +20,21 @@ function FCMainPanel:ReceiveBeginDestroy()
 
 end
 
+function FCMainPanel:OnButtonClicked()
+	print("[FCTestScript]FCMainPanel:OnButtonClicked")
+	local world = self:GetWorld()
+	local  ClassName = "/Game/UMG/UMG_TestPanel.UMG_TestPanel_C"
+	local UIManager = require "UIManager"
+	UIManager.OpenPanel(world, ClassName)
+end
+
+function FCMainPanel:OnGCButtonClicked()
+	collectgarbage("collect")
+    _G.UKismetSystemLibrary.CollectGarbage()  -- 立即GC一下
+	print("[FCTestScript]FCMainPanel:OnGCButtonClicked")
+	self:PrintRefInfo()
+end
+
 function FCMainPanel:OnButtonProfileClicked()
 	print("[FCTestScript]FCMainPanel:OnButtonProfileClicked")
 	local world = self:GetWorld()
@@ -40,20 +55,6 @@ function FCMainPanel:PrintRefInfo()
 	UKismetSystemLibrary.PrintString(world, StrLog, true, false, color, 3.0)
 end
 
-function FCMainPanel:OnButtonClicked()
-	print("[FCTestScript]FCMainPanel:OnButtonClicked")
-	local world = self:GetWorld()
-	local  ClassName = "/Game/UMG/UMG_TestPanel.UMG_TestPanel_C"
-	local UIManager = require "UIManager"
-	UIManager.OpenPanel(world, ClassName)
-end
-
-function FCMainPanel:OnGCButtonClicked()
-	collectgarbage("collect")
-    _G.UKismetSystemLibrary.CollectGarbage()  -- 立即GC一下
-	print("[FCTestScript]FCMainPanel:OnGCButtonClicked")
-	self:PrintRefInfo()
-end
 
 function FCMainPanel:OnChangeMapButtonClicked()
 	local world = self:GetWorld()

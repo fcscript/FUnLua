@@ -243,7 +243,7 @@ int64 FCDynamicBindScript(UObject* InObject)
 		lua_pushvalue(L, -1);                           // set metatable to self
 		lua_setmetatable(L, -2);
 
-		SetTableForClass(L, ClassName);
+		SetTableForClass(L, ClassName);                // 测试发现，这一步是不需要的
 
 		int CurTop = lua_gettop(L);
 		if (CurTop > StartTop)

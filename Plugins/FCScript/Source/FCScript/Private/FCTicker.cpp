@@ -33,3 +33,8 @@ TStatId UFCTicker::GetStatId() const
 {
 	RETURN_QUICK_DECLARE_CYCLE_STAT(UFCTicker, STATGROUP_Tickables);
 }
+
+void UFCTicker::OnLatentActionCompleted(int32 LinkID)
+{
+    GetScriptContext()->ResumeThread(LinkID); // resume a coroutine
+}

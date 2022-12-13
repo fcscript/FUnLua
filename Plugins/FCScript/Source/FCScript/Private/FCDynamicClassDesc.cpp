@@ -393,6 +393,48 @@ const char* GetUEClassName(const char* InName)
 	return Name;
 }
 
+int  FCScriptContext::QueryLuaRef(lua_State* L)
+{
+    ThreadToRefMap::iterator itRef = m_ThreadToRef.find(L);
+    int32 ThreadRef = 0;
+    if (itRef == m_ThreadToRef.end())
+    {
+        int32 Value = lua_pushthread(L);
+        if (Value == 1)
+        {
+            lua_pop(L, 1);
+            UE_LOG(LogFCScript, Warning, TEXT("%s: Can't call latent action in main lua thread!"), ANSI_TO_TCHAR(__FUNCTION__));
+            return 0;
+        }
+        ThreadRef = luaL_ref(L, LUA_REGISTRYINDEX);
+        m_ThreadToRef[L] = ThreadRef;
+        m_RefToThread[ThreadRef] = L;
+    }
+    else
+    {
+        ThreadRef = itRef->second;
+    }
+    return ThreadRef;
+}
+
+void FCScriptContext::ResumeThread(int ThreadRef)
+{
+    RefToThreadMap::iterator itThread = m_RefToThread.find(ThreadRef);
+    if (itThread != m_RefToThread.end())
+    {
+        lua_State* L = m_LuaState;
+
+        lua_State* Thread = itThread->second;
+        int32 State = lua_resume(Thread, L, 0, nullptr);
+        if (State == LUA_OK)
+        {
+            m_ThreadToRef.erase(Thread);
+            m_RefToThread.erase(itThread);
+            luaL_unref(L, LUA_REGISTRYINDEX, ThreadRef);    // remove the reference if the coroutine finishes its execution
+        }
+    }
+}
+
 FCDynamicClassDesc*  FCScriptContext::RegisterUClass(const char *UEClassName)
 {
 	CDynamicClassNameMap::iterator itClass = m_ClassFinder.find(UEClassName);
@@ -494,14 +536,14 @@ void FCScriptContext::Clear()
         lua_close(m_LuaState);
         m_LuaState = nullptr;
     }
+    m_Ticker = nullptr;
 
 	ReleasePtrMap(m_ClassNameMap);
     ReleasePtrMap(m_EnumNameMap);
 	m_StructMap.clear();
 	m_ClassFinder.clear();
-	m_TempParamPtr = 0;
-	m_TempValuePtr = 0;
-	m_TempParamIndex = 0;
+    m_ThreadToRef.clear();
+    m_RefToThread.clear();
 }
 
 //--------------------------------------------------------
