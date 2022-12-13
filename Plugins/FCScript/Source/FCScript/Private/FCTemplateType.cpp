@@ -183,10 +183,12 @@ FCInnerBaseType GetInnerType(const char *InClassName)
     {
         GInnerTypeMap["bool"] = FC_INNER_TYPE_bool;
         GInnerTypeMap["byte"] = FC_INNER_TYPE_INT8;
+        GInnerTypeMap["uint8"] = FC_INNER_TYPE_INT8;
         GInnerTypeMap["int8"] = FC_INNER_TYPE_INT8;
         GInnerTypeMap["int16"] = FC_INNER_TYPE_INT16;
         GInnerTypeMap["uint16"] = FC_INNER_TYPE_UINT16;
         GInnerTypeMap["int"] = FC_INNER_TYPE_INT;
+        GInnerTypeMap["int32"] = FC_INNER_TYPE_INT;
         GInnerTypeMap["uint"] = FC_INNER_TYPE_UINT;
         GInnerTypeMap["float"] = FC_INNER_TYPE_FLOAT;
         GInnerTypeMap["double"] = FC_INNER_TYPE_DOUBLE;

@@ -43,6 +43,12 @@ int  LuaPushValue(lua_State* L, const FVector4& value, bool bCopy);
 int  LuaPushValue(lua_State* L, const UObject* value, bool bCopy);
 int  LuaPushValue(lua_State* L, const FLuaValue& value, bool bCopy);
 
+template <class _Ty>
+int  LuaPushValue(lua_State* L, const TArray<_Ty> &Array, bool bCopy)
+{
+    FCScript::SetArgValue(L, Array);
+}
+
 UObject *LuaGetUObject(lua_State* L, int Idx);
 
 

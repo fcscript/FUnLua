@@ -6,57 +6,6 @@ struct OperatorSub {};
 struct OperatorMul {};
 struct OperatorDiv {};
 
-template<class _Ty>
-const char* Vector_GetClassName(const _Ty&)
-{
-	return "FVector";
-}
-template<>
-const char* Vector_GetClassName(const FVector2D&)
-{
-	return "FVector2D";
-}
-template<>
-const char* Vector_GetClassName(const FVector4&)
-{
-	return "FVector4";
-}
-template<>
-const char* Vector_GetClassName(const FIntPoint&)
-{
-	return "FIntPoint";
-}
-template<>
-const char* Vector_GetClassName(const FIntVector&)
-{
-	return "FIntVector";
-}
-template<>
-const char* Vector_GetClassName(const FColor&)
-{
-	return "FColor";
-}
-template<>
-const char* Vector_GetClassName(const FLinearColor&)
-{
-	return "FLinearColor";
-}
-template<>
-const char* Vector_GetClassName(const FQuat&)
-{
-	return "FQuat";
-}
-template<>
-const char* Vector_GetClassName(const FRotator&)
-{
-	return "FRotator";
-}
-template<>
-const char* Vector_GetClassName(const FTransform&)
-{
-	return "FTransform";
-}
-
 int VectorBase_SetWrap(lua_State* L, int MemberCount);
 void* VectorBase_GetAddr(lua_State* L, int Idx, const char *ClassName = nullptr);
 
@@ -193,9 +142,9 @@ int Vector_DotWrap(lua_State* L)
 
 
 template <class _Ty>
-int Vector_AnyCrossWrap(lua_State* L, const _Ty&)
+int Vector_AnyCrossWrap(lua_State* L, const _Ty&Type)
 {
-	const char* ClassName = Vector_GetClassName(_Ty());
+	const char* ClassName = FCScript::ExtractTypeName(Type);
 	_Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
 	_Ty* B = (_Ty*)VectorBase_GetAddr(L, 2, ClassName);
 
@@ -388,7 +337,7 @@ template <class _Ty>
 int Vector_Double_Add_Wrap(lua_State* L)
 {
 	// a = b + c
-	const char* ClassName = Vector_GetClassName(_Ty());
+	const char* ClassName = FCScript::ExtractTypeName(_Ty());
 	return Vector_Double_Operator_Wrap<_Ty>(L, ClassName, OperatorAdd());
 }
 
@@ -396,7 +345,7 @@ template <class _Ty>
 int Vector_Double_Sub_Wrap(lua_State* L)
 {
 	// a = b - c
-	const char* ClassName = Vector_GetClassName(_Ty());
+	const char* ClassName = FCScript::ExtractTypeName(_Ty());
 	return Vector_Double_Operator_Wrap<_Ty>(L, ClassName, OperatorSub());
 }
 
@@ -404,14 +353,14 @@ template <class _Ty>
 int Vector_Double_Mul_Wrap(lua_State* L)
 {
 	// a = b * c
-	const char* ClassName = Vector_GetClassName(_Ty());
+	const char* ClassName = FCScript::ExtractTypeName(_Ty());
 	return Vector_Double_Operator_Wrap<_Ty>(L, ClassName, OperatorMul());
 }
 template <class _Ty>
 int Vector_Double_Mul_float_Wrap(lua_State* L)
 {
 	// a = b * c
-	const char* ClassName = Vector_GetClassName(_Ty());
+	const char* ClassName = FCScript::ExtractTypeName(_Ty());
 	_Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
 	float B = lua_tonumber(L, 2);
 
@@ -428,13 +377,13 @@ template <class _Ty>
 int Vector_Double_Div_Wrap(lua_State* L)
 {
 	// a = b / c
-	const char* ClassName = Vector_GetClassName(_Ty());
+	const char* ClassName = FCScript::ExtractTypeName(_Ty());
 	return Vector_Double_Operator_Wrap<_Ty>(L, ClassName, OperatorDiv());
 }
 template <class _Ty>
 int Vector_Double_Div_float_Wrap(lua_State* L)
 {
-	const char* ClassName = Vector_GetClassName(_Ty());
+	const char* ClassName = FCScript::ExtractTypeName(_Ty());
 	_Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
 	float B = lua_tonumber(L, 2);
 

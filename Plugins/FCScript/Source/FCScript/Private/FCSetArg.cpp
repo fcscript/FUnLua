@@ -45,13 +45,6 @@ void  FC_GetArgValue_ByName(lua_State* L, int Index, void* ValueAddr, const char
     }
 }
 
-void* FC_GetArgRefObjPtr(lua_State* L, int Index)
-{
-    int64 ObjID = FC_GetArgObjID(L, Index);
-    FCObjRef* ObjRef = FCGetObj::GetIns()->FindValue(ObjID);
-    return ObjRef;
-}
-
 int64 FC_GetArgObjID(lua_State* L, int Index)
 {
     int Type = lua_type(L, Index);
@@ -77,6 +70,13 @@ int64 FC_GetArgObjID(lua_State* L, int Index)
         lua_pop(L, 1);
     }
     return ObjID;
+}
+
+void* FC_GetArgRefObjPtr(lua_State* L, int Index)
+{
+    int64 ObjID = FC_GetArgObjID(L, Index);
+    FCObjRef* ObjRef = FCGetObj::GetIns()->FindValue(ObjID);
+    return ObjRef;
 }
 
 UObject* FC_GetArgValue_Object(lua_State* L, int Index)
@@ -126,4 +126,30 @@ void FC_PushBindLuaValue(lua_State* L, int64 ObjID, const char* ClassName)
     //    luaL_getmetatable(L, ClassName);
     //    lua_setmetatable(L, -2);
     //}
+}
+
+void FC_PushArray(lua_State* L, const void* ArrayData, int ArrayLen, const char* InnerType)
+{
+    FCDynamicProperty* DynamicProperty = GetTArrayDynamicProperty(InnerType);
+    if (DynamicProperty)
+    {
+        FScriptArray* ScriptArray = new FScriptArray();
+        int64 ObjID = FCGetObj::GetIns()->PushTemplate(DynamicProperty, ScriptArray, EFCObjRefType::NewTArray);
+
+        FCObjRef* ObjRef = FCGetObj::GetIns()->FindValue(ObjID);
+        FArrayProperty* ArrayProperty = (FArrayProperty*)ObjRef->DynamicProperty->Property;
+        FProperty* Inner = ArrayProperty->Inner;
+        int ElementSize = Inner->GetSize();
+
+        void  FCTArrayWrap_SetNumb(FScriptArray * ScriptArray, FProperty * Inner, int NewNum);
+        FCTArrayWrap_SetNumb(ScriptArray, Inner, ArrayLen);
+
+        FMemory::Memcpy(ScriptArray->GetData(), ArrayData, ArrayLen * ElementSize);
+
+        FC_PushBindLuaValue(L, ObjID, "TArray");
+    }
+    else
+    {
+        lua_pushnil(L);
+    }
 }
