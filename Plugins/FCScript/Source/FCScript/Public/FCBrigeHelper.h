@@ -123,8 +123,8 @@ struct FCSCRIPT_API FCExportedClass
 	static FCExportedClass* FindExportedClass(const char* InClassName);
 	static void RegisterAll(lua_State* L);
 	static void UnRegisterAll(lua_State* L);
-    static void RegisterLibClass(lua_State* L, const char* InClassName, const LuaRegFunc* Funcs);
-    void RegisterLibClass(lua_State* L, const char *InClassName, const LuaRegFunc* Funcs, const LuaRegAttrib* Attribs, const LuaRegFunc* TableFuncs);
+    static int RegisterLibClass(lua_State* L, const char* InClassName, const LuaRegFunc* Funcs);
+    int RegisterLibClass(lua_State* L, const char *InClassName, const LuaRegFunc* Funcs, const LuaRegAttrib* Attribs, const LuaRegFunc* TableFuncs);
 	static void* GetThisPtr(lua_State* L, const char* InClassName);
 	static void ReleaseList(FCExportedItem *InList);
     static const FCExportedItem* FindChildFromList(const FCExportedItem* InListPtr, const char* InName);

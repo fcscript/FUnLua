@@ -1,3 +1,5 @@
+
+local FCPrint = require "FCPrint"
 local UMG_Profile = {}
 
 function UMG_Profile:Construct()
@@ -99,6 +101,7 @@ function UMG_Profile:DoArrayGet(funcName, testArray)
     end
     local costTime = os.clock() - StartTime
     self:PrintInfo("[FCTestScript]Array read ", funcName, ", cost time:", costTime, ",value=", value, ",Len=", len)
+    -- FCPrint.PrintRefInfo(self)
 end
 
 function UMG_Profile:DoArraySet(funcName, testArray, value)    
@@ -113,7 +116,7 @@ function UMG_Profile:DoArraySet(funcName, testArray, value)
 end
 
 function UMG_Profile:OnClickArrayInt()
-    local testArray = UE4.TArray("int")
+    local testArray = UE4.TArray("int32")
     for i = 1, 10 do 
         testArray:Add(i)
     end
@@ -135,8 +138,10 @@ function UMG_Profile:OnClickArrayStr()
     for i = 1, 10 do 
         testArray:Add(tostring(i))
     end
+    collectgarbage("stop")
     self:DoArrayGet("ArrayStr", testArray)
     self:DoArraySet("ArrayStr", testArray, "aaa")
+    collectgarbage("collect")
 end
 
 return UMG_Profile

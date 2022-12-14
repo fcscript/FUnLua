@@ -14,8 +14,11 @@ int FCDelegateWrap::RegisterDelegate(lua_State* L)
     const luaL_Reg LibFuncs[] =
     {
         { "AddListener", AddListener_wrap },
+        { "Add", AddListener_wrap },
         { "RemoveListener", RemoveListener_wrap },
+        { "Remove", RemoveListener_wrap },
         { "ClearLinstener", ClearLinstener_wrap },
+        { "Clear", ClearLinstener_wrap },
         { "Invoke", Invoke_wrap },
         { "__gc", FCExportedClass::obj_release },
         //{ "__call", obj_new },

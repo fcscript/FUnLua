@@ -188,27 +188,16 @@ int64 FCDynamicBindScript(UObject* InObject)
 		LoopTable(L, TableIdx, UnLuaOverride_Callback, &CallInfo);
 		lua_rawgeti(L, LUA_REGISTRYINDEX, BindInfo->m_ScriptIns);
 
-        // 记录__index
-        lua_pushstring(L, "__index");
-        lua_rawget(L, -2);
-        BindInfo->m_SuperIndex = luaL_ref(L, LUA_REGISTRYINDEX);
-
-        lua_pushstring(L, "__newindex");
-        lua_rawget(L, -2);
-        BindInfo->m_SuperNewIndex = luaL_ref(L, LUA_REGISTRYINDEX);
-
 		lua_pushstring(L, "__index");                   // 2  对不存在的索引(成员变量)访问时触发
 		lua_pushlightuserdata(L, (void*)BindInfo->m_ObjRefID);
 		lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
-        lua_pushinteger(L, BindInfo->m_SuperIndex);
-		lua_pushcclosure(L, BindScript_Index, 3);      // closure
+		lua_pushcclosure(L, BindScript_Index, 2);      // closure
 		lua_rawset(L, -3);
 
 		lua_pushstring(L, "__newindex");                // 2  对不存在的索引(成员变量)赋值时触发
 		lua_pushlightuserdata(L, (void*)BindInfo->m_ObjRefID);
 		lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
-        lua_pushinteger(L, BindInfo->m_SuperNewIndex);
-		lua_pushcclosure(L, BindScript_NewIndex, 3);           // 3
+		lua_pushcclosure(L, BindScript_NewIndex, 2);           // 3
 		lua_rawset(L, -3);
 
 		lua_pushstring(L, "__eq");

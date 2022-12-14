@@ -5,8 +5,10 @@ class FCUEUtilWrap
 {
 public:	
     static void Register(lua_State* L);
+    static void RegisterBaseType(lua_State* L);
 
     static int LibOpen_wrap(lua_State* L);
+    static int LibOpenBaseType_wrap(lua_State* L);
     static int LibOverriden_wrap(lua_State* L);
     static int Overriden_Index(lua_State* L);
 

@@ -22,6 +22,54 @@ enum FCInnerBaseType
     FC_INNER_TYPE_FTEXT,           // FText
 };
 
+struct FCTArrayDynamicProperty : public FCDynamicProperty
+{
+    FArrayProperty* ArrayProperty;
+    FCDynamicProperty *Inner;
+    int ElementSize;
+    FCTArrayDynamicProperty(FArrayProperty* InArrayProperty, FCDynamicProperty *ChildInner) :ArrayProperty(InArrayProperty), Inner(ChildInner), ElementSize(0)
+    {
+        ElementSize = ArrayProperty->Inner->GetSize();
+    }
+    ~FCTArrayDynamicProperty()
+    {
+        if (ArrayProperty)
+        {
+            // delete ArrayProperty; // 这个不能释放，UE会自动释放，不然就会Crash
+        }
+    }
+};
+
+struct FCTMapDynamicProperty : public FCDynamicProperty
+{
+    FMapProperty* MapProperty;
+    FCTMapDynamicProperty(FMapProperty* InMapProperty) :MapProperty(InMapProperty)
+    {
+    }
+    ~FCTMapDynamicProperty()
+    {
+        if (MapProperty)
+        {
+            //delete MapProperty; // 这个不能释放，UE会自动释放，不然就会Crash
+        }
+    }
+};
+
+struct FCTSetDynamicProperty : public FCDynamicProperty
+{
+    FSetProperty* SetProperty;
+    FCTSetDynamicProperty(FSetProperty* InSetProperty) :SetProperty(InSetProperty)
+    {
+    }
+    ~FCTSetDynamicProperty()
+    {
+        if (SetProperty)
+        {
+            //delete SetProperty; // 这个不能释放，UE会自动释放，不然就会Crash
+        }
+    }
+};
+
 FProperty  *CreateClassProperty(const char *InClassName);
 FCDynamicProperty *GetCppDynamicProperty(const char *InClassName);
 FCDynamicProperty* GetStructDynamicProperty(UStruct* Struct);

@@ -35,6 +35,28 @@ void FCUEUtilWrap::Register(lua_State* L)
     lua_register(L, "GetBindObjectCount", GetBindObjectCount_wrap);
     lua_register(L, "GetTotalObjRef", GetTotalObjRef_wrap);
     lua_register(L, "GetTotalIntPtr", GetTotalIntPtr_wrap);
+
+    // 注册基础数据类型，兼容UnLua
+    RegisterBaseType(L);
+}
+
+void FCUEUtilWrap::RegisterBaseType(lua_State* L)
+{
+    luaL_requiref(L, "bool", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "int8", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "uint8", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "int16", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "uint16", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "int", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "int32", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "uint32", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "int64", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "uint64", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "float", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "double", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "FString", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "FName", LibOpenBaseType_wrap, 1);
+    luaL_requiref(L, "FText", LibOpenBaseType_wrap, 1);
 }
 
 int FCUEUtilWrap::LibOpen_wrap(lua_State* L)
@@ -50,9 +72,17 @@ int FCUEUtilWrap::LibOpen_wrap(lua_State* L)
         { nullptr, nullptr }
     };
 
-    FCExportedClass::RegisterLibClass(L, "UEUtil", (const LuaRegFunc*)LibFuncs);
+    return FCExportedClass::RegisterLibClass(L, "UEUtil", (const LuaRegFunc*)LibFuncs);
+}
 
-    return 1;
+int FCUEUtilWrap::LibOpenBaseType_wrap(lua_State* L)
+{
+    const luaL_Reg LibFuncs[] =
+    {
+        { nullptr, nullptr }
+    };
+    const char* ClassName = lua_tostring(L, 1);
+    return FCExportedClass::RegisterLibClass(L, ClassName, (const LuaRegFunc*)LibFuncs);
 }
 
 int FCUEUtilWrap::LibOverriden_wrap(lua_State* L)

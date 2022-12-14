@@ -95,7 +95,7 @@ function _G.LuaUnrealClass(super_name)
 	new_class.__newindex = NewIndex
 	new_class.Super = super_class
 	new_class.__className = "LuaUnrealClass";
-	new_class.__this = new_class;
+	-- new_class.__this = new_class;
 
     return new_class
 end

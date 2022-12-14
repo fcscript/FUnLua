@@ -1,4 +1,4 @@
-
+require "UnLua"
 local FCTestPanel = LuaUnrealClass("UIPanelBase")
 
 function FCTestPanel:ReceiveBeginPlay()

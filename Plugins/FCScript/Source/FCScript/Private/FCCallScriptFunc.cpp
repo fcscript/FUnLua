@@ -8,6 +8,7 @@
 #include "Components/PrimitiveComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "FCBrigeBase.h"
+#include "../LuaCore/LuaContext.h"
 
 #include "FCGetObj.h"
 
@@ -48,20 +49,23 @@ void  PushScriptDouble(lua_State* L, const FCDynamicPropertyBase *DynamicPropert
 void  PushScriptFName(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
 	FString value = ((FName*)ValueAddr)->ToString();
-	FTCHARToUTF8 toUtf8(*value);
-	lua_pushlstring(L, toUtf8.Get(), toUtf8.Length());
+	//FTCHARToUTF8 toUtf8(*value);
+	//lua_pushlstring(L, toUtf8.Get(), toUtf8.Length());
+    lua_pushstring(L, TCHAR_TO_UTF8(*value));
 }
 void  PushScriptFString(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
 	FString &value = *((FString*)ValueAddr);
-    FTCHARToUTF8 toUtf8(*value);
-    lua_pushlstring(L, toUtf8.Get(), toUtf8.Length());
+    //FTCHARToUTF8 toUtf8(*value);
+    //lua_pushlstring(L, toUtf8.Get(), toUtf8.Length());
+    lua_pushstring(L, TCHAR_TO_UTF8(*value));
 }
 void  PushScriptFText(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
 	FString value = ((FText*)ValueAddr)->ToString();
-	FTCHARToUTF8 toUtf8(*value);
-	lua_pushlstring(L, toUtf8.Get(), toUtf8.Length());
+	//FTCHARToUTF8 toUtf8(*value);
+	//lua_pushlstring(L, toUtf8.Get(), toUtf8.Length());
+    lua_pushstring(L, TCHAR_TO_UTF8(*value));
 }
 void  PushScriptFVector(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {

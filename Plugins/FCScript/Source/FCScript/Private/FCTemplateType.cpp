@@ -237,6 +237,11 @@ FProperty  *CreateClassProperty(const char *InClassName)
         if(InnerType != FC_INNER_TYPE_Unknow)
         {
             InClassName = GetInnerTypeName(InnerType);
+            itProperty = GClassPropertyNameMap.find(InClassName);
+            if (itProperty != GClassPropertyNameMap.end())
+            {
+                return itProperty->second;
+            }
             FProperty* Property = CreateBaseProperty(InnerType);
             GClassPropertyNameMap[InClassName] = Property;
             return Property;
@@ -336,21 +341,6 @@ FArrayProperty* CreateTArrayProperty(const char* InPropertyType)
 	return ArrayProperty;
 }
 
-struct FCTArrayDynamicProperty : public FCDynamicProperty
-{
-	FArrayProperty  *ArrayProperty;
-	FCTArrayDynamicProperty(FArrayProperty *InArrayProperty):ArrayProperty(InArrayProperty)
-	{
-	}
-	~FCTArrayDynamicProperty()
-	{
-		if(ArrayProperty)
-		{
-			delete ArrayProperty;
-		}
-	}
-};
-
 typedef stdext::hash_map<const char *, FCDynamicProperty*> CTempalteDynamicPropertyMap;
 typedef stdext::hash_map<FCDoubleKey, FCDynamicProperty*> CMapTempalteDynamicPropertyMap;
 CTempalteDynamicPropertyMap   GTempalteDynamicPropertyMap;
@@ -370,7 +360,7 @@ FCDynamicProperty* GetTArrayDynamicProperty(const char* InPropertyType)
 		GTempalteDynamicPropertyMap[InPropertyType] = nullptr;
 		return nullptr;
 	}
-	FCTArrayDynamicProperty  *DynamicProperty = new FCTArrayDynamicProperty(ArrayProperty);
+	FCTArrayDynamicProperty  *DynamicProperty = new FCTArrayDynamicProperty(ArrayProperty, GetDynamicPropertyByUEProperty(ArrayProperty->Inner));
 	DynamicProperty->InitProperty(ArrayProperty);
 	GTempalteDynamicPropertyMap[InPropertyType] = DynamicProperty;
 	return DynamicProperty;
@@ -399,21 +389,6 @@ FMapProperty* CreateTMapProperty(const char *KeyType, const char *ValueType)
 	return MapProperty;
 }
 
-struct FCTMapDynamicProperty : public FCDynamicProperty
-{
-	FMapProperty  *MapProperty;
-	FCTMapDynamicProperty(FMapProperty *InMapProperty):MapProperty(InMapProperty)
-	{
-	}
-	~FCTMapDynamicProperty()
-	{
-		if(MapProperty)
-		{
-			//delete MapProperty; // 这个不能释放，UE会自动释放，不然就会Crash
-		}
-	}
-};
-
 FCDynamicProperty *GetTMapDynamicProperty(const char* KeyTypeName, const char* ValueTypeName)
 {
 	FCDoubleKey  MapKey(KeyTypeName, ValueTypeName);
@@ -438,21 +413,6 @@ FCDynamicProperty *GetTMapDynamicProperty(const char* KeyTypeName, const char* V
 
 	return DynamicProperty;
 }
-
-struct FCTSetDynamicProperty : public FCDynamicProperty
-{
-    FSetProperty* SetProperty;
-	FCTSetDynamicProperty(FSetProperty* InSetProperty) :SetProperty(InSetProperty)
-    {		
-    }
-    ~FCTSetDynamicProperty()
-    {
-        if (SetProperty)
-        {
-            //delete SetProperty; // 这个不能释放，UE会自动释放，不然就会Crash
-        }
-    }
-};
 
 //-----------------------------------------------
 FSetProperty* CreateTSetProperty(const char* ClassName)

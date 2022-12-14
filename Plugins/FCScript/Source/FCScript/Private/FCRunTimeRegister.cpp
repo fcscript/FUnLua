@@ -555,39 +555,52 @@ int BindScript_Index(lua_State* L)
     // (table, key)
     int64 ObjID = (int64)lua_touserdata(L, lua_upvalueindex(1));
     FCDynamicClassDesc * ClassDesc = (FCDynamicClassDesc*)lua_touserdata(L, lua_upvalueindex(2));
-    int IndexFuncRef = lua_tointeger(L, lua_upvalueindex(3));
     FCObjRef* ObjRef = FCGetObj::GetIns()->FindValue(ObjID);
+    const char* FieldName = lua_tostring(L, 2);
     if (ObjRef && ObjRef->IsValid())
     {
-        const char* FieldName = lua_tostring(L, 2);
         FCDynamicField* Field = ClassDesc->FindFieldByName(FieldName);
         if (Field)
         {
             return Field->DoGet(L, ObjRef, ClassDesc);
         }
     }
-    // __super_index
-    int StartTop = lua_gettop(L);
-    lua_rawgeti(L, LUA_REGISTRYINDEX, IndexFuncRef);
-
-    int32 MessageHandlerIdx = lua_gettop(L) - 1;
-    lua_pushvalue(L, 1);
-    lua_pushvalue(L, 2);
-    int32 Code = lua_pcall(L, 2, LUA_MULTRET, MessageHandlerIdx);
-    if (Code != LUA_OK)
+    int Ret = lua_rawget(L, 1);
+    int Type = lua_type(L, -1);
+    if(Type > LUA_TNIL)
     {
-        ReportLuaCallError(L);  // 理论上不会出错，这里
-        return 0;
+        return Ret;
     }
+
+    lua_pushvalue(L, 1);
+    while(true)
+    {
+        lua_pushstring(L, "Super");
+        lua_rawget(L, -2);
+        Type = lua_type(L, -1);
+        if(Type == LUA_TTABLE)
+        {
+            lua_getfield(L, -1, FieldName);
+            int ChildType = lua_type(L, -1);
+            if(ChildType > LUA_TNIL)
+            {
+                return 1;
+            }
+            lua_pop(L, 1);
+        }
+        else
+        {
+            break;
+        }
+    }
+    lua_pushnil(L);
     return 1;
-    //return lua_rawget(L, 1);
 }
 
 int BindScript_NewIndex(lua_State* L)
 {
     int64 ObjID = (int64)lua_touserdata(L, lua_upvalueindex(1));
     FCDynamicClassDesc* ClassDesc = (FCDynamicClassDesc*)lua_touserdata(L, lua_upvalueindex(2));
-    int NewIndexFuncRef = lua_tointeger(L, lua_upvalueindex(3));
     const char* FieldName = lua_tostring(L, 2);
     FCObjRef* ObjRef = FCGetObj::GetIns()->FindValue(ObjID);
     if (ObjRef && ObjRef->IsValid())
@@ -598,21 +611,7 @@ int BindScript_NewIndex(lua_State* L)
             return Field->DoSet(L, ObjRef, ClassDesc);
         }
     }
-
-    // __super_newindex
-    lua_rawgeti(L, LUA_REGISTRYINDEX, NewIndexFuncRef);
-
-    int32 MessageHandlerIdx = lua_gettop(L) - 1;
-    // (table, key, value)
-    lua_pushvalue(L, 1);
-    lua_pushvalue(L, 2);
-    lua_pushvalue(L, 3);
-    int32 Code = lua_pcall(L, 3, LUA_MULTRET, MessageHandlerIdx);
-    if (Code != LUA_OK)
-    {
-        ReportLuaCallError(L);  // 理论上不会出错，这里
-    }
-    //lua_rawset(L, 1);
+    lua_rawset(L, 1);
     return 0;
 }
 

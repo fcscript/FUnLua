@@ -50,13 +50,13 @@ void FCExportedClass::UnRegisterAll(lua_State* L)
 	}
 }
 
-void FCExportedClass::RegisterLibClass(lua_State* L, const char* InClassName, const LuaRegFunc* Funcs)
+int FCExportedClass::RegisterLibClass(lua_State* L, const char* InClassName, const LuaRegFunc* Funcs)
 {
     int32 Type = luaL_getmetatable(L, InClassName);
     lua_pop(L, 1);
     if (Type == LUA_TTABLE)
     {
-        return;
+        return 0;
     }
     luaL_newmetatable(L, InClassName);
 
@@ -78,9 +78,10 @@ void FCExportedClass::RegisterLibClass(lua_State* L, const char* InClassName, co
 
     lua_pushvalue(L, -1);                    // set metatable to self
     lua_setmetatable(L, -2);
+    return 1;
 }
 
-void FCExportedClass::RegisterLibClass(lua_State* L, const char* InClassName, const LuaRegFunc* Funcs, const LuaRegAttrib* Attribs, const LuaRegFunc* TableFuncs)
+int FCExportedClass::RegisterLibClass(lua_State* L, const char* InClassName, const LuaRegFunc* Funcs, const LuaRegAttrib* Attribs, const LuaRegFunc* TableFuncs)
 {
     const LuaRegFunc *RegFunc = Funcs;
     while (RegFunc != nullptr && RegFunc->Func != nullptr)
@@ -97,7 +98,7 @@ void FCExportedClass::RegisterLibClass(lua_State* L, const char* InClassName, co
     lua_pop(L, 1);
     if (Type == LUA_TTABLE)
     {
-        return ;
+        return 0;
     }
     luaL_newmetatable(L, InClassName);
 
@@ -111,6 +112,7 @@ void FCExportedClass::RegisterLibClass(lua_State* L, const char* InClassName, co
 
     lua_pushvalue(L, -1);                    // set metatable to self
     lua_setmetatable(L, -2);
+    return 1;
 }
 
 void* FCExportedClass::GetThisPtr(lua_State* L, const char* InClassName)

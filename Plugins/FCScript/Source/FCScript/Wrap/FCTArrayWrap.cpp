@@ -169,7 +169,7 @@ int FCTArrayWrap_GetAt_Wrap(lua_State* L)
 	FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
 	if (ObjRef && ObjRef->DynamicProperty)
 	{
-		if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
+        if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
 		{
 			int Index = lua_tointeger(L, 2) - 1;  // lua 从 1开始
 
