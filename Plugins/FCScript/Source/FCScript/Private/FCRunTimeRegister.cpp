@@ -814,6 +814,6 @@ void   RunTimeRegisterScript(FCScriptContext *Context)
     lua_register(L, "UEPrint", Global_Print);
     lua_register(L, "require", Global_Require);
 
-    lua_gc(L, LUA_GCSETPAUSE, 100);
-    lua_gc(L, LUA_GCSETSTEPMUL, 5000);
+    //lua_gc(L, LUA_GCSETPAUSE, 100);
+    //lua_gc(L, LUA_GCSETSTEPMUL, 5000);
 }

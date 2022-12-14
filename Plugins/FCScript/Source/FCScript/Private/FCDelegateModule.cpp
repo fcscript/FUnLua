@@ -249,6 +249,8 @@ void FFCDelegateModule::Shutdown()
 	FCRefObjCache::GetIns()->Clear();
 	ReleaseTempalteProperty();
 	FFCObjectdManager::GetSingleIns()->Clear();
+    lua_gc(L, LUA_GCCOLLECT, 0);
+    lua_gc(L, LUA_GCCOLLECT, 0);
 	GetContextManger()->Clear();
 	GameInstance = nullptr;
 	if(Ticker)

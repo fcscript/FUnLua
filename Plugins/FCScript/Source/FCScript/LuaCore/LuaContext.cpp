@@ -1,12 +1,12 @@
 #include "LuaContext.h"
 #include "FCScriptDelegates.h"
 
-extern "C"
-{
-#include "lfunc.h"
-#include "lstate.h"
-#include "lobject.h"
-}
+//extern "C"
+//{
+//#include "lfunc.h"
+//#include "lstate.h"
+//#include "lobject.h"
+//}
 
 //static TValue* GetTValue(lua_State* L, int32 Index)
 //{

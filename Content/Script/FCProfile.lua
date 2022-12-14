@@ -138,10 +138,11 @@ function UMG_Profile:OnClickArrayStr()
     for i = 1, 10 do 
         testArray:Add(tostring(i))
     end
-    collectgarbage("stop")
+    -- collectgarbage("stop")  -- 测试发现 Get里面会触发GC，导致测试不稳定，GC会很慢
+    -- 是库编译的问题，GC步长的影响
     self:DoArrayGet("ArrayStr", testArray)
     self:DoArraySet("ArrayStr", testArray, "aaa")
-    collectgarbage("collect")
+    -- collectgarbage("collect")
 end
 
 return UMG_Profile

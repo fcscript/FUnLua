@@ -26,8 +26,6 @@ public class FCScript : ModuleRules
         PublicIncludePaths.AddRange(
             new string[] {
                 "$(ModuleDir)/Private",
-                "$(ModuleDir)/../FCLib/include",
-                "$(ModuleDir)/../LuaLib/src",
             }
         );
                 
