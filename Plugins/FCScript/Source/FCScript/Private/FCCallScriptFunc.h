@@ -56,9 +56,16 @@ bool  CallAnyScriptFunc(FCScriptContext* Context, int64 ScriptIns, const char *S
 	lua_State* L = Context->m_LuaState;
 	if(L)
 	{
+        int StartTop = lua_gettop(L);
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ScriptIns);
 		int TabldIdx = lua_gettop(L);
-        return CallTableVoidFunction(L, TabldIdx, ScriptFuncName, Args...);
+        bool bSuc = CallTableVoidFunction(L, TabldIdx, ScriptFuncName, Args...);
+        int CurTop = lua_gettop(L);
+        if(CurTop > StartTop)
+        {
+            lua_pop(L, CurTop - StartTop);
+        }
+        return bSuc;
 	}
     return false;
 }

@@ -1,7 +1,7 @@
 #include "FCTemplateType.h"
 
 
-#if ENGINE_MINOR_VERSION < 25 
+#if OLD_UE_ENGINE
 template<class _Ty>
 _Ty * NewUEProperty(UScriptStruct* ScriptStruct)
 {
@@ -19,7 +19,7 @@ _Ty* NewUEProperty(UScriptStruct* ScriptStruct)
 
 FProperty  *NewUEBoolProperty(UScriptStruct* ScriptStruct)
 {
-#if ENGINE_MINOR_VERSION < 25
+#if OLD_UE_ENGINE
 	// see overloaded operator new that defined in DECLARE_CLASS(...)
 	UBoolProperty* Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UBoolProperty(FObjectInitializer(), EC_CppProperty, 0, (EPropertyFlags)0, 0xFF, 1, true);
 #else
@@ -30,9 +30,9 @@ FProperty  *NewUEBoolProperty(UScriptStruct* ScriptStruct)
 
 FProperty* NewUEStructProperty(UScriptStruct* Struct, UScriptStruct* ScriptStruct)
 {
-#if ENGINE_MINOR_VERSION < 25
+#if OLD_UE_ENGINE
 	// see overloaded operator new that defined in DECLARE_CLASS(...)
-	FStructProperty* Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UObjectProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_HasGetValueTypeHash, Struct);
+    UStructProperty *Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UStructProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_HasGetValueTypeHash, Struct);
 #else
 	FStructProperty* Property = new FStructProperty(ScriptStruct, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash, Struct);
 #endif
@@ -41,9 +41,10 @@ FProperty* NewUEStructProperty(UScriptStruct* Struct, UScriptStruct* ScriptStruc
 
 FProperty  *NewUEClassProperty(UClass *Class, UScriptStruct* ScriptStruct)
 {
-#if ENGINE_MINOR_VERSION < 25
+#if OLD_UE_ENGINE
 	// see overloaded operator new that defined in DECLARE_CLASS(...)
-	UObjectProperty* Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UObjectProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_HasGetValueTypeHash, Class);
+    //UObjectProperty* Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UObjectProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_HasGetValueTypeHash, Class);
+    UClassProperty *Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UClassProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_HasGetValueTypeHash | CPF_UObjectWrapper, Class, nullptr);
 #else
 	FObjectProperty* Property = new FObjectProperty(ScriptStruct, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash, Class);
 #endif
@@ -52,7 +53,7 @@ FProperty  *NewUEClassProperty(UClass *Class, UScriptStruct* ScriptStruct)
 
 FArrayProperty  *NewUEArrayProperty(UScriptStruct* ScriptStruct)
 {
-#if ENGINE_MINOR_VERSION < 25
+#if OLD_UE_ENGINE
 	FArrayProperty* Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) FArrayProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_None);
 #else
 	FArrayProperty* Property = new FArrayProperty(ScriptStruct, NAME_None, RF_Transient);
@@ -62,7 +63,7 @@ FArrayProperty  *NewUEArrayProperty(UScriptStruct* ScriptStruct)
 
 FMapProperty  *NewUEMapProperty(UScriptStruct* ScriptStruct)
 {	
-#if ENGINE_MINOR_VERSION < 25
+#if OLD_UE_ENGINE
 	FMapProperty* Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) FMapProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_None);
 #else
 	FMapProperty* Property = new FMapProperty(ScriptStruct, NAME_None, RF_Transient);
@@ -72,8 +73,8 @@ FMapProperty  *NewUEMapProperty(UScriptStruct* ScriptStruct)
 
 FSetProperty* NewUESetProperty(UScriptStruct* ScriptStruct)
 {
-#if ENGINE_MINOR_VERSION < 25
-	FSetProperty* Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) FMapProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_None);
+#if OLD_UE_ENGINE
+	FSetProperty* Property = new (EC_InternalUseOnlyConstructor, (UClass*)ScriptStruct, NAME_None, RF_Transient) FSetProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_None);
 #else
 	FSetProperty* Property = new FSetProperty(ScriptStruct, NAME_None, RF_Transient);
 #endif

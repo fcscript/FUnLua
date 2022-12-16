@@ -108,8 +108,10 @@ int FCVector4Wrap::Dot3_Wrap(lua_State* L)
 {
     FVector4* A = (FVector4*)VectorBase_GetAddr(L, 1);
     FVector4* B = (FVector4*)VectorBase_GetAddr(L, 2);
-    float Dot3(const FVector4 & V1, const FVector4 & V2);
-    lua_pushnumber(L, A && B ? Dot3(*A, *B) : 0);
+    if(A && B)
+        lua_pushnumber(L, A->X * B->X + A->Y * B->Y + A->Z * B->Z);
+    else
+        lua_pushnumber(L, 0);
     return 1;
 }
 
@@ -117,8 +119,10 @@ int FCVector4Wrap::Dot4_Wrap(lua_State* L)
 {
     FVector4* A = (FVector4*)VectorBase_GetAddr(L, 1);
     FVector4* B = (FVector4*)VectorBase_GetAddr(L, 2);
-    float Dot4(const FVector4 & V1, const FVector4 & V2);
-    lua_pushnumber(L, A && B ? Dot4(*A, *B) : 0);
+    if (A && B)
+        lua_pushnumber(L, A->X * B->X + A->Y * B->Y + A->Z * B->Z + A->W * B->W);
+    else
+        lua_pushnumber(L, 0);
     return 1;
 }
 

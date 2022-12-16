@@ -87,49 +87,6 @@ struct FFakeProperty : public FField
     int32       Offset_Internal;
 };
 
-#define fc_offsetof(s,m) ((int32)((size_t)&(((s*)0)->m)))
-
-UFunction* DuplicateUFunction(UFunction *TemplateFunction, UClass *OuterClass, const FName &NewFuncName)
-{
-    int32 Offset = fc_offsetof(FFakeProperty, Offset_Internal);
-    FArchive Ar;         // dummy archive used for FProperty::Link()
-
-#if CLEAR_INTERNAL_NATIVE_FLAG_DURING_DUPLICATION
-    FObjectDuplicationParameters DuplicationParams(TemplateFunction, OuterClass);
-    DuplicationParams.DestName = NewFuncName;
-    DuplicationParams.InternalFlagMask &= ~EInternalObjectFlags::Native;
-    UFunction *NewFunc = Cast<UFunction>(StaticDuplicateObjectEx(DuplicationParams));
-#else
-    UFunction *NewFunc = DuplicateObject(TemplateFunction, OuterClass, NewFuncName);
-#endif
-
-    NewFunc->PropertiesSize = TemplateFunction->PropertiesSize;
-    NewFunc->MinAlignment = TemplateFunction->MinAlignment;
-    int32 NumParams = NewFunc->NumParms;
-    if (NumParams > 0)
-    {
-        NewFunc->PropertyLink = CastField<FProperty>(GetChildProperties(NewFunc));
-        FProperty *SrcProperty = CastField<FProperty>(GetChildProperties(TemplateFunction));
-        FProperty *DestProperty = NewFunc->PropertyLink;
-        while (true)
-        {
-            DestProperty->Link(Ar);
-            DestProperty->RepIndex = SrcProperty->RepIndex;
-            *((int32*)((uint8*)DestProperty + Offset)) = *((int32*)((uint8*)SrcProperty + Offset)); // set Offset_Internal (Offset_Internal set by DestProperty->Link(Ar) is incorrect because of incorrect Outer class)
-            if (--NumParams < 1)
-            {
-                break;
-            }
-            DestProperty->PropertyLinkNext = CastField<FProperty>(DestProperty->Next);
-            DestProperty = DestProperty->PropertyLinkNext;
-            SrcProperty = SrcProperty->PropertyLinkNext;
-        }
-    }
-    NewFunc->ClearInternalFlags(EInternalObjectFlags::Native);
-	NewFunc->Script.Empty();
-    return NewFunc;
-}
-
 int FCDynamicDelegateList::FindDelegate(const FCDelegateInfo &Info) const
 {
 	for(int i = 0; i<Delegates.size(); ++i)

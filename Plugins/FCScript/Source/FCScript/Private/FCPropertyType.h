@@ -50,7 +50,15 @@ enum FCPropertyType
 };
 
 
-#if ENGINE_MINOR_VERSION < 25
+#if (ENGINE_MAJOR_VERSION < 5) && (ENGINE_MINOR_VERSION < 25)
+#define OLD_UE_ENGINE 1
+#else
+#define OLD_UE_ENGINE 0
+#endif
+
+
+
+#if OLD_UE_ENGINE
 #define CastField Cast
 #define GetPropertyOuter(Property) (Property)->GetOuter()
 #define GetChildProperties(Function) (Function)->Children

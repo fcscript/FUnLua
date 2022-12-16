@@ -50,6 +50,7 @@ int  LuaPushValue(lua_State* L, const TArray<_Ty> &Array, bool bCopy)
 }
 
 UObject *LuaGetUObject(lua_State* L, int Idx);
+int ReportLuaCallError(lua_State* L);
 
 
 template<bool bCopy>
@@ -67,7 +68,7 @@ int32 PushLuaArgs(lua_State* L, T1&& V1, T2&&... V2)
 template <typename... T>
 FLuaRetValues CallGlobalLua(lua_State* L, const char* FuncName, T&&... Args)
 {
-    int nStackValueNumb = lua_gettop(L); // È¡µ±Ç°Õ»ÄÚÔªËØ¸öÊı
+    int nStackValueNumb = lua_gettop(L); // å–å½“å‰æ ˆå†…å…ƒç´ ä¸ªæ•°
     lua_getglobal(L, FuncName);
     if (lua_isfunction(L, -1) == false)
     {
@@ -77,7 +78,7 @@ FLuaRetValues CallGlobalLua(lua_State* L, const char* FuncName, T&&... Args)
     int32 MessageHandlerIdx = lua_gettop(L) - 1;
     int32 NumArgs = PushLuaArgs<false>(L, Forward<T>(Args)...);
     int32 Code = lua_pcall(L, NumArgs, LUA_MULTRET, MessageHandlerIdx);
-    // ËµÃ÷£ºlua_pcall µ÷ÓÃºó£¬»á×Ô¶¯ÊäÈëµÄÏà¹Ø²ÎÊı(º¯ÊıÃû+º¯Êı²ÎÊı)
+    // è¯´æ˜ï¼šlua_pcall è°ƒç”¨åï¼Œä¼šè‡ªåŠ¨è¾“å…¥çš„ç›¸å…³å‚æ•°(å‡½æ•°å+å‡½æ•°å‚æ•°)
     int32 TopIdx = lua_gettop(L);
 
     if (Code == LUA_OK)
@@ -97,7 +98,7 @@ FLuaRetValues CallGlobalLua(lua_State* L, const char* FuncName, T&&... Args)
 template <typename... T>
 bool CallGlobalVoidLua(lua_State* L, const char* FuncName, T&&... Args)
 {
-    int nStackValueNumb = lua_gettop(L); // È¡µ±Ç°Õ»ÄÚÔªËØ¸öÊı
+    int nStackValueNumb = lua_gettop(L); // å–å½“å‰æ ˆå†…å…ƒç´ ä¸ªæ•°
     lua_getglobal(L, FuncName);
     if (lua_isfunction(L, -1) == false)
     {
@@ -107,14 +108,14 @@ bool CallGlobalVoidLua(lua_State* L, const char* FuncName, T&&... Args)
     int32 MessageHandlerIdx = lua_gettop(L) - 1;
     int32 NumArgs = PushLuaArgs<false>(L, Forward<T>(Args)...);
     int32 Code = lua_pcall(L, NumArgs, LUA_MULTRET, MessageHandlerIdx);
-    // ËµÃ÷£ºlua_pcall µ÷ÓÃºó£¬»á×Ô¶¯ÊäÈëµÄÏà¹Ø²ÎÊı(º¯ÊıÃû+º¯Êı²ÎÊı)
+    // è¯´æ˜ï¼šlua_pcall è°ƒç”¨åï¼Œä¼šè‡ªåŠ¨è¾“å…¥çš„ç›¸å…³å‚æ•°(å‡½æ•°å+å‡½æ•°å‚æ•°)
     int32 TopIdx = lua_gettop(L);
     int nRealPushParam = TopIdx - MessageHandlerIdx + 1;
     lua_pop(L, nRealPushParam);
     return Code == LUA_OK;
 }
 
-// µ÷ÓÃTableµÄ³ÉÔ±º¯Êı£¬ÓĞ·µ»ØÖµµÄÄÇÖÖ
+// è°ƒç”¨Tableçš„æˆå‘˜å‡½æ•°ï¼Œæœ‰è¿”å›å€¼çš„é‚£ç§
 template <typename... T>
 FLuaRetValues CallTableFunction(lua_State* L, int TableIdx, const char* FuncName, T&&... Args)
 {
@@ -130,7 +131,7 @@ FLuaRetValues CallTableFunction(lua_State* L, int TableIdx, const char* FuncName
     lua_pushvalue(L, TableIdx); // push self
     int32 NumArgs = PushLuaArgs<false>(L, Forward<T>(Args)...);
     int32 Code = lua_pcall(L, NumArgs + 1, LUA_MULTRET, MessageHandlerIdx);
-    // ËµÃ÷£ºlua_pcall µ÷ÓÃºó£¬»á×Ô¶¯ÊäÈëµÄÏà¹Ø²ÎÊı(º¯ÊıÃû+º¯Êı²ÎÊı)
+    // è¯´æ˜ï¼šlua_pcall è°ƒç”¨åï¼Œä¼šè‡ªåŠ¨è¾“å…¥çš„ç›¸å…³å‚æ•°(å‡½æ•°å+å‡½æ•°å‚æ•°)
     int32 TopIdx = lua_gettop(L);
 
     if (Code == LUA_OK)
@@ -147,7 +148,7 @@ FLuaRetValues CallTableFunction(lua_State* L, int TableIdx, const char* FuncName
     return FLuaRetValues();
 }
 
-// µ÷ÓÃTableµÄ³ÉÔ±º¯Êı£¬ÎŞ·µ»ØÖµµÄÄÇÖÖ
+// è°ƒç”¨Tableçš„æˆå‘˜å‡½æ•°ï¼Œæ— è¿”å›å€¼çš„é‚£ç§
 template <typename... T>
 bool CallTableVoidFunction(lua_State* L, int TableIdx, const char* FuncName, T&&... Args)
 {
@@ -163,7 +164,11 @@ bool CallTableVoidFunction(lua_State* L, int TableIdx, const char* FuncName, T&&
     lua_pushvalue(L, TableIdx); // push self
     int32 NumArgs = PushLuaArgs<false>(L, Forward<T>(Args)...);
     int32 Code = lua_pcall(L, NumArgs + 1, LUA_MULTRET, MessageHandlerIdx);
-    // ËµÃ÷£ºlua_pcall µ÷ÓÃºó£¬»á×Ô¶¯ÊäÈëµÄÏà¹Ø²ÎÊı(º¯ÊıÃû+º¯Êı²ÎÊı)
+    if(Code != LUA_OK)
+    {
+        ReportLuaCallError(L);
+    }
+    // è¯´æ˜ï¼šlua_pcall è°ƒç”¨åï¼Œä¼šè‡ªåŠ¨è¾“å…¥çš„ç›¸å…³å‚æ•°(å‡½æ•°å+å‡½æ•°å‚æ•°)
     int32 CurIdx = lua_gettop(L);
     if (CurIdx > StartIdx)
     {

@@ -336,7 +336,8 @@ bool GlbTryLoadLuaFile(lua_State* L, const char* ModuleName)
     FString  ScriptPath = FPaths::ProjectContentDir();
     ScriptPath += TEXT("Script/");
     ScriptPath += UTF8_TO_TCHAR(ModuleName);
-    ScriptPath.Replace(TEXT("."), TEXT("/"));
+    //ScriptPath.Replace(TEXT("."), TEXT("/"));
+    ScriptPath.ReplaceCharInline('.', '/');
     ScriptPath += TEXT(".lua");
 
     TArray<uint8> Data;

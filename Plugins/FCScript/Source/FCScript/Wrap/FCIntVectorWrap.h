@@ -8,6 +8,7 @@ public:
     static int LibOpen_wrap(lua_State* L);
 
     static int Set_wrap(lua_State* L);
+    static int SizeSquared_wrap(lua_State* L);
     static int mul_wrap(lua_State* L);
     static int div_wrap(lua_State* L);
     static int double_mul_wrap(lua_State* L);

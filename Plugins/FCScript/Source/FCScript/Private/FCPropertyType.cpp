@@ -49,7 +49,7 @@ void  InitPropertyTable()
 	gPropertyTypeMap[FSetProperty::StaticClass()]    = FCPROPERTY_Set;
 	gPropertyTypeMap[FDelegateProperty::StaticClass()] = FCPROPERTY_DelegateProperty;
 	gPropertyTypeMap[FMulticastDelegateProperty::StaticClass()] = FCPROPERTY_MulticastDelegateProperty;
-	#if ENGINE_MINOR_VERSION > 22
+	#if OLD_UE_ENGINE == 0
 	gPropertyTypeMap[FMulticastInlineDelegateProperty::StaticClass()] = FCPROPERTY_MulticastDelegateProperty;
 	gPropertyTypeMap[FMulticastSparseDelegateProperty::StaticClass()] = FCPROPERTY_MulticastDelegateProperty;
 	#endif

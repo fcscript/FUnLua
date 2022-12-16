@@ -17,7 +17,7 @@ int FCIntVectorWrap::LibOpen_wrap(lua_State* L)
     const LuaRegFunc LibFuncs[] =
     {
         { "Set", Set_wrap },
-        { "SizeSquared", Vector_SizeSquaredWrap<FIntVector> },
+        { "SizeSquared", SizeSquared_wrap },
         { "Add", Vector_AddWrap<FIntVector> },
         { "Sub", Vector_SubWrap<FIntVector> },
         { "Mul", mul_wrap },
@@ -60,6 +60,20 @@ int FCIntVectorWrap::Set_wrap(lua_State* L)
         A->X = lua_tointeger(L, 2);
         A->Y = lua_tointeger(L, 3);
         A->Z = lua_tointeger(L, 4);
+    }
+    return 0;
+}
+
+int FCIntVectorWrap::SizeSquared_wrap(lua_State* L)
+{
+    FIntVector* A = (FIntVector*)VectorBase_GetAddr(L, 1, "FIntVector");
+    if(A)
+    {
+        lua_pushnumber(L, A->X * A->X + A->Y * A->Y + A->Z * A->Z);
+    }
+    else
+    {
+        lua_pushnumber(L, 0);
     }
     return 0;
 }

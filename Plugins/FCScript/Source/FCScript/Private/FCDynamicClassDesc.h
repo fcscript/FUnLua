@@ -100,9 +100,6 @@ struct FCDynamicProperty : public FCDynamicPropertyBase
 	virtual int DoSet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
 };
 
-// 复制一个函数
-UFunction* DuplicateUFunction(UFunction *TemplateFunction, UClass *OuterClass, const FName &NewFuncName);
-
 struct  FCDynamicFunction : public FCDynamicField
 {
 	UFunction  *Function;

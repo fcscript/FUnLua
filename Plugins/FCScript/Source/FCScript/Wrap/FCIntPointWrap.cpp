@@ -17,10 +17,10 @@ int FCIntPointWrap::LibOpen_wrap(lua_State* L)
     const LuaRegFunc LibFuncs[] =
     {
         { "Set", Set_wrap },
-        { "Add", Vector_AddWrap<FIntPoint> },
-        { "Sub", Vector_SubWrap<FIntPoint> },
-        { "Mul", Vector_MulWrap<FIntPoint> },
-        { "Div", Vector_DivWrap<FIntPoint> },
+        { "Add", Add_wrap },
+        { "Sub", Sub_wrap },
+        { "Mul", Mul_wrap },
+        { "Div", Div_wrap },
         { nullptr, nullptr }
     };
     const LuaRegAttrib LibAttrib[] =
@@ -31,10 +31,10 @@ int FCIntPointWrap::LibOpen_wrap(lua_State* L)
     };
     const LuaRegFunc LibTable[] =
     {
-        { "__add", Vector_Double_Add_Wrap<FIntPoint> },
-        { "__sub", Vector_Double_Sub_Wrap<FIntPoint> },
-        { "__mul", Vector_Double_Mul_Wrap<FIntPoint> },
-        { "__div", Vector_Double_Div_Wrap<FIntPoint> },
+        { "__add", double_add_wrap },
+        { "__sub", double_sub_wrap },
+        { "__mul", double_mul_wrap },
+        { "__div", double_div_wrap },
         { "__tostring", tostring_wrap },
         { "__gc", FCExportedClass::obj_Delete },
         { "__eq", FCExportedClass::obj_equal },
@@ -59,6 +59,105 @@ int FCIntPointWrap::Set_wrap(lua_State* L)
         A->Y = lua_tointeger(L, 3);
     }
     return 0;
+}
+
+int FCIntPointWrap::Add_wrap(lua_State* L)
+{
+    FIntPoint* A = (FIntPoint*)VectorBase_GetAddr(L, 1, "FIntPoint");
+    FIntPoint* B = (FIntPoint*)VectorBase_GetAddr(L, 2, "FIntPoint");
+    if(A && B)
+    {
+        A->X += B->X;
+        A->Y += B->Y;
+    }
+    return 0;
+}
+
+int FCIntPointWrap::Sub_wrap(lua_State* L)
+{
+    FIntPoint* A = (FIntPoint*)VectorBase_GetAddr(L, 1, "FIntPoint");
+    FIntPoint* B = (FIntPoint*)VectorBase_GetAddr(L, 2, "FIntPoint");
+    if (A && B)
+    {
+        A->X -= B->X;
+        A->Y -= B->Y;
+    }
+    return 0;
+}
+
+int FCIntPointWrap::Mul_wrap(lua_State* L)
+{
+    FIntPoint* A = (FIntPoint*)VectorBase_GetAddr(L, 1, "FIntPoint");
+    int B = lua_tointeger(L, 2);
+    if (A)
+    {
+        A->X *= B;
+        A->Y *= B;
+    }
+    return 0;
+}
+
+int FCIntPointWrap::Div_wrap(lua_State* L)
+{
+    FIntPoint* A = (FIntPoint*)VectorBase_GetAddr(L, 1, "FIntPoint");
+    int B = lua_tointeger(L, 2);
+    if (A && B != 0)
+    {
+        A->X /= B;
+        A->Y /= B;
+    }
+    return 0;
+}
+
+int FCIntPointWrap::double_add_wrap(lua_State* L)
+{
+    FIntPoint* A = (FIntPoint*)VectorBase_GetAddr(L, 1, "FIntPoint");
+    FIntPoint* B = (FIntPoint*)VectorBase_GetAddr(L, 2, "FIntPoint");
+    FIntPoint  V;
+    if(A && B)
+    {
+        V.X = A->X + B->X;
+        V.Y = A->X + B->Y;
+    }
+    FCScript::SetArgValue(L, V);
+    return 1;
+}
+
+int FCIntPointWrap::double_sub_wrap(lua_State* L)
+{
+    FIntPoint* A = (FIntPoint*)VectorBase_GetAddr(L, 1, "FIntPoint");
+    FIntPoint* B = (FIntPoint*)VectorBase_GetAddr(L, 2, "FIntPoint");
+    FIntPoint  V;
+    if (A && B)
+    {
+        V.X = A->X - B->X;
+        V.Y = A->X - B->Y;
+    }
+    FCScript::SetArgValue(L, V);
+    return 1;
+}
+
+int FCIntPointWrap::double_mul_wrap(lua_State* L)
+{
+    // Dot ???
+    FIntPoint* A = (FIntPoint*)VectorBase_GetAddr(L, 1, "FIntPoint");
+    FIntPoint* B = (FIntPoint*)VectorBase_GetAddr(L, 2, "FIntPoint");
+    lua_pushinteger(L, A && B ? (A->X * B->X + A->Y * B->Y): 0);
+    return 1;
+}
+
+int FCIntPointWrap::double_div_wrap(lua_State* L)
+{
+    FIntPoint* A = (FIntPoint*)VectorBase_GetAddr(L, 1, "FIntPoint");
+    int B = lua_tointeger(L, 2);
+    FIntPoint  V;
+    if(A && B != 0)
+    {
+        V.X = A->X / B;
+        V.Y = A->Y / B;
+    }
+    FCScript::SetArgValue(L, V);
+    return 1;
 }
 
 int FCIntPointWrap::tostring_wrap(lua_State* L)

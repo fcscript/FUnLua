@@ -7,6 +7,9 @@ public:
     static void Register(lua_State* L);
     static int LibOpen_wrap(lua_State* L);
 
+    static int IsNormalized_wrap(lua_State* L);
+    static int Cross_wrap(lua_State* L);
+
     static int double_add_wrap(lua_State* L);
     static int double_sub_wrap(lua_State* L);
     static int double_mul_wrap(lua_State* L);

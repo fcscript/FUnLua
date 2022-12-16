@@ -18,13 +18,13 @@ int FCVector2Wrap::LibOpen_wrap(lua_State* L)
     {
         { "Set", Vector_SetWrap<FVector2D> },
         { "Normalize", Vector_NormalizeWrap<FVector2D> },
-        { "IsNormalized", Vector_IsNormalizedWrap<FVector2D> },
+        { "IsNormalized", IsNormalized_wrap },
         { "Add", Vector_AddWrap<FVector2D> },
         { "Sub", Vector_SubWrap<FVector2D> },
         { "Mul", Vector_MulWrap<FVector2D> },
         { "Div", Vector_DivWrap<FVector2D> },
         { "Dot", Vector_DotWrap<FVector2D> },
-        { "Cross", Vector_CrossWrap<FVector2D> },
+        { "Cross", Cross_wrap },
         { "Size", Vector_SizeWrap<FVector2D> },
         { "SizeSquared", Vector_SizeSquaredWrap<FVector2D> },
         { "Dist", Vector_DistWrap<FVector2D> },
@@ -55,6 +55,29 @@ int FCVector2Wrap::LibOpen_wrap(lua_State* L)
 
     const char* ClassName = lua_tostring(L, 1);
     GFVector2WrapClass.RegisterLibClass(L, ClassName, LibFuncs, LibAttrib, LibTable);
+    return 1;
+}
+
+int FCVector2Wrap::IsNormalized_wrap(lua_State* L)
+{
+    FVector2D* A = (FVector2D*)VectorBase_GetAddr(L, 1, "FVector2D");
+    if(A)
+    {
+        bool bNormalized = FMath::Abs(1.f - A->SizeSquared()) < THRESH_VECTOR_NORMALIZED;
+        lua_pushboolean(L, bNormalized);
+    }
+    else
+    {
+        lua_pushboolean(L, false);
+    }
+    return 1;
+}
+
+int FCVector2Wrap::Cross_wrap(lua_State* L)
+{
+    FVector2D* A = (FVector2D*)VectorBase_GetAddr(L, 1, "FVector2D");
+    FVector2D* B = (FVector2D*)VectorBase_GetAddr(L, 2, "FVector2D");
+    lua_pushnumber(L, A && B ? (*A ^ *B) : 0);
     return 1;
 }
 

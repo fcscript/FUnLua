@@ -41,20 +41,10 @@ int Vector_GetNormalizedWrap(lua_State* L)
 }
 
 template<class _Ty>
-bool Vector_IsNormalized(_Ty* V)
-{
-	return V->IsNormalized();
-}
-template<> bool Vector_IsNormalized(FVector2D* V)
-{
-	return FMath::Abs(1.f - V->SizeSquared()) < THRESH_VECTOR_NORMALIZED;
-}
-
-template<class _Ty>
 int Vector_IsNormalizedWrap(lua_State* L)
 {
 	_Ty* A = (_Ty*)VectorBase_GetAddr(L, 1);
-	lua_pushboolean(L, A ? Vector_IsNormalized(A) : false);
+	lua_pushboolean(L, A ? A->IsNormalized() : false);
 	return 1;
 }
 
@@ -159,15 +149,6 @@ int Vector_AnyCrossWrap(lua_State* L, const _Ty&Type)
 	return 1;
 }
 
-template <>
-int Vector_AnyCrossWrap(lua_State* L, const FVector2D&)
-{
-	FVector2D* A = (FVector2D*)VectorBase_GetAddr(L, 1);
-	FVector2D* B = (FVector2D*)VectorBase_GetAddr(L, 2);
-	lua_pushnumber(L, A && B ? (*A ^ *B) : 0);
-	return 1;
-}
-
 template <class _Ty>
 int Vector_CrossWrap(lua_State* L)
 {
@@ -197,11 +178,11 @@ float Vector_SizeSquared(_Ty* V)
 {
 	return V->SizeSquared();
 }
-template <>
-float Vector_SizeSquared(FIntVector* V)
-{
-	return V->X * V->X + V->Y * V->Y + V->Z * V->Z;
-}
+//template <>
+//float Vector_SizeSquared(FIntVector* V)
+//{
+//	return V->X * V->X + V->Y * V->Y + V->Z * V->Z;
+//}
 
 template <class _Ty>
 int Vector_SizeSquaredWrap(lua_State* L)
