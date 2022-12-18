@@ -384,6 +384,7 @@ typedef stdext::hash_map<const char *, FCDynamicClassDesc*>   CDynamicClassNameM
 typedef stdext::hash_map<std::string, FDynamicEnum*>   CDynamicEnumNameMap;
 typedef stdext::hash_map<int, FCDynamicClassDesc*>   CDynamicClassIDMap;
 typedef stdext::hash_map<UStruct*, FCDynamicClassDesc*>   CDynamicUStructMap;
+typedef stdext::hash_map<FProperty*, FCDynamicClassDesc*>   CDynamicPropertyMap;
 typedef  stdext::hash_map<lua_State*, int32>   ThreadToRefMap;
 typedef  stdext::hash_map<int32, lua_State*>   RefToThreadMap;
 
@@ -397,6 +398,7 @@ struct FCScriptContext
 	CDynamicClassNameMap  m_ClassFinder;   // name == > class ptr
     CDynamicEnumNameMap   m_EnumNameMap;    // name == > class ptr
 	CDynamicUStructMap    m_StructMap;      // UStruct* ==> class ptr
+    CDynamicPropertyMap   m_PropeytyMap;    // FPropery ==> class ptr
 
     ThreadToRefMap        m_ThreadToRef;
     RefToThreadMap        m_RefToThread;
@@ -410,6 +412,7 @@ struct FCScriptContext
 	
 	FCDynamicClassDesc*  RegisterUClass(const char *UEClassName);
 	FCDynamicClassDesc*  RegisterUStruct(UStruct *Struct);
+    FCDynamicClassDesc*  RegisterByProperty(FProperty *Property);
     FDynamicEnum*        RegisterEnum(const char *InEnumName);
 	void Clear();
 };

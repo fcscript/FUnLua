@@ -103,6 +103,13 @@ struct FCObjRef
 		//	return ThisObjAddr;
 		//}
 	}
+    FCPropertyType GetPropertyType() const
+    {
+        if(RefType != RefFunction)
+            return DynamicProperty->Type;
+        else
+            return FCPROPERTY_Function;
+    }
 	FStructProperty *GetStructProperty() const
 	{
 		if(EFCObjRefType::RefProperty == RefType || EFCObjRefType::RefStructValue == RefType)

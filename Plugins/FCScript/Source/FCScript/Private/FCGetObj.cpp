@@ -159,9 +159,21 @@ int64  FCGetObj::PushChildProperty(FCObjRef* Parent, const FCDynamicProperty* Dy
 		++(itObj->second->Ref);
 		return itObj->second->PtrIndex;
 	}
-	FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
-	FCScriptContext* ScriptContext = GetScriptContext();
-	FCDynamicClassDesc* ClassDesc = ScriptContext->RegisterUStruct(StructProperty->Struct);
+
+    FFieldClass* FieldClass = DynamicProperty->Property->GetClass();
+    uint64 CastFlags = FieldClass->GetCastFlags();
+    uint64 AllFlags = CASTCLASS_FStructProperty;
+    FCDynamicClassDesc* ClassDesc = nullptr;
+    FCScriptContext* ScriptContext = GetScriptContext();
+    if((CastFlags & AllFlags) != 0)
+    {
+        FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
+        ClassDesc = ScriptContext->RegisterUStruct(StructProperty->Struct);
+    }
+    else
+    {
+        ClassDesc = ScriptContext->RegisterByProperty((FProperty*)DynamicProperty->Property);
+    }
 
 	FCObjRef* ObjRef = NewObjRef();
 	ObjRef->Ref = 1;

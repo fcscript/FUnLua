@@ -502,8 +502,7 @@ void  ReadScriptTArray(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* 
 		else if(DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
 		{
 			FArrayProperty* Property = (FArrayProperty*)DynamicProperty->Property;
-			UStruct* Struct = DynamicProperty->Property->GetOwnerStruct();
-			if (ObjRef->ClassDesc && ObjRef->ClassDesc->m_Struct == Struct)
+            if (ObjRef->GetPropertyType() == DynamicProperty->Type)
 			{
                 Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
 			}
@@ -525,8 +524,7 @@ void ReadScriptTMap(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
         else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
         {
             FMapProperty* Property = (FMapProperty*)DynamicProperty->Property;
-            UStruct* Struct = DynamicProperty->Property->GetOwnerStruct();
-            if (ObjRef->ClassDesc && ObjRef->ClassDesc->m_Struct == Struct)
+            if (ObjRef->GetPropertyType() == DynamicProperty->Type)
             {
                 //Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
                 Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
@@ -549,8 +547,7 @@ void ReadScriptTSet(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
         else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
         {
             FSetProperty* Property = (FSetProperty*)DynamicProperty->Property;
-            UStruct* Struct = DynamicProperty->Property->GetOwnerStruct();
-            if (ObjRef->ClassDesc && ObjRef->ClassDesc->m_Struct == Struct)
+            if (ObjRef->GetPropertyType() == DynamicProperty->Type)
             {
                 //Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
                 Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
