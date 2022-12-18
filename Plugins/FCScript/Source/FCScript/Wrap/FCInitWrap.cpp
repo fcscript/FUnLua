@@ -20,11 +20,13 @@
 #include "FCQuatWrap.h"
 #include "FCRotatorWrap.h"
 #include "FCTransformWrap.h"
+#include "FCClassWrap.h"
 
 
 void FCInitWrap::Register(lua_State* L)
 {
 	FCUObjectWrap::Register(L);
+    FCClassWrap::Register(L);
 	FCUEUtilWrap::Register(L);
 	FCDelegateWrap::Register(L);
 	FCMulticastDelegateWrap::Register(L);

@@ -107,13 +107,15 @@ struct  FCDynamicFunction : public FCDynamicField
 	int     ReturnPropertyIndex;
 	int     ParmsSize;        // 参数序列化后的字节大小
 	int     ParamCount;       // 函数参数个数(不包括返回值)
+    int     OuterParamCount;  // 
+    int     OuterParamSize;
 	bool    bOverride;
 	bool    bOuter;
 	bool    bRegister;        // 是不是在类中注册了
 	bool    bDelegate;
 	std::string Name;        // 函数名
 	std::vector<FCDynamicProperty>   m_Property;
-	FCDynamicFunction():Function(nullptr), LatentPropertyIndex(-1), ReturnPropertyIndex(-1), ParmsSize(0), ParamCount(0), bOverride(false), bOuter(false), bRegister(false), bDelegate(false)
+	FCDynamicFunction():Function(nullptr), LatentPropertyIndex(-1), ReturnPropertyIndex(-1), ParmsSize(0), ParamCount(0), OuterParamCount(0), OuterParamSize(0), bOverride(false), bOuter(false), bRegister(false), bDelegate(false)
 	{
 	}
 	void  InitParam(UFunction *InFunction);

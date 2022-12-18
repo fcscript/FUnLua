@@ -31,6 +31,8 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
 	bOuter = false;
 	int Index = 0;
 	ParamCount = 0;
+    OuterParamCount = 0;
+    OuterParamSize = 0;
 	for (TFieldIterator<FProperty> It(InFunction); It && (It->PropertyFlags & CPF_Parm); ++It, ++Index)
 	{
 		FProperty *Property = *It;
@@ -43,6 +45,8 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
 		if(FCProperty->bOuter)
 		{
 			bOuter = true;
+            ++OuterParamCount;
+            OuterParamSize += Property->ElementSize;
 		}
         if(LatentPropertyIndex == -1)
         {

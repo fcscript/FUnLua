@@ -625,6 +625,16 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     const FCDynamicProperty* DynamicProperty = BeginProperty;
     uint8* Frame = Buffer;
     int nAllBuffSize = Function->PropertiesSize + Function->ParmsSize;
+    int OuterAddrOffset = nAllBuffSize;
+    int OutParmRecOffset = OuterAddrOffset + DynamicFunc->OuterParamSize;
+    int OuterIndesOffset = 0;
+    if(DynamicFunc->bOuter)
+    {
+        nAllBuffSize += DynamicFunc->OuterParamSize + sizeof(FOutParmRec) * DynamicFunc->OuterParamCount;
+        OuterIndesOffset = nAllBuffSize;
+        nAllBuffSize += sizeof(short) * DynamicFunc->OuterParamCount;
+        nAllBuffSize += sizeof(FOutParmRec);  // 多加一个吧，以免越界
+    }
     if (nAllBuffSize > BufferSize)
     {
         Frame = (uint8*)FMemory_Alloca(nAllBuffSize);
@@ -634,7 +644,11 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     int Index = ParamIndex;
     uint8  *Locals = Buffer;
     uint8  *ValueAddr = Locals;
+    uint8  *OuterAddr = Locals + OuterAddrOffset;
+    FOutParmRec* FristOuterParms = (FOutParmRec*)(Locals + OutParmRecOffset);
+    FOutParmRec* OuterParms = FristOuterParms;
     int LatentPropertyIndex = DynamicFunc->LatentPropertyIndex;
+    short *OuterIndexs = (short *)(Locals + OuterIndesOffset);
     // 将脚本参数传给UE的函数
     for (; DynamicProperty < EndProperty; ++DynamicProperty, ++Index)
     {
@@ -647,6 +661,22 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
             DynamicProperty->Property->CopySingleValue(ValueAddr, &LatentActionInfo);
         }
         DynamicProperty->m_ReadScriptFunc(L, Index, DynamicProperty, ValueAddr, nullptr, nullptr);
+
+        if(DynamicProperty->bOuter)
+        {
+            *OuterIndexs++ = Index - ParamIndex;
+            //DynamicProperty->Property->InitializeValue(OuterAddr);
+            OuterParms->NextOutParm = nullptr;
+            OuterParms->Property = (FProperty*)DynamicProperty->Property;
+            OuterParms->PropAddr = ValueAddr;
+            //OuterParms->PropAddr = OuterAddr;
+            //OuterAddr += DynamicProperty->Property->ElementSize;
+            if(OuterParms != FristOuterParms)
+            {
+                (OuterParms-1)->NextOutParm = OuterParms;
+            }
+            ++OuterParms;
+        }
     }
 
     if (DynamicFunc->ReturnPropertyIndex >= 0)
@@ -659,6 +689,14 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     FFrame NewStack(ThisObject, Function, Frame, NULL, GetChildProperties(Function));
     const bool bHasReturnParam = Function->ReturnValueOffset != MAX_uint16;
     uint8* ReturnValueAddress = bHasReturnParam ? ((uint8*)Frame + Function->ReturnValueOffset) : nullptr;
+    if(DynamicFunc->bOuter && FristOuterParms->Property)
+    {
+        NewStack.OutParms = FristOuterParms;
+    }
+    else
+    {
+        FristOuterParms = nullptr;
+    }
     if(NativeFuncPtr)
     {
         NativeFuncPtr(ThisObject, NewStack, ReturnValueAddress);
@@ -667,10 +705,13 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     {
         //Function->Invoke(ThisObject, NewStack, ReturnValueAddress);
         if(ThisObject)
-            ThisObject->UObject::ProcessEvent(Function, Frame);
+        {
+            //ThisObject->UObject::ProcessEvent(Function, Frame);
+            Function->Invoke(ThisObject, NewStack, ReturnValueAddress);
+        }
         else
         {
-            NativeFuncPtr = DynamicFunc->Function->GetNativeFunc();
+            NativeFuncPtr = Function->GetNativeFunc();
             if(NativeFuncPtr)
                 NativeFuncPtr(ThisObject, NewStack, ReturnValueAddress);
         }
@@ -690,18 +731,17 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     }
 
     // 拷贝返回给脚本的变量, lua不支持修改栈上输入的参数, 只能通过多个参数返回
-    if (DynamicFunc->bOuter)
+    OuterParms = FristOuterParms;
+    OuterIndexs = (short*)(Locals + OuterIndesOffset);
+    while(OuterParms)
     {
-        DynamicProperty = BeginProperty;
-        for (; DynamicProperty < EndProperty; ++DynamicProperty)
-        {
-            if (DynamicProperty->bOuter)
-            {
-                ValueAddr = Locals + DynamicProperty->Offset_Internal;
-                DynamicProperty->m_WriteScriptFunc(L, DynamicProperty, ValueAddr, nullptr, nullptr);
-                ++RetCount;
-            }
-        }
+        ValueAddr = OuterParms->PropAddr;
+        Index = *OuterIndexs++;
+        DynamicProperty = BeginProperty + Index;
+        if (!DynamicProperty->Property->HasAnyPropertyFlags(CPF_ConstParm))
+            DynamicProperty->m_WriteScriptFunc(L, DynamicProperty, ValueAddr, nullptr, nullptr);
+        //DynamicProperty->Property->DestroyValue(ValueAddr);
+        OuterParms = OuterParms->NextOutParm;
     }
 
     // 释放临时变量

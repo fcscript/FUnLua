@@ -333,17 +333,28 @@ bool GlbTryLoadLuaFile(lua_State* L, const char* ModuleName)
         }
     }
 
+    FString  FileName(UTF8_TO_TCHAR(ModuleName));
+    FileName.ReplaceCharInline('.', '/');
+
     FString  ScriptPath = FPaths::ProjectContentDir();
     ScriptPath += TEXT("Script/");
-    ScriptPath += UTF8_TO_TCHAR(ModuleName);
-    //ScriptPath.Replace(TEXT("."), TEXT("/"));
-    ScriptPath.ReplaceCharInline('.', '/');
+    ScriptPath += FileName;
     ScriptPath += TEXT(".lua");
 
     TArray<uint8> Data;
     if (FFileHelper::LoadFileToArray(Data, *ScriptPath, 0))
     {
         return GlobDoRequireFileData(L, ModuleName, Data);
+    }
+    else
+    {
+        ScriptPath = FPaths::ProjectContentDir();
+        ScriptPath += FileName;
+        ScriptPath += TEXT(".lua");
+        if (FFileHelper::LoadFileToArray(Data, *ScriptPath, 0))
+        {
+            return GlobDoRequireFileData(L, ModuleName, Data);
+        }
     }
     return false;
 }

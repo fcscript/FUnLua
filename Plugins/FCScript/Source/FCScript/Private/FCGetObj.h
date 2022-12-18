@@ -45,7 +45,7 @@ struct FCObjRef
 	union
 	{
 		uint8     *ThisObjAddr;    // 对象自己的地址
-		int        PropertyOffset;  // 属性位移
+		//int        PropertyOffset;  // 属性位移
 	};
 	int        Ref;             // 引用计数
 	EFCObjRefType  RefType;
@@ -78,15 +78,7 @@ struct FCObjRef
 	}
 	uint8* GetThisAddr() const
 	{
-		if (Parent && RefType != EFCObjRefType::RefFunction)
-		{
-			uint8* ParentPropertyAddr = Parent->ThisObjAddr;  // 不要递归
-			return ParentPropertyAddr ? (ParentPropertyAddr + PropertyOffset) : nullptr;
-		}
-		else
-		{
-			return (uint8*)ThisObjAddr;
-		}		
+        return ThisObjAddr;
 	}
 	bool IsValid() const
 	{
@@ -94,20 +86,22 @@ struct FCObjRef
 	}
 	uint8*GetPropertyAddr()
 	{
-		if(Parent)
-		{
-			uint8*ParentPropertyAddr = Parent->ThisObjAddr;
-			if(Parent->DynamicProperty && FCPROPERTY_Array == Parent->DynamicProperty->Type)
-			{
-				FScriptArray* ScriptArray = (FScriptArray*)ThisObjAddr;
-				ParentPropertyAddr = (uint8*)ScriptArray->GetData();
-			}
-			return ParentPropertyAddr ? (ParentPropertyAddr + PropertyOffset) : nullptr;
-		}
-		else
-		{
-			return ThisObjAddr;
-		}
+        return ThisObjAddr;
+		//if(Parent)
+		//{
+		//	uint8*ParentPropertyAddr = Parent->ThisObjAddr;
+		//	if(Parent->DynamicProperty && FCPROPERTY_Array == Parent->DynamicProperty->Type)
+		//	{
+		//		FScriptArray* ScriptArray = (FScriptArray*)ThisObjAddr;
+		//		ParentPropertyAddr = (uint8*)ScriptArray->GetData();
+  //              return ParentPropertyAddr ? (ParentPropertyAddr + PropertyOffset) : nullptr;
+		//	}
+  //          return ThisObjAddr;
+		//}
+		//else
+		//{
+		//	return ThisObjAddr;
+		//}
 	}
 	FStructProperty *GetStructProperty() const
 	{
@@ -155,6 +149,7 @@ public:
 	int64  PushChildProperty(FCObjRef *Parent, const FCDynamicProperty* DynamicProperty, void* pValueAddr);
 	// 功能：压入一个纯Struct对象(没有父对象，一般是临时的)
 	int64  PushStructValue(const FCDynamicProperty *DynamicProperty, void *pValueAddr);
+    int64  PushNewTArray(const FCDynamicProperty* DynamicProperty, void* pValueAddr);
 	// 功能：将一个Cpp栈上的临时变量压入到对象管理器
 	int64  PushCppPropery(const FCDynamicProperty* DynamicProperty, void* pValueAddr);
 	int64  PushTemplate(const FCDynamicProperty *DynamicProperty, void *pValueAddr, EFCObjRefType RefType);

@@ -171,12 +171,14 @@ typedef stdext::hash_map<UStruct*, FCDynamicProperty*> CStructDynamicPropertyMap
 typedef stdext::hash_map<FProperty*, FCDynamicProperty*> CPropertyDynamicPropertyMap;
 typedef stdext::hash_map<const char*, FCDynamicProperty*> CCppDynamicPropertyMap;
 typedef stdext::hash_map<const char*, char*> CCppName2NameMap;
+typedef stdext::hash_map<const FProperty*, bool> CPropertyBaseCopyTypeMap; // base type(bool, int8, int16, int32, float, double), can memory copy
 CInnerTypeMap            GInnerTypeMap;
 CTemplatePropertyNameMap GClassPropertyNameMap;
 CStructDynamicPropertyMap GStructDynamicPropertyMap;
 CPropertyDynamicPropertyMap GPropertyDynamicPropertyMap;
 CCppDynamicPropertyMap      GCppDynamicPropertyMap;
 CCppName2NameMap            GCppName2NameMap;
+CPropertyBaseCopyTypeMap    GPropertyBaseCopyTypeMap;
 
 FCInnerBaseType GetInnerType(const char *InClassName)
 {
@@ -467,6 +469,8 @@ void ReleaseTempalteProperty()
 	ReleasePtrMap(GPropertyDynamicPropertyMap);
 	ReleasePtrMap(GCppDynamicPropertyMap);
 
+    GPropertyBaseCopyTypeMap.clear();
+
 	GScriptStruct = nullptr;
 }
 
@@ -519,4 +523,29 @@ void TSet_Clear(FScriptSet* ScriptMap, FSetProperty* SetProperty)
         }
     }
     ScriptMap->Empty(0, SetLayout);
+}
+
+bool IsBaseTypeCopy(const FProperty *InPropery)
+{
+    CPropertyBaseCopyTypeMap::iterator itFind = GPropertyBaseCopyTypeMap.find(InPropery);
+    if(itFind != GPropertyBaseCopyTypeMap.end())
+    {
+        return itFind->second;
+    }
+    FFieldClass *FieldClass = InPropery->GetClass();
+    uint64 CastFlags = FieldClass->GetCastFlags();
+    uint64 AllBaseFlags = CASTCLASS_FInt8Property
+        | CASTCLASS_FByteProperty
+        | CASTCLASS_FBoolProperty
+        | CASTCLASS_FInt16Property
+        | CASTCLASS_FUInt16Property
+        | CASTCLASS_FIntProperty
+        | CASTCLASS_FUInt32Property
+        | CASTCLASS_FInt64Property
+        | CASTCLASS_FUInt64Property
+        | CASTCLASS_FFloatProperty
+        | CASTCLASS_FDoubleProperty;
+    bool bBaseType = (CastFlags & AllBaseFlags) != 0;
+    GPropertyBaseCopyTypeMap[InPropery] = bBaseType;
+    return bBaseType;
 }

@@ -1,6 +1,7 @@
 #include "FCGetObj.h"
 #include "FCTemplateType.h"
 #include "FCCallScriptFunc.h"
+#include "FCTArrayHelper.h"
 
 FCGetObj* FCGetObj::s_Ins = nullptr;
 
@@ -148,9 +149,7 @@ int64  FCGetObj::PushProperty(UObject *Parent, const FCDynamicProperty *DynamicP
 int64  FCGetObj::PushChildProperty(FCObjRef* Parent, const FCDynamicProperty* DynamicProperty, void* pValueAddr)
 {
 	uint8  *ParentAddr = Parent->GetKeyAddr();
-	uint8  *CurValueAddr = (uint8 *)pValueAddr;
-	int64  PropertyOffset = CurValueAddr - ParentAddr;
-	ObjRefKey  ObjKey(ParentAddr, (const void*)(PropertyOffset));
+	ObjRefKey  ObjKey(ParentAddr, (const void*)(pValueAddr));
 
 	CScriptRefObjMap::iterator itObj = m_ObjMap.find(ObjKey);
 	if (itObj != m_ObjMap.end())
@@ -169,7 +168,7 @@ int64  FCGetObj::PushChildProperty(FCObjRef* Parent, const FCDynamicProperty* Dy
 	ObjRef->ClassDesc = ClassDesc;
 	ObjRef->PtrIndex = ++m_nObjID;
 	ObjRef->DynamicProperty = (FCDynamicProperty*)DynamicProperty;
-	ObjRef->PropertyOffset = PropertyOffset;
+	ObjRef->ThisObjAddr = (uint8*)pValueAddr;
 	m_ObjMap[ObjKey] = ObjRef;
 	m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
 
@@ -216,6 +215,21 @@ int64  FCGetObj::PushStructValue(const FCDynamicProperty *DynamicProperty, void 
 	m_ObjMap[ObjKey] = ObjRef;
 	m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
 	return ObjRef->PtrIndex;
+}
+
+int64  FCGetObj::PushNewTArray(const FCDynamicProperty* DynamicProperty, void* pValueAddr)
+{
+    FArrayProperty* ArrayProperty = (FArrayProperty*)DynamicProperty->Property;
+
+    FScriptArray* ScriptArray = new FScriptArray();
+    int64 ObjID = PushTemplate(DynamicProperty, ScriptArray, EFCObjRefType::NewTArray);
+
+    FScriptArray* SrcScriptArray = (FScriptArray*)pValueAddr;
+    // 拷贝吧
+    FCTArrayHelper  ArrayHelper(ScriptArray, DynamicProperty);
+    ArrayHelper.CopyArray(SrcScriptArray);
+
+    return ObjID;
 }
 
 int64  FCGetObj::PushCppPropery(const FCDynamicProperty* DynamicProperty, void* pValueAddr)

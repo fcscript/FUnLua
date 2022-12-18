@@ -108,4 +108,7 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FOnHttpResponseMessage OnResponseMessage;
+
+    UPROPERTY(BlueprintReadWrite, EditAnywhere)
+    FTestAvatarSystemInitParams   AvatarParams;
 };

@@ -228,7 +228,7 @@ void  PushScriptTArray(lua_State* L, const FCDynamicPropertyBase* DynamicPropert
 	}
 	else
 	{
-		ObjID = FCGetObj::GetIns()->PushStructValue((const FCDynamicProperty*)DynamicProperty, ValueAddr);
+		ObjID = FCGetObj::GetIns()->PushNewTArray((const FCDynamicProperty*)DynamicProperty, ValueAddr);
 	}
 	FCScript::PushBindObjRef(L, ObjID, DynamicProperty->GetClassName());
 }

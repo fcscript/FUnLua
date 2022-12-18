@@ -31,6 +31,8 @@ void FCUEUtilWrap::Register(lua_State* L)
 
     lua_register(L, "NewObject", NewObject_wrap);
     lua_register(L, "SpawActor", SpawActor_wrap);
+    lua_register(L, "LoadObject", LoadObject_wrap);
+    lua_register(L, "LoadClass", LoadClass_wrap);
     lua_register(L, "LoadUserWidget", LoadUserWidget_wrap);
     lua_register(L, "GetBindObjectCount", GetBindObjectCount_wrap);
     lua_register(L, "GetTotalObjRef", GetTotalObjRef_wrap);
@@ -257,18 +259,56 @@ int FCUEUtilWrap::DoGetStaticClass_wrap(lua_State* L, void* ObjRefPtr, UObject* 
     return 1;
 }
 
+FCDynamicClassDesc *UEUtil_FindClassDesc(const char *ClassName)
+{
+    if(!ClassName)
+        return nullptr;
+    FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUClass(ClassName);
+    if (!ClassDesc)
+    {
+        std::string  InClassName(ClassName);
+        int Index = InClassName.rfind('.');
+        if (Index < 0)
+        {
+            Index = InClassName.rfind('/');
+            if (Index >= 0)
+            {
+                std::string Name = InClassName.substr(Index + 1);
+                InClassName += '.';
+                InClassName += Name;
+            }
+        }
+        int Len = InClassName.size();
+        if (!(Len > 2 && InClassName[Len - 1] == 'C' && InClassName[Len - 2] == '_'))
+        {
+            InClassName += "_C";
+        }
+        ClassDesc = GetScriptContext()->RegisterUClass(InClassName.c_str());
+    }
+    return ClassDesc;
+}
+
 int FCUEUtilWrap::NewObject_wrap(lua_State* L)
 {
-    UObject* InObject = FCScript::GetUObject(L, 1);
-    UObject* Outer = InObject;
-	if(!Outer)
-	{
-		Outer = GetTransientPackage();
-	}
-	const char* UEClassName = lua_tostring(L, 2);
-    const char* ScriptClassName = lua_tostring(L, 3);
-    const char* ObjectName = lua_tostring(L, 4);
-	FCDynamicClassDesc *ClassDesc = GetScriptContext()->RegisterUClass(UEClassName);
+    FCDynamicClassDesc* ClassDesc = nullptr;
+    int Type = lua_type(L, 1);
+    if(Type == LUA_TSTRING)
+    {
+        const char* UEClassName = lua_tostring(L, 1);
+        ClassDesc = UEUtil_FindClassDesc(UEClassName);
+    }
+    else
+    {
+        UObject* Arg1 = FCScript::GetUObject(L, 1);
+        UStruct *ObjStruct = Cast<UStruct>(Arg1);
+        ClassDesc = GetScriptContext()->RegisterUStruct(ObjStruct);
+    }
+
+    UObject* Arg2 = FCScript::GetUObject(L, 2);
+    UObject* Outer = Arg2 ? Arg2 : GetTransientPackage();
+
+    const char* ObjectName = lua_tostring(L, 3);
+    const char* ScriptClassName = lua_tostring(L, 4);
 	if(ClassDesc)
 	{
 		FName  Name(NAME_None);
@@ -276,17 +316,61 @@ int FCUEUtilWrap::NewObject_wrap(lua_State* L)
 		{
 			Name = FName((const TCHAR*)ObjectName);
         }
-        FCGetObj::GetIns()->PushNewObject(ClassDesc, Name, Outer);
-        if(InObject)
+        int64  ObjID = FCGetObj::GetIns()->PushNewObject(ClassDesc, Name, Outer);
+        if(ScriptClassName && ScriptClassName[0] != 0)
         {
-            FFCObjectdManager::GetSingleIns()->CallBindScript(InObject, ScriptClassName);
+            UObject* Object = FCGetObj::GetIns()->GetUObject(ObjID);
+            FFCObjectdManager::GetSingleIns()->CallBindScript(Object, ScriptClassName);
         }
+        FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+        return 1;
 	}
-	return 0;
+    lua_pushnil(L);
+	return 1;
 }
 int FCUEUtilWrap::SpawActor_wrap(lua_State* L)
 {
 	return NewObject_wrap(L);
+}
+
+// UObject.Load("/Game/Core/Blueprints/AI/BehaviorTree_Enemy.BehaviorTree_Enemy")
+int FCUEUtilWrap::LoadObject_wrap(lua_State* L)
+{
+    const char* ObjectName = lua_tostring(L, 1);
+    if (!ObjectName)
+    {
+        return 0;
+    }
+
+    FString ObjectPath(ObjectName);
+    int32 Index = INDEX_NONE;
+    ObjectPath.FindChar(TCHAR('.'), Index);
+    if (Index == INDEX_NONE)
+    {
+        ObjectPath.FindLastChar(TCHAR('/'), Index);
+        if (Index != INDEX_NONE)
+        {
+            const FString Name = ObjectPath.Mid(Index + 1);
+            ObjectPath += TCHAR('.');
+            ObjectPath += Name;
+        }
+    }
+    UObject* Object = LoadObject<UObject>(nullptr, *ObjectPath);
+    FCScript::PushUObject(L, Object);
+    return 1;
+}
+
+// UClass.Load("/Game/Core/Blueprints/AICharacter.AICharacter_C")
+int FCUEUtilWrap::LoadClass_wrap(lua_State* L)
+{
+    const char* ClassName = lua_tostring(L, 1);
+    if (!ClassName)
+    {
+        return 0;
+    }
+    FCDynamicClassDesc* ClassDesc = UEUtil_FindClassDesc(ClassName);
+    FCScript::PushUObject(L, ClassDesc ? ClassDesc->m_Struct : nullptr);
+    return 1;
 }
 
 int FCUEUtilWrap::LoadUserWidget_wrap(lua_State* L)

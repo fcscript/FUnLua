@@ -90,3 +90,5 @@ void TArray_Clear(FScriptArray *ScriptArray, FProperty *Inner);
 void TMap_Clear(FScriptMap* ScriptMap, FMapProperty* MapProperty);
 
 void TSet_Clear(FScriptSet* ScriptMap, FSetProperty* SetProperty);
+
+bool IsBaseTypeCopy(const FProperty *InPropery);

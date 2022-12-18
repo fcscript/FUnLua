@@ -15,6 +15,8 @@ function UMG_Profile:Construct()
     self:BindButton(self.ArrayInt, self.OnClickArrayInt)
     self:BindButton(self.ArrayByte, self.OnClickArrayByte)
     self:BindButton(self.ArrayStr, self.OnClickArrayStr)
+    
+    self:BindButton(self.Other, self.DoOther)
 end
 
 function UMG_Profile:BindButton(button, func)
@@ -140,6 +142,22 @@ function UMG_Profile:OnClickArrayStr()
     end
     self:DoArrayGet("ArrayStr", testArray)
     self:DoArraySet("ArrayStr", testArray, "aaa")
+end
+
+function UMG_Profile:DoOther()
+    local AvatarClass = UClass.Load("UFCTest")
+    local obj = NewObject(AvatarClass)
+    local objAvatar = obj.AvatarParams
+    local ProfileFrame = require "Script.ProfileFrame"
+    local world = self:GetWorld()
+    print("[ProfileFrame]UnLua------------------")
+    ProfileFrame.DoStruct(world, objAvatar)
+    
+    obj.HP = 101
+    ProfileFrame.GetHP(obj)
+    ProfileFrame.NotifyAll(obj)
+    ProfileFrame.SetIDList(obj)
+    print("[ProfileFrame]UnLua------------------")
 end
 
 return UMG_Profile

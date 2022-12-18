@@ -5,8 +5,7 @@ UEPrint("[Unlua]UnluaEntryPointer is required")
 local UnluaEntryPointer = LuaUnrealClass()
 
 function UnluaEntryPointer:Construct()
-    UEPrint("[Unlua]UnluaEntryPointer:Construct")
-
+    UEPrint("[Unlua]UnluaEntryPointer:Construct")    
 end
 
 function UnluaEntryPointer:Destruct()
@@ -18,7 +17,7 @@ function UnluaEntryPointer:ReceiveBeginPlay()
     local world = self:GetWorld()
     local UIManager = require "UnLua.Script.UI.UIManager"
 	local ClassName = "/Game/UnLua/UI/UMG/UMG_MainPanel"    
-    UIManager.OpenPanel(world, ClassName)
+    UIManager.OpenPanel(world, ClassName)    
 end
 
 return UnluaEntryPointer

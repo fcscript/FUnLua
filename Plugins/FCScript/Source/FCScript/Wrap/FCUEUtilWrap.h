@@ -25,6 +25,8 @@ public:
 
 	static int NewObject_wrap(lua_State* L);
     static int SpawActor_wrap(lua_State* L);
+    static int LoadObject_wrap(lua_State* L);
+    static int LoadClass_wrap(lua_State* L);
     static int LoadUserWidget_wrap(lua_State* L);
     static int GetBindObjectCount_wrap(lua_State* L);
     static int GetTotalObjRef_wrap(lua_State* L);

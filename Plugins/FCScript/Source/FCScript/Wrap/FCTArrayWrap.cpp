@@ -1,6 +1,7 @@
 #include "FCTArrayWrap.h"
 #include "Containers/ScriptArray.h"
 #include "FCTemplateType.h"
+#include "FCTArrayHelper.h"
 
 #include "FCObjectManager.h"
 #include "FCGetObj.h"
@@ -294,67 +295,6 @@ int  TArrayWrap_Add(lua_State* L, FCObjRef* ObjRef, int Idx)
 	}
 	return Index;
 }
-
-struct TArrayCacheValue
-{
-	uint8 Buffer[64];
-	uint8* ElementCache;
-	FScriptArray* ScriptArray;
-	FCDynamicProperty* ElementProperty;
-	FProperty* Inner;
-	bool   bValid;
-	TArrayCacheValue()
-	{
-		ElementCache = ElementCache;
-		ScriptArray = nullptr;
-		ElementProperty = nullptr;
-		Inner = nullptr;
-		bValid = false;
-	}
-	bool  ReadValue(lua_State* L, FCObjRef* ObjRef, int Idx)
-	{
-		bValid = false;
-		if (Inner)
-		{
-			Inner->DestroyValue(ElementCache);
-		}
-		if (ObjRef && ObjRef->DynamicProperty)
-		{
-			if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
-			{
-				ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-				FArrayProperty* ArrayProperty = (FArrayProperty*)ObjRef->DynamicProperty->Property;
-				Inner = ArrayProperty->Inner;
-
-				int ElementSize = Inner->GetSize();
-				int Alignment = Inner->GetMinAlignment();
-				if (Alignment < sizeof(void*))
-					Alignment = sizeof(void*);
-				if (ElementSize > 64)
-				{
-					ElementCache = (uint8*)FMemory::Malloc(ElementSize, Alignment);
-				}
-				ArrayProperty->InitializeValue(ElementCache);
-
-				ElementProperty = GetDynamicPropertyByUEProperty(Inner);
-				ElementProperty->m_ReadScriptFunc(L, Idx, ElementProperty, ElementCache, NULL, ObjRef);
-				bValid = true;
-			}
-		}
-		return bValid;
-	}
-	~TArrayCacheValue()
-	{
-		if (Inner)
-		{
-			Inner->DestroyValue(ElementCache);
-		}
-		if (ElementCache != Buffer)
-		{
-			FMemory::Free(ElementCache);
-		}
-	}
-};
 
 int TArrayWrap_Find(lua_State* L, FCObjRef* ObjRef, int Idx)
 {

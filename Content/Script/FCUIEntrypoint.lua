@@ -3,7 +3,12 @@ local UIManager = require "UIManager"
 
 local FCUIEntrypoint = {}
 
-function FCUIEntrypoint:ReceiveBeginPlay()
+function FCUIEntrypoint:ReceiveBeginPlay()	
+    local AvatarClass = UClass.Load("UFCTest")
+    local obj = NewObject(AvatarClass)
+    local objAvatar = obj.AvatarParams	
+	objAvatar.BoneAdjustItem.SlotName = "abc"
+
 	local a = TArray("int")
 	a:Add(1)
 	a:Add(2)
