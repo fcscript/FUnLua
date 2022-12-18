@@ -14,6 +14,13 @@ end
 
 function UnluaEntryPointer:ReceiveBeginPlay()
     UEPrint("[Unlua]UnluaEntryPointer:ReceiveBeginPlay")
+    local AvatarClass = UClass.Load("UFCTest")
+    local obj = NewObject(AvatarClass)
+    
+	local map = TMap(_G.int32, _G.int32)
+	obj:SetIDMap(map)
+	obj:SetIDMap(map)
+
     local world = self:GetWorld()
     local UIManager = require "UnLua.Script.UI.UIManager"
 	local ClassName = "/Game/UnLua/UI/UMG/UMG_MainPanel"    

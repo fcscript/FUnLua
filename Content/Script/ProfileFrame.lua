@@ -61,7 +61,17 @@ function ProfileFrame.DoStruct(world, avatarParam)
     end
     local costTime = os.clock() - StartTime
 
-    ProfileFrame.PrintInfo(world, "[ProfileFrame]set struct member, cost time:", costTime, ",slotName:", avatarParam.BoneAdjustItem.SlotName)
+    ProfileFrame.PrintInfo(world, "[ProfileFrame]set struct member child, cost time:", costTime, ",slotName:", avatarParam.BoneAdjustItem.SlotName)
+end
+
+function ProfileFrame.DoStructOne(world, avatarParam)    
+    local StartTime = os.clock()
+    for i = 1, 100000 do
+        avatarParam.MaleFaceConfigPath = "abc"
+    end
+    local costTime = os.clock() - StartTime
+
+    ProfileFrame.PrintInfo(world, "[ProfileFrame]set struct member one, cost time:", costTime, ",MaleFaceConfigPath:", avatarParam.BoneAdjustItem.SlotName)
 end
 
 return ProfileFrame

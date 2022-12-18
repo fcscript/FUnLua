@@ -150,6 +150,8 @@ public:
 	// 功能：压入一个纯Struct对象(没有父对象，一般是临时的)
 	int64  PushStructValue(const FCDynamicProperty *DynamicProperty, void *pValueAddr);
     int64  PushNewTArray(const FCDynamicProperty* DynamicProperty, void* pValueAddr);
+    int64  PushNewTMap(const FCDynamicProperty* DynamicProperty, void* pValueAddr);
+    int64  PushNewTSet(const FCDynamicProperty* DynamicProperty, void* pValueAddr);
 	// 功能：将一个Cpp栈上的临时变量压入到对象管理器
 	int64  PushCppPropery(const FCDynamicProperty* DynamicProperty, void* pValueAddr);
 	int64  PushTemplate(const FCDynamicProperty *DynamicProperty, void *pValueAddr, EFCObjRefType RefType);

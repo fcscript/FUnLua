@@ -12,15 +12,31 @@ function FCUIEntrypoint:ReceiveBeginPlay()
 	local a = TArray("int")
 	a:Add(1)
 	a:Add(2)
-	-- local len = a:Length()
-	local len = #a
-	for i = 1, len do
-		print("[FCTestScript]a:", a:Get(i))
+	a:Add(201)
+	a:Add(501)
+
+	local map = TMap("int", "int")
+	map:Add(1, 10)
+	map:Add(2, 20)
+
+	local it = map:begin()
+	while(it:IsValid()) do
+		print("[FCTestScript]map,key=", it.key, ",value=", it.value)
+		it:ToNext()
 	end
-	
-	local b = TArray("int")
-	b:Add(1)
-	b:Add(2)
+
+	obj.IDMap = map
+	obj:SetIDMap(map)
+
+	local b = obj:GetIDList()
+	-- local len = a:Length()
+	print("[FCTestScript]b=", b)
+	if b then
+		local len = #b
+		for i = 1, len do
+			print("[FCTestScript]b:", b:Get(i))
+		end	
+	end
 
 	local Name = self:GetName()
 	local world = self:GetWorld()

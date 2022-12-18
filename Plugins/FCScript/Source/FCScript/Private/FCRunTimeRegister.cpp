@@ -292,13 +292,20 @@ int Global_RegisterEnum(lua_State* L)
     {
         return 0;
     }
-    const char* pcsEnumName = lua_tostring(L, 1);
-    int32 Type = luaL_getmetatable(L, pcsEnumName);
+    const char* ClassName = lua_tostring(L, 1);
+    GlbRegisterEnum(L, ClassName);
+    return 0;
+}
+
+void GlbRegisterEnum(lua_State* L, const char* ClassName)
+{
+    const FDynamicEnum* EnumClass = GetScriptContext()->RegisterEnum(ClassName);
+    if(!EnumClass)
+        return ;
+    int32 Type = luaL_getmetatable(L, ClassName);
     if (Type != LUA_TTABLE)
     {
-        const FDynamicEnum* EnumClass = GetScriptContext()->RegisterEnum(pcsEnumName);
-
-        luaL_newmetatable(L, pcsEnumName);
+        luaL_newmetatable(L, ClassName);
 
         lua_pushstring(L, "__index");
         lua_pushcfunction(L, Enum_Index);
@@ -313,13 +320,12 @@ int Global_RegisterEnum(lua_State* L)
         lua_pushvalue(L, -1);               // set metatable to self
         lua_setmetatable(L, -2);
 
-        SetTableForClass(L, pcsEnumName);
+        SetTableForClass(L, ClassName);
     }
     lua_pop(L, 1);
-    return 0;
 }
 
-bool  GlbRegisterClass(lua_State* L, const char* ClassName)
+bool GlbReigterClassEx(lua_State* L, FCDynamicClassDesc* ClassDesc, const char* ClassName)
 {
     int32 Type = luaL_getmetatable(L, ClassName);
     lua_pop(L, 1);
@@ -327,8 +333,6 @@ bool  GlbRegisterClass(lua_State* L, const char* ClassName)
     {
         return true;
     }
-
-    FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUClass(ClassName);
     if (!ClassDesc)
     {
         // 为免存泄露，也需要创建一个
@@ -402,9 +406,9 @@ bool  GlbRegisterClass(lua_State* L, const char* ClassName)
         UClass* Class = ClassDesc->m_Class;
         if (Class != UObject::StaticClass() && Class != UClass::StaticClass())
         {
-            lua_pushstring(L, "ClassDesc");                 // Key
-            lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
-            lua_rawset(L, -3);
+            //lua_pushstring(L, "ClassDesc");                 // Key
+            //lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
+            //lua_rawset(L, -3);
 
             lua_pushstring(L, "StaticClass");               // Key
             lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
@@ -437,6 +441,12 @@ bool  GlbRegisterClass(lua_State* L, const char* ClassName)
 
     SetTableForClass(L, ClassName);
     return true;
+}
+
+bool  GlbRegisterClass(lua_State* L, const char* ClassName)
+{
+    FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUClass(ClassName);
+    return GlbReigterClassEx(L, ClassDesc, ClassName);
 }
 
 // 注册元表类(无返回值的函数)
@@ -525,6 +535,33 @@ int Global_SetUProperty(lua_State* L)
     }
     //Global_SetTableValue(L);
     return 0;    
+}
+
+int Global_Index(lua_State* L)
+{
+    int Type = lua_type(L, 2);
+    if(Type == LUA_TSTRING)
+    {
+        const char* FieldName = lua_tostring(L, 2); // value
+        if(FieldName)
+        {
+            char ch = FieldName[0];
+            if(ch == 'U' || ch == 'A' || ch == 'F')
+            {
+                FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUClass(FieldName);
+                if(ClassDesc)
+                {
+                    GlbReigterClassEx(L, ClassDesc, FieldName);
+                }
+            }
+            else if(ch == 'E')
+            {
+                GlbRegisterEnum(L, FieldName);
+            }
+        }
+    }
+    lua_rawget(L, -2);
+    return 1;
 }
 
 int BindScript_GetBPObject(lua_State* L)
@@ -627,22 +664,23 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     int nAllBuffSize = Function->PropertiesSize + Function->ParmsSize;
     int OuterAddrOffset = nAllBuffSize;
     int OutParmRecOffset = OuterAddrOffset + DynamicFunc->OuterParamSize;
-    int OuterIndesOffset = 0;
+    int OuterIndesOffset = OutParmRecOffset;
     if(DynamicFunc->bOuter)
     {
         nAllBuffSize += DynamicFunc->OuterParamSize + sizeof(FOutParmRec) * DynamicFunc->OuterParamCount;
         OuterIndesOffset = nAllBuffSize;
         nAllBuffSize += sizeof(short) * DynamicFunc->OuterParamCount;
-        nAllBuffSize += sizeof(FOutParmRec);  // 多加一个吧，以免越界
     }
     if (nAllBuffSize > BufferSize)
     {
+        nAllBuffSize = (nAllBuffSize + 15) / 16 * 16;
         Frame = (uint8*)FMemory_Alloca(nAllBuffSize);
+        //Frame = (uint8*)FMemory::Malloc(nAllBuffSize, 16);
     }
     FMemory::Memzero(Frame, nAllBuffSize);
 
     int Index = ParamIndex;
-    uint8  *Locals = Buffer;
+    uint8  *Locals = Frame;
     uint8  *ValueAddr = Locals;
     uint8  *OuterAddr = Locals + OuterAddrOffset;
     FOutParmRec* FristOuterParms = (FOutParmRec*)(Locals + OutParmRecOffset);
@@ -664,7 +702,7 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
 
         if(DynamicProperty->bOuter)
         {
-            *OuterIndexs++ = Index - ParamIndex;
+            *OuterIndexs++ = (short)(Index - ParamIndex);
             //DynamicProperty->Property->InitializeValue(OuterAddr);
             OuterParms->NextOutParm = nullptr;
             OuterParms->Property = (FProperty*)DynamicProperty->Property;
@@ -755,6 +793,7 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     // 释放临时内存
     if (Frame != Buffer)
     {
+        //FMemory::Free(Frame);
     }
     return RetCount;
 }
@@ -840,6 +879,7 @@ void   RunTimeRegisterScript(FCScriptContext *Context)
 
     lua_register(L, "RegisterEnum", Global_RegisterEnum);
     lua_register(L, "RegisterClass", Global_RegisterClass);
+    lua_register(L, "Global_Index", Global_Index);
     lua_register(L, "GetUProperty", Global_GetUProperty);
     lua_register(L, "SetUProperty", Global_SetUProperty);
     lua_register(L, "print", Global_Print);

@@ -102,5 +102,5 @@ public:
     }
 public:
     void  Resize(int NewNum);
-    void  CopyArray(const FScriptArray *OtherArray);
+    void  Copy(const FScriptArray *OtherArray);
 };

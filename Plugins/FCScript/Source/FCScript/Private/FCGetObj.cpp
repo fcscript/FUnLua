@@ -2,6 +2,8 @@
 #include "FCTemplateType.h"
 #include "FCCallScriptFunc.h"
 #include "FCTArrayHelper.h"
+#include "FCTMapHelper.h"
+#include "FCTSetHelper.h"
 
 FCGetObj* FCGetObj::s_Ins = nullptr;
 
@@ -221,13 +223,43 @@ int64  FCGetObj::PushNewTArray(const FCDynamicProperty* DynamicProperty, void* p
 {
     FArrayProperty* ArrayProperty = (FArrayProperty*)DynamicProperty->Property;
 
-    FScriptArray* ScriptArray = new FScriptArray();
-    int64 ObjID = PushTemplate(DynamicProperty, ScriptArray, EFCObjRefType::NewTArray);
+    FScriptArray* DesContent = new FScriptArray();
+    int64 ObjID = PushTemplate(DynamicProperty, DesContent, EFCObjRefType::NewTArray);
 
-    FScriptArray* SrcScriptArray = (FScriptArray*)pValueAddr;
+    FScriptArray* SrcContent = (FScriptArray*)pValueAddr;
     // 拷贝吧
-    FCTArrayHelper  ArrayHelper(ScriptArray, DynamicProperty);
-    ArrayHelper.CopyArray(SrcScriptArray);
+    FCTArrayHelper  ArrayHelper(DesContent, DynamicProperty);
+    ArrayHelper.Copy(SrcContent);
+
+    return ObjID;
+}
+
+int64  FCGetObj::PushNewTMap(const FCDynamicProperty* DynamicProperty, void* pValueAddr)
+{
+    FMapProperty* MapProperty = (FMapProperty*)DynamicProperty->Property;
+
+    FScriptMap* DesContent = new FScriptMap();
+    int64 ObjID = PushTemplate(DynamicProperty, DesContent, EFCObjRefType::NewTMap);
+
+    FScriptMap* SrcContent = (FScriptMap*)pValueAddr;
+
+    FCTMapHelper  MapHelper(DesContent, DynamicProperty);
+    MapHelper.Copy(SrcContent);
+
+    return ObjID;
+}
+
+int64  FCGetObj::PushNewTSet(const FCDynamicProperty* DynamicProperty, void* pValueAddr)
+{
+    FSetProperty* SetProperty = (FSetProperty*)DynamicProperty->Property;
+
+    FScriptSet* DesContent = new FScriptSet();
+    int64 ObjID = PushTemplate(DynamicProperty, DesContent, EFCObjRefType::NewTSet);
+
+    FScriptSet* SrcContent = (FScriptSet*)pValueAddr;
+
+    FCTSetHelper  Helper(DesContent, DynamicProperty);
+    Helper.Copy(SrcContent);
 
     return ObjID;
 }

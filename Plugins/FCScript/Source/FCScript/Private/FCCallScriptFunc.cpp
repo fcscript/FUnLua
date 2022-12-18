@@ -233,6 +233,38 @@ void  PushScriptTArray(lua_State* L, const FCDynamicPropertyBase* DynamicPropert
 	FCScript::PushBindObjRef(L, ObjID, DynamicProperty->GetClassName());
 }
 
+void  PushScriptTMap(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FMapProperty* MapProperty = (FMapProperty*)DynamicProperty->Property;
+    int64 ObjID = 0;
+    // 如果变量是UObject的属性
+    if (ThisObj)
+    {
+        ObjID = FCGetObj::GetIns()->PushProperty(ThisObj, (const FCDynamicProperty*)DynamicProperty, ValueAddr);
+    }
+    else
+    {
+        ObjID = FCGetObj::GetIns()->PushNewTMap((const FCDynamicProperty*)DynamicProperty, ValueAddr);
+    }
+    FCScript::PushBindObjRef(L, ObjID, DynamicProperty->GetClassName());    
+}
+
+void  PushScriptTSet(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FSetProperty* MapProperty = (FSetProperty*)DynamicProperty->Property;
+    int64 ObjID = 0;
+    // 如果变量是UObject的属性
+    if (ThisObj)
+    {
+        ObjID = FCGetObj::GetIns()->PushProperty(ThisObj, (const FCDynamicProperty*)DynamicProperty, ValueAddr);
+    }
+    else
+    {
+        ObjID = FCGetObj::GetIns()->PushNewTSet((const FCDynamicProperty*)DynamicProperty, ValueAddr);
+    }
+    FCScript::PushBindObjRef(L, ObjID, DynamicProperty->GetClassName());
+}
+
 void  InitDynamicPropertyWriteFunc(FCDynamicProperty *DynamicProperty, FCPropertyType Flag)
 {
 	if(DynamicProperty->m_WriteScriptFunc)
@@ -299,6 +331,12 @@ void  InitDynamicPropertyWriteFunc(FCDynamicProperty *DynamicProperty, FCPropert
 		case FCPROPERTY_Array:
 			DynamicProperty->m_WriteScriptFunc = PushScriptTArray;
 			break;
+        case FCPROPERTY_Map:
+            DynamicProperty->m_WriteScriptFunc = PushScriptTMap;
+            break;
+        case FCPROPERTY_Set:
+            DynamicProperty->m_WriteScriptFunc = PushScriptTSet;
+            break;
 		case FCPROPERTY_DelegateProperty:
 		case FCPROPERTY_MulticastDelegateProperty:
 			DynamicProperty->m_WriteScriptFunc = PushScriptDelegate;
@@ -458,19 +496,67 @@ void  ReadScriptTArray(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* 
 	{
 		if(EFCObjRefType::NewTArray == ObjRef->RefType)
 		{
-			FArrayProperty* ArrayProperty = (FArrayProperty*)DynamicProperty->Property;
-			ArrayProperty->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
+			FArrayProperty* Property = (FArrayProperty*)DynamicProperty->Property;
+            Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
 		}
 		else if(DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
 		{
-			FArrayProperty* ArrayProperty = (FArrayProperty*)DynamicProperty->Property;
+			FArrayProperty* Property = (FArrayProperty*)DynamicProperty->Property;
 			UStruct* Struct = DynamicProperty->Property->GetOwnerStruct();
 			if (ObjRef->ClassDesc && ObjRef->ClassDesc->m_Struct == Struct)
 			{
-				ArrayProperty->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
+                Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
 			}
 		}
 	}
+}
+
+void ReadScriptTMap(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef)
+    {
+        if (EFCObjRefType::NewTMap == ObjRef->RefType)
+        {
+            FMapProperty* Property = (FMapProperty*)DynamicProperty->Property;
+            //Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
+            Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+        }
+        else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
+        {
+            FMapProperty* Property = (FMapProperty*)DynamicProperty->Property;
+            UStruct* Struct = DynamicProperty->Property->GetOwnerStruct();
+            if (ObjRef->ClassDesc && ObjRef->ClassDesc->m_Struct == Struct)
+            {
+                //Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
+                Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+            }
+        }
+    }
+}
+
+void ReadScriptTSet(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef)
+    {
+        if (EFCObjRefType::NewTSet == ObjRef->RefType)
+        {
+            FSetProperty* Property = (FSetProperty*)DynamicProperty->Property;
+            //Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
+            Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+        }
+        else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
+        {
+            FSetProperty* Property = (FSetProperty*)DynamicProperty->Property;
+            UStruct* Struct = DynamicProperty->Property->GetOwnerStruct();
+            if (ObjRef->ClassDesc && ObjRef->ClassDesc->m_Struct == Struct)
+            {
+                //Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
+                Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+            }
+        }
+    }
 }
 
 void  InitDynamicPropertyReadFunc(FCDynamicProperty *DynamicProperty, FCPropertyType Flag)
@@ -539,6 +625,12 @@ void  InitDynamicPropertyReadFunc(FCDynamicProperty *DynamicProperty, FCProperty
 		case FCPROPERTY_Array:
 			DynamicProperty->m_ReadScriptFunc = ReadScriptTArray;
 			break;
+        case FCPROPERTY_Map:
+            DynamicProperty->m_ReadScriptFunc = ReadScriptTMap;
+            break;
+        case FCPROPERTY_Set:
+            DynamicProperty->m_ReadScriptFunc = ReadScriptTSet;
+            break;
 		default:
 			break;
 	}

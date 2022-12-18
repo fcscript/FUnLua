@@ -152,6 +152,7 @@ function UMG_Profile:DoOther()
     local world = self:GetWorld()
     print("[ProfileFrame]UnLua------------------")
     ProfileFrame.DoStruct(world, objAvatar)
+    ProfileFrame.DoStructOne(world, objAvatar)
     
     obj.HP = 101
     ProfileFrame.GetHP(obj)

@@ -27,25 +27,7 @@ void  FCTArrayHelper::Resize(int NewNum)
     }
 }
 
-void  FCTArrayHelper::CopyArray(const FScriptArray* OtherArray)
+void  FCTArrayHelper::Copy(const FScriptArray* OtherArray)
 {
-    bool bBaseCopy = IsBaseTypeCopy(ArrayProperty->Inner);
-    int Num = OtherArray->Num();
-    Resize(Num);
-    if(bBaseCopy)
-    {
-        if(Num > 0)
-            FMemory::Memcpy(ScriptArray->GetData(), OtherArray->GetData(), ElementSize * Num);
-    }
-    else
-    {
-        uint8* DesAddr = (uint8*)ScriptArray->GetData();
-        uint8* SrcAddr = (uint8*)OtherArray->GetData();
-        for(int i = 0; i< Num; ++i)
-        {
-            ArrayProperty->CopyValuesInternal(DesAddr, SrcAddr, 1);
-            DesAddr += ElementSize;
-            SrcAddr += ElementSize;
-        }
-    }
+    ArrayProperty->CopyValuesInternal(ScriptArray, OtherArray, ArrayProperty->ArrayDim);
 }

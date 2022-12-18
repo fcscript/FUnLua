@@ -4,6 +4,11 @@
 
 int Class_Index(lua_State* L);
 int Class_NewIndex(lua_State* L);
+int Global_RegisterEnum(lua_State* L);
+int Global_RegisterClass(lua_State* L);
+void GlbRegisterEnum(lua_State* L, const char* ClassName);
+bool GlbReigterClassEx(lua_State* L, FCDynamicClassDesc* ClassDesc, const char* ClassName);
+int Global_Index(lua_State* L);
 int BindScript_GetBPObject(lua_State* L);
 int BindScript_Index(lua_State* L);
 int BindScript_NewIndex(lua_State* L);
