@@ -44,8 +44,10 @@ struct FCDynamicPropertyBase : public FCDynamicField
 	const FProperty  *Property;
 	bool              bRef;       // 是不是引用类型
 	bool              bOuter;     // 是不是输出类型
+    bool              bTempNeedRef;  // 临时的上下拷贝参数标记
+    bool              bTempRealRef;  // 
 	
-	FCDynamicPropertyBase() :ElementSize(0), Offset_Internal(0), PropertyIndex(0), ScriptParamIndex(0), Type(FCPropertyType::FCPROPERTY_Unkonw), Flags(CPF_None), Property(nullptr), bRef(false), bOuter(false)
+	FCDynamicPropertyBase() :ElementSize(0), Offset_Internal(0), PropertyIndex(0), ScriptParamIndex(0), Type(FCPropertyType::FCPROPERTY_Unkonw), Flags(CPF_None), Property(nullptr), bRef(false), bOuter(false), bTempNeedRef(false), bTempRealRef(false)
 	{
 	}
 	bool  IsRef() const

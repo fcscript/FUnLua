@@ -657,17 +657,19 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     int  StackSize = DynamicFunc->ParmsSize;
     UFunction* Function = DynamicFunc->Function;
     int nParamCount = DynamicFunc->ParamCount;
-    const FCDynamicProperty* BeginProperty = DynamicFunc->m_Property.data();
-    const FCDynamicProperty* EndProperty = BeginProperty + nParamCount;
-    const FCDynamicProperty* DynamicProperty = BeginProperty;
+    FCDynamicProperty* BeginProperty = DynamicFunc->m_Property.data();
+    FCDynamicProperty* EndProperty = BeginProperty + nParamCount;
+    FCDynamicProperty* DynamicProperty = (FCDynamicProperty *)BeginProperty;
     uint8* Frame = Buffer;
     int nAllBuffSize = Function->PropertiesSize + Function->ParmsSize;
-    int OuterAddrOffset = nAllBuffSize;
-    int OutParmRecOffset = OuterAddrOffset + DynamicFunc->OuterParamSize;
+    //int OuterAddrOffset = nAllBuffSize;
+    //int OutParmRecOffset = OuterAddrOffset + DynamicFunc->OuterParamSize;
+    int OutParmRecOffset = nAllBuffSize;
     int OuterIndesOffset = OutParmRecOffset;
     if(DynamicFunc->bOuter)
     {
-        nAllBuffSize += DynamicFunc->OuterParamSize + sizeof(FOutParmRec) * DynamicFunc->OuterParamCount;
+        //nAllBuffSize += DynamicFunc->OuterParamSize + sizeof(FOutParmRec) * DynamicFunc->OuterParamCount;
+        nAllBuffSize += sizeof(FOutParmRec) * DynamicFunc->OuterParamCount;
         OuterIndesOffset = nAllBuffSize;
         nAllBuffSize += sizeof(short) * DynamicFunc->OuterParamCount;
     }
@@ -682,7 +684,7 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     int Index = ParamIndex;
     uint8  *Locals = Frame;
     uint8  *ValueAddr = Locals;
-    uint8  *OuterAddr = Locals + OuterAddrOffset;
+    //uint8  *OuterAddr = Locals + OuterAddrOffset;
     FOutParmRec* FristOuterParms = (FOutParmRec*)(Locals + OutParmRecOffset);
     FOutParmRec* OuterParms = FristOuterParms;
     int LatentPropertyIndex = DynamicFunc->LatentPropertyIndex;
@@ -698,17 +700,21 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
             FLatentActionInfo LatentActionInfo(ThreadRef, GetTypeHash(FGuid::NewGuid()), TEXT("OnLatentActionCompleted"), GetScriptContext()->m_Ticker);
             DynamicProperty->Property->CopySingleValue(ValueAddr, &LatentActionInfo);
         }
+        DynamicProperty->bTempNeedRef = true;
+        DynamicProperty->bTempRealRef = false;
         DynamicProperty->m_ReadScriptFunc(L, Index, DynamicProperty, ValueAddr, nullptr, nullptr);
+        DynamicProperty->bTempNeedRef = false;
 
         if(DynamicProperty->bOuter)
         {
             *OuterIndexs++ = (short)(Index - ParamIndex);
             //DynamicProperty->Property->InitializeValue(OuterAddr);
-            OuterParms->NextOutParm = nullptr;
-            OuterParms->Property = (FProperty*)DynamicProperty->Property;
-            OuterParms->PropAddr = ValueAddr;
             //OuterParms->PropAddr = OuterAddr;
             //OuterAddr += DynamicProperty->Property->ElementSize;
+
+            OuterParms->PropAddr = ValueAddr;
+            OuterParms->NextOutParm = nullptr;
+            OuterParms->Property = (FProperty*)DynamicProperty->Property;
             if(OuterParms != FristOuterParms)
             {
                 (OuterParms-1)->NextOutParm = OuterParms;
@@ -787,7 +793,8 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     for (; DynamicProperty < EndProperty; ++DynamicProperty)
     {
         ValueAddr = Locals + DynamicProperty->Offset_Internal;
-        DynamicProperty->Property->DestroyValue(ValueAddr);
+        if(!DynamicProperty->bTempRealRef)
+            DynamicProperty->Property->DestroyValue(ValueAddr);
     }
 
     // 释放临时内存

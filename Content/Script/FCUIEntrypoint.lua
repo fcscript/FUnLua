@@ -15,7 +15,8 @@ function FCUIEntrypoint:ReceiveBeginPlay()
 	a:Add(201)
 	a:Add(501)
 
-	local map = TMap("int", "int")
+	-- local map = obj.IDMap
+	local map = TMap("int32", "int32")
 	map:Add(1, 10)
 	map:Add(2, 20)
 
@@ -25,7 +26,8 @@ function FCUIEntrypoint:ReceiveBeginPlay()
 		it:ToNext()
 	end
 
-	obj.IDMap = map
+	obj:SetIDList(a)
+	-- obj.IDMap = map
 	obj:SetIDMap(map)
 
 	local b = obj:GetIDList()

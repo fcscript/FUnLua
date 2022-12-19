@@ -384,8 +384,8 @@ FMapProperty* CreateTMapProperty(const char *KeyType, const char *ValueType)
 	MapProperty->ValueProp = ValueProperty;
 
 	int ValueSize = ValueProperty->ElementSize * ValueProperty->ArrayDim;
-	int AlignKeySize = (KeyProperty->ElementSize + 7)/8*8;
-	int AlignValueSize = (ValueSize + 7)/8*8;
+	int AlignKeySize = KeyProperty->GetMinAlignment();
+    int AlignValueSize = ValueProperty->GetMinAlignment();
 
 	MapProperty->MapLayout = FScriptMap::GetScriptLayout(KeyProperty->ElementSize, AlignKeySize, ValueSize, AlignValueSize);
 
@@ -429,7 +429,7 @@ FSetProperty* CreateTSetProperty(const char* ClassName)
 	SetProperty->ElementProp = ElementProp;
 
     int ValueSize = ElementProp->ElementSize * ElementProp->ArrayDim;
-    int AlignValueSize = (ValueSize + 7) / 8 * 8;
+    int AlignValueSize = ElementProp->GetMinAlignment();
 
 	SetProperty->SetLayout = FScriptSet::GetScriptLayout(ValueSize, AlignValueSize);
 
@@ -470,6 +470,9 @@ void ReleaseTempalteProperty()
 	ReleasePtrMap(GCppDynamicPropertyMap);
 
     GPropertyBaseCopyTypeMap.clear();
+
+    GTempalteDynamicPropertyMap.clear();
+    GMapTemplateDynamicPropertyMap.clear();
 
 	GScriptStruct = nullptr;
 }

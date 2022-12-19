@@ -18,6 +18,8 @@ function UnluaEntryPointer:ReceiveBeginPlay()
     local obj = NewObject(AvatarClass)
     
 	local map = TMap(_G.int32, _G.int32)
+	map:Add(1, 10)
+	map:Add(2, 20)
 	obj:SetIDMap(map)
 	obj:SetIDMap(map)
 

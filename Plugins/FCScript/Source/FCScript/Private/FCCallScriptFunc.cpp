@@ -497,7 +497,15 @@ void  ReadScriptTArray(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* 
 		if(EFCObjRefType::NewTArray == ObjRef->RefType)
 		{
 			FArrayProperty* Property = (FArrayProperty*)DynamicProperty->Property;
-            Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
+            if (DynamicProperty->bTempNeedRef)
+            {
+                ((FCDynamicPropertyBase*)DynamicProperty)->bTempRealRef = true;
+                FMemory::Memcpy(ValueAddr, ObjRef->GetPropertyAddr(), sizeof(FScriptArray));
+            }
+            else
+            {
+                Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
+            }
 		}
 		else if(DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
 		{
@@ -519,7 +527,15 @@ void ReadScriptTMap(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
         {
             FMapProperty* Property = (FMapProperty*)DynamicProperty->Property;
             //Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
-            Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+            if(DynamicProperty->bTempNeedRef)
+            {
+                ((FCDynamicPropertyBase *)DynamicProperty)->bTempRealRef = true;
+                FMemory::Memcpy(ValueAddr, ObjRef->GetPropertyAddr(), sizeof(FScriptMap));
+            }
+            else
+            {
+                Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+            }
         }
         else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
         {
@@ -542,7 +558,15 @@ void ReadScriptTSet(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
         {
             FSetProperty* Property = (FSetProperty*)DynamicProperty->Property;
             //Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
-            Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+            if (DynamicProperty->bTempNeedRef)
+            {
+                ((FCDynamicPropertyBase*)DynamicProperty)->bTempRealRef = true;
+                FMemory::Memcpy(ValueAddr, ObjRef->GetPropertyAddr(), sizeof(FScriptSet));
+            }
+            else
+            {
+                Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+            }
         }
         else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
         {
