@@ -39,14 +39,8 @@ struct FCObjRef
         FCDynamicFunction *DynamicFunction;  // 函数
     };
 
-	int64     PtrIndex;         // Wrap对象ID
-
-	//void     *ValuePtr;
-	union
-	{
-		uint8     *ThisObjAddr;    // 对象自己的地址
-		//int        PropertyOffset;  // 属性位移
-	};
+	int64      PtrIndex;         // Wrap对象ID
+    uint8*     ThisObjAddr;     // 对象自己的地址
 	int        Ref;             // 引用计数
 	EFCObjRefType  RefType;
 	CFastList<FCObjRef>  Childs;
@@ -56,11 +50,6 @@ struct FCObjRef
 	ObjRefKey GetRefKey() const
 	{
 		return ObjRefKey(Parent ? Parent->ThisObjAddr : nullptr, ThisObjAddr);
-	}
-	// 得到该对象的唯一地址
-	uint8* GetKeyAddr() const
-	{
-		return ThisObjAddr;
 	}
 	UObject* GetParentObject() const
 	{
@@ -87,21 +76,6 @@ struct FCObjRef
 	uint8*GetPropertyAddr()
 	{
         return ThisObjAddr;
-		//if(Parent)
-		//{
-		//	uint8*ParentPropertyAddr = Parent->ThisObjAddr;
-		//	if(Parent->DynamicProperty && FCPROPERTY_Array == Parent->DynamicProperty->Type)
-		//	{
-		//		FScriptArray* ScriptArray = (FScriptArray*)ThisObjAddr;
-		//		ParentPropertyAddr = (uint8*)ScriptArray->GetData();
-  //              return ParentPropertyAddr ? (ParentPropertyAddr + PropertyOffset) : nullptr;
-		//	}
-  //          return ThisObjAddr;
-		//}
-		//else
-		//{
-		//	return ThisObjAddr;
-		//}
 	}
     FCPropertyType GetPropertyType() const
     {

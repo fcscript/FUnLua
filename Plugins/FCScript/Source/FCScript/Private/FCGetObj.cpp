@@ -150,7 +150,7 @@ int64  FCGetObj::PushProperty(UObject *Parent, const FCDynamicProperty *DynamicP
 
 int64  FCGetObj::PushChildProperty(FCObjRef* Parent, const FCDynamicProperty* DynamicProperty, void* pValueAddr)
 {
-	uint8  *ParentAddr = Parent->GetKeyAddr();
+	uint8  *ParentAddr = Parent->GetThisAddr();
 	ObjRefKey  ObjKey(ParentAddr, (const void*)(pValueAddr));
 
 	CScriptRefObjMap::iterator itObj = m_ObjMap.find(ObjKey);
@@ -240,8 +240,9 @@ int64  FCGetObj::PushNewTArray(const FCDynamicProperty* DynamicProperty, void* p
 
     FScriptArray* SrcContent = (FScriptArray*)pValueAddr;
     // 拷贝吧
-    FCTArrayHelper  ArrayHelper(DesContent, DynamicProperty);
-    ArrayHelper.Copy(SrcContent);
+    //FCTArrayHelper  ArrayHelper(DesContent, DynamicProperty);
+    //ArrayHelper.Copy(SrcContent);
+    ArrayProperty->CopyValuesInternal(DesContent, SrcContent, ArrayProperty->ArrayDim);
 
     return ObjID;
 }
@@ -255,8 +256,9 @@ int64  FCGetObj::PushNewTMap(const FCDynamicProperty* DynamicProperty, void* pVa
 
     FScriptMap* SrcContent = (FScriptMap*)pValueAddr;
 
-    FCTMapHelper  MapHelper(DesContent, DynamicProperty);
-    MapHelper.Copy(SrcContent);
+    //FCTMapHelper  MapHelper(DesContent, DynamicProperty);
+    //MapHelper.Copy(SrcContent);
+    MapProperty->CopyValuesInternal(DesContent, SrcContent, MapProperty->ArrayDim);
 
     return ObjID;
 }
@@ -270,8 +272,9 @@ int64  FCGetObj::PushNewTSet(const FCDynamicProperty* DynamicProperty, void* pVa
 
     FScriptSet* SrcContent = (FScriptSet*)pValueAddr;
 
-    FCTSetHelper  Helper(DesContent, DynamicProperty);
-    Helper.Copy(SrcContent);
+    //FCTSetHelper  Helper(DesContent, DynamicProperty);
+    //Helper.Copy(SrcContent);
+    SetProperty->CopyValuesInternal(DesContent, SrcContent, SetProperty->ArrayDim);
 
     return ObjID;
 }

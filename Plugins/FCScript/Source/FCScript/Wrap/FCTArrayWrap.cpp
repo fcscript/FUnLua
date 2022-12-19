@@ -186,7 +186,9 @@ int FCTArrayWrap_GetAt_Wrap(lua_State* L)
 
 				FCDynamicProperty * ElementProperty = GetDynamicPropertyByUEProperty(Inner);
 
-				ElementProperty->m_WriteScriptFunc(L, ElementProperty, ValueAddr, NULL, ObjRef);
+                // 这个地方拷贝一个对象，不能引用，所以不能传父对象
+				//ElementProperty->m_WriteScriptFunc(L, ElementProperty, ValueAddr, NULL, ObjRef);
+                ElementProperty->m_WriteScriptFunc(L, ElementProperty, ValueAddr, NULL, NULL);  // 断绝引用关系
                 return 1;
 			}
 		}
