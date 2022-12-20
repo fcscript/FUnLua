@@ -99,7 +99,7 @@ struct LuaRegAttrib
     exportlib_custom_call_back SetFunc;
 };
 
-typedef  stdext::hash_map<const char*, FCExportedItem*>   CExportedItemMap;
+typedef  std::unordered_map<const char*, FCExportedItem*, FCStringHash, FCStringEqual>   CExportedItemMap;
 
 struct FCSCRIPT_API FCExportedClass
 {

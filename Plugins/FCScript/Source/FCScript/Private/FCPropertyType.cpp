@@ -1,9 +1,9 @@
 #include "FCPropertyType.h"
 #include "FCStringCore.h"
 
-typedef  stdext::hash_map<void*, FCPropertyType>   CPropertyTypeMap;
-typedef  stdext::hash_map<const char *, FCPropertyType>   CGraphyTypeMap;
-typedef  stdext::hash_map<FCPropertyType, const char *>   CPropertyClassNameMap;
+typedef  std::unordered_map<void*, FCPropertyType>   CPropertyTypeMap;
+typedef  std::unordered_map<const char *, FCPropertyType, FCStringHash, FCStringEqual>   CGraphyTypeMap;
+typedef  std::unordered_map<FCPropertyType, const char *>   CPropertyClassNameMap;
 CPropertyTypeMap  gPropertyTypeMap;
 CGraphyTypeMap   gGraphyTypeMap;
 CPropertyTypeMap gCachePropertyTypeMap;

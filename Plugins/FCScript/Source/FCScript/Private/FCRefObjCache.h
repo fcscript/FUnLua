@@ -19,7 +19,7 @@ class FCRefObjCache
 		int    Ref;     // 引用计数
 		FRefCacheInfo() :m_pLast(nullptr), m_pNext(nullptr), ObjID(0), LuaRef(-1), Ref(0) {}
 	};
-	typedef  stdext::hash_map<int64, FRefCacheInfo*>   CRefID2LuaCacheMap;  // RefID ==> RefCacheInfo
+	typedef  std::unordered_map<int64, FRefCacheInfo*>   CRefID2LuaCacheMap;  // RefID ==> RefCacheInfo
 
 	CRefID2LuaCacheMap        m_ID2CacheMap;  // ID ==> RefCacheInfo
 	CFastList<FRefCacheInfo>  m_CacheList;    // 缓存列表

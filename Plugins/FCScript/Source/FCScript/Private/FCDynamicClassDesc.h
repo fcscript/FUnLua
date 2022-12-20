@@ -230,15 +230,15 @@ struct FCDynamicDelegateList
 };
 
 
-typedef  stdext::hash_map<const char*, FCDynamicProperty*>   CDynamicName2Property;
-typedef  stdext::hash_map<int, FCDynamicProperty*>   CDynamicID2Property;
+typedef  std::unordered_map<const char*, FCDynamicProperty*, FCStringHash, FCStringEqual>   CDynamicName2Property;
+typedef  std::unordered_map<int, FCDynamicProperty*>   CDynamicID2Property;
 typedef  std::vector<FCDynamicProperty*>   CDynamicPropertyPtrArray;
 
-typedef  stdext::hash_map<int, FCDynamicFunction*>   CDynamicFunctionIDMap; // id == > function
-typedef  stdext::hash_map<const char*, FCDynamicFunction*>   CDynamicFunctionNameMap;  // name ==> function
-typedef  stdext::hash_map<const char*, FCDynamicField*>   CDynamicFieldNameMap;  // name ==> function
+typedef  std::unordered_map<int, FCDynamicFunction*>   CDynamicFunctionIDMap; // id == > function
+typedef  std::unordered_map<const char*, FCDynamicFunction*, FCStringHash, FCStringEqual>   CDynamicFunctionNameMap;  // name ==> function
+typedef  std::unordered_map<const char*, FCDynamicField*, FCStringHash, FCStringEqual>   CDynamicFieldNameMap;  // name ==> function
 
-typedef  stdext::hash_map<const char*, int>   CDynamicName2Int; // name ==> int
+typedef  std::unordered_map<const char*, int, FCStringHash, FCStringEqual>   CDynamicName2Int; // name ==> int
 
 const char* GetUEClassName(const char* InName);
 const char* GetConstName(const char* InName);
@@ -382,13 +382,13 @@ struct FDynamicEnum
     }
 };
 
-typedef stdext::hash_map<const char *, FCDynamicClassDesc*>   CDynamicClassNameMap;
-typedef stdext::hash_map<std::string, FDynamicEnum*>   CDynamicEnumNameMap;
-typedef stdext::hash_map<int, FCDynamicClassDesc*>   CDynamicClassIDMap;
-typedef stdext::hash_map<UStruct*, FCDynamicClassDesc*>   CDynamicUStructMap;
-typedef stdext::hash_map<FProperty*, FCDynamicClassDesc*>   CDynamicPropertyMap;
-typedef  stdext::hash_map<lua_State*, int32>   ThreadToRefMap;
-typedef  stdext::hash_map<int32, lua_State*>   RefToThreadMap;
+typedef std::unordered_map<const char *, FCDynamicClassDesc*, FCStringHash, FCStringEqual>   CDynamicClassNameMap;
+typedef std::unordered_map<std::string, FDynamicEnum*>   CDynamicEnumNameMap;
+typedef std::unordered_map<int, FCDynamicClassDesc*>   CDynamicClassIDMap;
+typedef std::unordered_map<UStruct*, FCDynamicClassDesc*>   CDynamicUStructMap;
+typedef std::unordered_map<FProperty*, FCDynamicClassDesc*>   CDynamicPropertyMap;
+typedef std::unordered_map<lua_State*, int32>   ThreadToRefMap;
+typedef std::unordered_map<int32, lua_State*>   RefToThreadMap;
 
 struct FCScriptContext
 {

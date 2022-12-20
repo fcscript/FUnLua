@@ -102,9 +102,9 @@ struct FCObjRef
 	}
 };
 
-typedef  stdext::hash_map<ObjRefKey, FCObjRef*>   CScriptRefObjMap;  // ptr ==> FCObjRef
-typedef  stdext::hash_map<int64, FCObjRef*>   CIntPtr2RefObjMap; // IntPtr ==> FCObjRef
-typedef  stdext::hash_map<int64, int64>   CIntPtr2IntPtrMap; // IntPtr ==> IntPtr
+typedef  std::unordered_map<ObjRefKey, FCObjRef*>   CScriptRefObjMap;  // ptr ==> FCObjRef
+typedef  std::unordered_map<int64, FCObjRef*>   CIntPtr2RefObjMap; // IntPtr ==> FCObjRef
+typedef  std::unordered_map<int64, int64>   CIntPtr2IntPtrMap; // IntPtr ==> IntPtr
 
 class FCGetObj
 {	

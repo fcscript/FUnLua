@@ -165,13 +165,13 @@ FProperty  *CreateBaseProperty(FCInnerBaseType InBaseType)
 	return nullptr;
 }
 
-typedef stdext::hash_map<const char *, FCInnerBaseType> CInnerTypeMap;
-typedef stdext::hash_map<const char *, FProperty*> CTemplatePropertyNameMap;
-typedef stdext::hash_map<UStruct*, FCDynamicProperty*> CStructDynamicPropertyMap;
-typedef stdext::hash_map<FProperty*, FCDynamicProperty*> CPropertyDynamicPropertyMap;
-typedef stdext::hash_map<const char*, FCDynamicProperty*> CCppDynamicPropertyMap;
-typedef stdext::hash_map<const char*, char*> CCppName2NameMap;
-typedef stdext::hash_map<const FProperty*, bool> CPropertyBaseCopyTypeMap; // base type(bool, int8, int16, int32, float, double), can memory copy
+typedef std::unordered_map<const char *, FCInnerBaseType, FCStringHash, FCStringEqual> CInnerTypeMap;
+typedef std::unordered_map<const char *, FProperty*, FCStringHash, FCStringEqual> CTemplatePropertyNameMap;
+typedef std::unordered_map<UStruct*, FCDynamicProperty*> CStructDynamicPropertyMap;
+typedef std::unordered_map<FProperty*, FCDynamicProperty*> CPropertyDynamicPropertyMap;
+typedef std::unordered_map<const char*, FCDynamicProperty*, FCStringHash, FCStringEqual> CCppDynamicPropertyMap;
+typedef std::unordered_map<const char*, char*, FCStringHash, FCStringEqual> CCppName2NameMap;
+typedef std::unordered_map<const FProperty*, bool> CPropertyBaseCopyTypeMap; // base type(bool, int8, int16, int32, float, double), can memory copy
 CInnerTypeMap            GInnerTypeMap;
 CTemplatePropertyNameMap GClassPropertyNameMap;
 CStructDynamicPropertyMap GStructDynamicPropertyMap;
@@ -344,8 +344,8 @@ FArrayProperty* CreateTArrayProperty(const char* InPropertyType)
 	return ArrayProperty;
 }
 
-typedef stdext::hash_map<const char *, FCDynamicProperty*> CTempalteDynamicPropertyMap;
-typedef stdext::hash_map<FCDoubleKey, FCDynamicProperty*> CMapTempalteDynamicPropertyMap;
+typedef std::unordered_map<const char *, FCDynamicProperty*, FCStringHash, FCStringEqual> CTempalteDynamicPropertyMap;
+typedef std::unordered_map<FCDoubleKey, FCDynamicProperty*> CMapTempalteDynamicPropertyMap;
 CTempalteDynamicPropertyMap   GTempalteDynamicPropertyMap;
 CMapTempalteDynamicPropertyMap GMapTemplateDynamicPropertyMap;
 

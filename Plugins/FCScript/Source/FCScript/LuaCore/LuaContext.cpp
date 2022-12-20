@@ -121,7 +121,7 @@ void* NewUserdataWithPadding(lua_State* L, int32 Size, const char* MetatableName
 
 struct FTableFlagList
 {
-    typedef stdext::hash_map<const void *, bool>   CVoidPtrMap;
+    typedef std::unordered_map<const void *, bool>   CVoidPtrMap;
     CVoidPtrMap  Flags;
 public:
     bool IsExit(const void* TableAddr) const

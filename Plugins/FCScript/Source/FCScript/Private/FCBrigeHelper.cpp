@@ -2,7 +2,7 @@
 #include "FCGetObj.h"
 #include "../LuaCore/LuaContext.h"
 
-typedef stdext::hash_map<const char*, FCExportedClass*>   CExportClassNameMap;
+typedef std::unordered_map<const char*, FCExportedClass*, FCStringHash, FCStringEqual>   CExportClassNameMap;
 FCExportedClass* FCExportedClass::s_pExportedIns = nullptr;
 CExportClassNameMap  sExportClassMap;
 
