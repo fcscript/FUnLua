@@ -130,7 +130,7 @@ int FCVector2Wrap::obj_New(lua_State* L)
     const char* ClassName = lua_tostring(L, 1);
     V->X = lua_tonumber(L, 2);
     V->Y = lua_tonumber(L, 3);
-    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
     return 1;
 }
 

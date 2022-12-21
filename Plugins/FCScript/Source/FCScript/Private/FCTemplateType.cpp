@@ -170,14 +170,12 @@ typedef std::unordered_map<const char *, FProperty*, FCStringHash, FCStringEqual
 typedef std::unordered_map<UStruct*, FCDynamicProperty*> CStructDynamicPropertyMap;
 typedef std::unordered_map<FProperty*, FCDynamicProperty*> CPropertyDynamicPropertyMap;
 typedef std::unordered_map<const char*, FCDynamicProperty*, FCStringHash, FCStringEqual> CCppDynamicPropertyMap;
-typedef std::unordered_map<const char*, char*, FCStringHash, FCStringEqual> CCppName2NameMap;
 typedef std::unordered_map<const FProperty*, bool> CPropertyBaseCopyTypeMap; // base type(bool, int8, int16, int32, float, double), can memory copy
 CInnerTypeMap            GInnerTypeMap;
 CTemplatePropertyNameMap GClassPropertyNameMap;
 CStructDynamicPropertyMap GStructDynamicPropertyMap;
 CPropertyDynamicPropertyMap GPropertyDynamicPropertyMap;
 CCppDynamicPropertyMap      GCppDynamicPropertyMap;
-CCppName2NameMap            GCppName2NameMap;
 CPropertyBaseCopyTypeMap    GPropertyBaseCopyTypeMap;
 
 FCInnerBaseType GetInnerType(const char *InClassName)
@@ -207,23 +205,6 @@ FCInnerBaseType GetInnerType(const char *InClassName)
         return itType->second;
     }
     return FC_INNER_TYPE_Unknow;
-}
-
-const char* GetConstName(const char* InName)
-{
-	if (!InName)
-		return "";
-	CCppName2NameMap::iterator itName = GCppName2NameMap.find(InName);
-	if (itName != GCppName2NameMap.end())
-	{
-		return itName->second;
-	}
-	int  Len = strlen(InName);
-	char* buffer = new char[Len + 1];
-	memcpy(buffer, InName, Len);
-	buffer[Len] = 0;
-	GCppName2NameMap[buffer] = buffer;
-	return buffer;
 }
 
 FProperty  *CreateClassProperty(const char *InClassName)
@@ -258,14 +239,14 @@ FProperty  *CreateClassProperty(const char *InClassName)
 		{
 			// 注明一下，这里的Struct一定是UScriptStruct
 			FProperty* Property = NewUEStructProperty((UScriptStruct *)DynamicClass->m_Struct, GetGlbScriptStruct());
-			InClassName = DynamicClass->m_UEClassName.c_str();
+			InClassName = DynamicClass->m_UEClassName;
 			GClassPropertyNameMap[InClassName] = Property;
 			return Property;
 		}
 		return nullptr;
 	}
 	FProperty *Property = NewUEClassProperty(DynamicClass->m_Class, GetGlbScriptStruct());
-	InClassName = DynamicClass->m_UEClassName.c_str();
+	InClassName = DynamicClass->m_UEClassName;
 	GClassPropertyNameMap[InClassName] = Property;
 	return Property;
 }
@@ -303,6 +284,7 @@ FCDynamicProperty* GetStructDynamicProperty(UStruct* Struct)
 	FProperty* Property = NewUEStructProperty((UScriptStruct*)Struct, GetGlbScriptStruct());
 	DynamicPropery->InitProperty(Property);
 	DynamicPropery->Name = TCHAR_TO_UTF8(*(Struct->GetName()));
+    DynamicPropery->Name = GetConstName(DynamicPropery->Name);
 	GStructDynamicPropertyMap[Struct] = DynamicPropery;
 	return DynamicPropery;
 }
@@ -321,6 +303,7 @@ FCDynamicProperty* GetDynamicPropertyByUEProperty(FProperty* InProperty)
 		FStructProperty* StructProperty = (FStructProperty*)InProperty;
 		UStruct* Struct = StructProperty->Struct;
 		DynamicPropery->Name = TCHAR_TO_UTF8(*(Struct->GetName()));
+        DynamicPropery->Name = GetConstName(DynamicPropery->Name);
 	}
 	GPropertyDynamicPropertyMap[InProperty] = DynamicPropery;
 	return DynamicPropery;

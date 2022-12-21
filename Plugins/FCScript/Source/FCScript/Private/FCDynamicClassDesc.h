@@ -11,15 +11,6 @@
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFCScript, Log, All);
 
-struct FCUnitPtr
-{
-	union
-	{
-		const void  *Ptr;
-		int64  nPtr;
-	};
-};
-
 struct FCDynamicField
 {
 	virtual ~FCDynamicField() {}
@@ -36,8 +27,8 @@ struct FCDynamicPropertyBase : public FCDynamicField
 	int		Offset_Internal;  // 相对偏移
 	int     PropertyIndex;    // 参数或属性索引(序号)
 	int     ScriptParamIndex; // 脚本参数索引号
-	std::string Name;        // 变量名,调试时用的(常引用)
-	std::string ClassName;   // 类名
+	const char* Name;        // 变量名,调试时用的(常引用)
+    const char* ClassName;   // 类名
 	
 	FCPropertyType    Type;       // 类型
 	EPropertyFlags    Flags;      // 属性类型（用于强制转换的检测)
@@ -47,7 +38,7 @@ struct FCDynamicPropertyBase : public FCDynamicField
     bool              bTempNeedRef;  // 临时的上下拷贝参数标记
     bool              bTempRealRef;  // 
 	
-	FCDynamicPropertyBase() :ElementSize(0), Offset_Internal(0), PropertyIndex(0), ScriptParamIndex(0), Type(FCPropertyType::FCPROPERTY_Unkonw), Flags(CPF_None), Property(nullptr), bRef(false), bOuter(false), bTempNeedRef(false), bTempRealRef(false)
+	FCDynamicPropertyBase() :ElementSize(0), Offset_Internal(0), PropertyIndex(0), ScriptParamIndex(0), Name(nullptr), ClassName(nullptr), Type(FCPropertyType::FCPROPERTY_Unkonw), Flags(CPF_None), Property(nullptr), bRef(false), bOuter(false), bTempNeedRef(false), bTempRealRef(false)
 	{
 	}
 	bool  IsRef() const
@@ -60,11 +51,11 @@ struct FCDynamicPropertyBase : public FCDynamicField
 	}
 	const char* GetFieldName() const
 	{
-		return Name.c_str();
+		return Name;
 	}
 	const char* GetClassName() const
 	{
-		return ClassName.c_str();
+		return ClassName;
 	}
 	// 功能：得到委托的触发函数
 	UFunction *GetSignatureFunction() const
@@ -115,9 +106,9 @@ struct  FCDynamicFunction : public FCDynamicField
 	bool    bOuter;
 	bool    bRegister;        // 是不是在类中注册了
 	bool    bDelegate;
-	std::string Name;        // 函数名
+	const char* Name;        // 函数名
 	std::vector<FCDynamicProperty>   m_Property;
-	FCDynamicFunction():Function(nullptr), LatentPropertyIndex(-1), ReturnPropertyIndex(-1), ParmsSize(0), ParamCount(0), OuterParamCount(0), OuterParamSize(0), bOverride(false), bOuter(false), bRegister(false), bDelegate(false)
+	FCDynamicFunction():Function(nullptr), LatentPropertyIndex(-1), ReturnPropertyIndex(-1), ParmsSize(0), ParamCount(0), OuterParamCount(0), OuterParamSize(0), bOverride(false), bOuter(false), bRegister(false), bDelegate(false), Name(nullptr)
 	{
 	}
 	void  InitParam(UFunction *InFunction);
@@ -127,7 +118,7 @@ struct  FCDynamicFunction : public FCDynamicField
     }
 	const char* GetFieldName() const
 	{
-		return Name.c_str();
+		return Name;
 	}
 	virtual FCDynamicField* Clone() const { return new FCDynamicFunction(*this); }
 	virtual int DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
@@ -151,14 +142,14 @@ typedef int (*LPLuaLibOpenCallback)(lua_State* L);
 
 struct FCDynamicWrapField : public FCDynamicField
 {
-	std::string Name;        // 函数名或属性名
+	const char * Name;        // 函数名或属性名
 	LPWrapLibFunction   m_GetFunction;
 	LPWrapLibFunction   m_SetFunction;
 	FCDynamicWrapField():m_GetFunction(nullptr), m_SetFunction(nullptr) {}
 	FCDynamicWrapField(LPWrapLibFunction InGetFunc, LPWrapLibFunction InSetFunc) :m_GetFunction(InGetFunc), m_SetFunction(InSetFunc) {}
 	const char* GetFieldName() const
 	{
-		return Name.c_str();
+		return Name;
 	}
 };
 
@@ -241,7 +232,6 @@ typedef  std::unordered_map<const char*, FCDynamicField*, FCStringHash, FCString
 typedef  std::unordered_map<const char*, int, FCStringHash, FCStringEqual>   CDynamicName2Int; // name ==> int
 
 const char* GetUEClassName(const char* InName);
-const char* GetConstName(const char* InName);
 
 // 一个动态类的数据结构
 struct FCDynamicClassDesc
@@ -251,8 +241,8 @@ struct FCDynamicClassDesc
     UScriptStruct               *m_ScriptStruct;
 	FCDynamicClassDesc          *m_Super;
 	EClassCastFlags              m_ClassFlags;  // 用于强制转换的检测
-	std::string                  m_SuperName;
-	std::string                  m_UEClassName; // 类名，wrap的类名
+	const char *                 m_SuperName;
+	const char *                 m_UEClassName; // 类名，wrap的类名
 	CDynamicPropertyPtrArray     m_Property;  // 属性
 	CDynamicName2Property        m_Name2Property;  // 所有的属性
 
@@ -261,7 +251,7 @@ struct FCDynamicClassDesc
     CDynamicFieldNameMap         m_Fileds;      // 属性
 	LPLuaLibOpenCallback         m_LibOpenCallback;
 	
-	FCDynamicClassDesc():m_Struct(nullptr), m_Class(nullptr), m_ScriptStruct(nullptr), m_Super(nullptr), m_ClassFlags(CASTCLASS_None), m_LibOpenCallback(nullptr)
+	FCDynamicClassDesc():m_Struct(nullptr), m_Class(nullptr), m_ScriptStruct(nullptr), m_Super(nullptr), m_ClassFlags(CASTCLASS_None), m_SuperName(nullptr), m_UEClassName(nullptr), m_LibOpenCallback(nullptr)
 	{
 	}
 	~FCDynamicClassDesc();

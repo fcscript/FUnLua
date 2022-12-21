@@ -52,7 +52,7 @@ void FCDynamicOverrideNative(UObject* Context, FFrame& TheStack, RESULT_DECL)
             int64 ScriptIns = FFCObjectdManager::GetSingleIns()->FindOverrideScriptIns(Object, Func);
 			if (ScriptIns)
 			{
-				if(FCCallScriptFunc(ScriptContext, Object, ScriptIns, DynamicFunction->Name.c_str(), DynamicFunction, TheStack))
+				if(FCCallScriptFunc(ScriptContext, Object, ScriptIns, DynamicFunction->Name, DynamicFunction, TheStack))
                 {
                     return ;
                 }
@@ -60,7 +60,7 @@ void FCDynamicOverrideNative(UObject* Context, FFrame& TheStack, RESULT_DECL)
 		}
 		else
 		{
-			if(FCCallScriptFunc(ScriptContext, Object, 0, DynamicFunction->Name.c_str(), DynamicFunction, TheStack))
+			if(FCCallScriptFunc(ScriptContext, Object, 0, DynamicFunction->Name, DynamicFunction, TheStack))
             {
                 return ;
             }
@@ -118,7 +118,7 @@ void FCDynamicOverrideBeginBeginPlay(UObject* Context, FFrame& TheStack, RESULT_
             int64 ScriptIns = FCDynamicBindScript(Object);
 			if(ScriptIns > 0)
 			{
-				CallAnyScriptFunc(ScriptContext, BindInfo->m_ScriptIns, DynamicFunction->Name.c_str());
+				CallAnyScriptFunc(ScriptContext, BindInfo->m_ScriptIns, DynamicFunction->Name);
 				return ;
 			}
 		}
@@ -142,7 +142,7 @@ int64 FCDynamicBindScript(UObject* InObject)
 	{
 		lua_State* L = ScriptContext->m_LuaState;
 		FCDynamicClassDesc * ClassDesc = ScriptContext->RegisterUStruct(InObject->GetClass());
-		const char* ClassName = ClassDesc->m_UEClassName.c_str();
+		const char* ClassName = ClassDesc->m_UEClassName;
 
 		int StartTop = lua_gettop(L);
 		int TableIdx = lua_gettop(L);
@@ -170,7 +170,7 @@ int64 FCDynamicBindScript(UObject* InObject)
 
 		if (ClassDesc->m_Super)
 		{
-			const char* InSuperClassName = ClassDesc->m_SuperName.c_str();
+			const char* InSuperClassName = ClassDesc->m_SuperName;
 			lua_pushstring(L, "ParentClass");                   // 2
 			int Type = luaL_getmetatable(L, InSuperClassName);
 			if (Type != LUA_TTABLE)

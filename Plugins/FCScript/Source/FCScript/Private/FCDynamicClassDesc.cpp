@@ -7,6 +7,7 @@
 void  FCDynamicProperty::InitProperty(const FProperty *InProperty)
 {
 	Name = TCHAR_TO_UTF8(*(InProperty->GetName()));
+    Name = GetConstName(Name);
 	ElementSize = InProperty->ElementSize;
 	Offset_Internal = InProperty->GetOffset_ForInternal();
 	Flags = InProperty->GetPropertyFlags();
@@ -14,7 +15,7 @@ void  FCDynamicProperty::InitProperty(const FProperty *InProperty)
 	bOuter = InProperty->HasAnyPropertyFlags(CPF_OutParm);
 
 	Type = GetScriptPropertyType(Property);
-	GetScriptPropertyClassName(ClassName, Type, InProperty);
+    ClassName = GetScriptPropertyClassName(Type, InProperty);
 
 	InitDynamicPropertyWriteFunc(this, Type);
 	InitDynamicPropertyReadFunc(this, Type);
@@ -23,6 +24,7 @@ void  FCDynamicProperty::InitProperty(const FProperty *InProperty)
 void  FCDynamicFunction::InitParam(UFunction *InFunction)
 {
     Name = TCHAR_TO_UTF8(*(InFunction->GetName()));
+    Name = GetConstName(Name);
 	Function = InFunction;
 	ParmsSize = InFunction->ParmsSize;
 	m_Property.resize(InFunction->NumParms);
@@ -50,7 +52,7 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
 		}
         if(LatentPropertyIndex == -1)
         {
-            if (FCProperty->Name == "LatentInfo")
+            if(strcmp(FCProperty->Name, "LatentInfo") == 0)
             {
                 LatentPropertyIndex = Index;
             }
@@ -77,7 +79,7 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
 }
 
 
-#if ENGINE_MINOR_VERSION < 25
+#if OLD_UE_ENGINE
 struct FFakeProperty : public UField
 #else
 struct FFakeProperty : public FField
@@ -170,15 +172,15 @@ FCDynamicClassDesc &FCDynamicClassDesc::CopyDesc(const FCDynamicClassDesc &other
 	{
 		FCDynamicProperty *FCProperty = new FCDynamicProperty(*(other.m_Property[i]));
 		m_Property[i] = FCProperty;
-		m_Name2Property[FCProperty->Name.c_str()] = FCProperty;
-		m_Fileds[FCProperty->Name.c_str()] = FCProperty;
+		m_Name2Property[FCProperty->Name] = FCProperty;
+		m_Fileds[FCProperty->Name] = FCProperty;
 	}
 	m_Functions.clear();
 	for(CDynamicFunctionNameMap::const_iterator it = other.m_Functions.begin(); it != other.m_Functions.end(); ++it)
 	{
 		FCDynamicFunction *Func = new FCDynamicFunction(*(it->second));
-		m_Functions[Func->Name.c_str()] = Func;
-		m_Fileds[Func->Name.c_str()] = Func;
+		m_Functions[Func->Name] = Func;
+		m_Fileds[Func->Name] = Func;
 	}
 	m_LibFields.clear();
 	for (CDynamicFieldNameMap::const_iterator it = other.m_LibFields.begin(); it != other.m_LibFields.end(); ++it)
@@ -198,6 +200,7 @@ void  FCDynamicClassDesc::OnRegisterStruct(UStruct *Struct, void *Context)
 	if(Super)
 	{
 		m_SuperName = TCHAR_TO_UTF8(*(Super->GetName()));
+        m_SuperName = GetConstName(m_SuperName);
 		//OnRegisterStruct(Super);
 	}
 	m_Class = Cast<UClass>(Struct);
@@ -227,7 +230,7 @@ void  FCDynamicClassDesc::OnAddStructMember(UStruct* Struct, void* Context)
         FCProperty->PropertyIndex = m_Property.size();
         FCProperty->bOuter = false;
 
-		const char* FieldName = FCProperty->Name.c_str();
+		const char* FieldName = FCProperty->Name;
         m_Property.push_back(FCProperty);
         m_Name2Property[FieldName] = FCProperty;
 		m_Fileds[FieldName] = FCProperty;
@@ -241,7 +244,7 @@ void  FCDynamicClassDesc::OnAddStructMember(UStruct* Struct, void* Context)
         {
             FCDynamicFunction* DynamicFunction = new FCDynamicFunction();
             DynamicFunction->InitParam(Function);
-			const char* FieldName = DynamicFunction->Name.c_str();
+			const char* FieldName = DynamicFunction->Name;
             m_Functions[FieldName] = DynamicFunction;
 			m_Fileds[FieldName] = DynamicFunction;
         }
@@ -278,8 +281,8 @@ FCDynamicFunction*  FCDynamicClassDesc::RegisterUEFunc(const char *pcsFuncName)
 	FCDynamicFunction* DynamicFunction = new FCDynamicFunction();
 	DynamicFunction->InitParam(Function);
 	//DynamicFunction->Name = pcsFuncName;
-	m_Functions[DynamicFunction->Name.c_str()] = DynamicFunction;
-	m_Fileds[DynamicFunction->Name.c_str()] = DynamicFunction;
+	m_Functions[DynamicFunction->Name] = DynamicFunction;
+	m_Fileds[DynamicFunction->Name] = DynamicFunction;
 
 	return DynamicFunction;
 }
@@ -296,7 +299,7 @@ FCDynamicFunction*  FCDynamicClassDesc::RegisterFunc(const char *pcsFuncName)
 	FCDynamicFunction *DynamicFunction = RegisterUEFunc(pcsFuncName);
 	if (!DynamicFunction)
 	{
-		UE_LOG(LogFCScript, Warning, TEXT("failed register function: %s, class name: %s"), UTF8_TO_TCHAR(pcsFuncName), UTF8_TO_TCHAR(m_UEClassName.c_str()));
+		UE_LOG(LogFCScript, Warning, TEXT("failed register function: %s, class name: %s"), UTF8_TO_TCHAR(pcsFuncName), UTF8_TO_TCHAR(m_UEClassName));
 	}
 	return DynamicFunction;
 }
@@ -309,9 +312,9 @@ FCDynamicField* FCDynamicClassDesc::RegisterWrapLibFunction(const char* pcsFuncN
 		return itFiled->second;
 	}
 	FCDynamicWrapLibFunction* LibField = new FCDynamicWrapLibFunction(InGetFunc, InSetFunc);
-	LibField->Name = pcsFuncName;
-	m_LibFields[LibField->Name.c_str()] = LibField;
-	m_Fileds[LibField->Name.c_str()] = LibField;
+	LibField->Name = GetConstName(pcsFuncName);
+	m_LibFields[LibField->Name] = LibField;
+	m_Fileds[LibField->Name] = LibField;
 	return LibField;
 }
 
@@ -323,9 +326,9 @@ FCDynamicField* FCDynamicClassDesc::RegisterWrapLibAttrib(const char* pcsFuncNam
 		return itFiled->second;
 	}
 	FCDynamicWrapLibAttrib* LibField = new FCDynamicWrapLibAttrib(InGetFunc, InSetFunc);
-	LibField->Name = pcsFuncName;
-	m_LibFields[LibField->Name.c_str()] = LibField;
-	m_Fileds[LibField->Name.c_str()] = LibField;
+	LibField->Name = GetConstName(pcsFuncName);
+	m_LibFields[LibField->Name] = LibField;
+	m_Fileds[LibField->Name] = LibField;
 	return LibField;
 }
 //---------------------------------------------------------------------------
@@ -422,10 +425,11 @@ FCDynamicClassDesc*  FCScriptContext::RegisterUClass(const char *UEClassName)
 		NameOffset = 0;
 	}
 
+    UEClassName = GetConstName(UEClassName);
+
 	FCDynamicClassDesc *ScriptClassDesc = new FCDynamicClassDesc();
 	ScriptClassDesc->m_UEClassName = UEClassName;
 	ScriptClassDesc->OnRegisterStruct(Struct, this);
-	UEClassName = ScriptClassDesc->m_UEClassName.c_str();
 
 	m_ClassNameMap[UEClassName] = ScriptClassDesc;
 	m_StructMap[Struct] = ScriptClassDesc;
@@ -450,9 +454,10 @@ FCDynamicClassDesc*  FCScriptContext::RegisterUStruct(UStruct *Struct)
 	UEClassName += Struct->GetName();
 	FCDynamicClassDesc *ScriptClassDesc = new FCDynamicClassDesc();
 	ScriptClassDesc->m_UEClassName = TCHAR_TO_UTF8(*UEClassName);
+    ScriptClassDesc->m_UEClassName = GetConstName(ScriptClassDesc->m_UEClassName);
 	ScriptClassDesc->OnRegisterStruct(Struct, this);
 
-	const char* ClassName = ScriptClassDesc->m_UEClassName.c_str();
+	const char* ClassName = ScriptClassDesc->m_UEClassName;
 	m_ClassNameMap[ClassName] = ScriptClassDesc;
 	m_StructMap[Struct] = ScriptClassDesc;
 

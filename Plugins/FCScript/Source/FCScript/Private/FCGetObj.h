@@ -182,17 +182,6 @@ public:
 		}
 		return nullptr;
 	}
-	int  GetValueHash(int64 ObjID)
-	{
-		CIntPtr2RefObjMap::iterator itObj = m_IntPtrMap.find(ObjID);
-		if (itObj != m_IntPtrMap.end())
-		{
-			FCUnitPtr  Ptr;
-			Ptr.Ptr = itObj->second->GetPropertyAddr();
-			return (int)(Ptr.nPtr);
-		}
-		return (int)ObjID;
-	}
 	void  *GetValuePtr(int64 ObjID) const
 	{
 		CIntPtr2RefObjMap::const_iterator itObj = m_IntPtrMap.find(ObjID);

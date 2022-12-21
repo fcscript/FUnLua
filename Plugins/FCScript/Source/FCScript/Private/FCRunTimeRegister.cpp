@@ -72,7 +72,7 @@ void*  NewUserDataByClass(lua_State* L, FCDynamicClassDesc* ClassDesc)
     int32 UserdataPadding = CalcUserdataPadding(Alignment);       // calculate padding size for userdata
 
     // 结构体的话，可以由lua自己维护
-    void* Userdata = NewUserdataWithPadding(L, Size, ClassDesc->m_UEClassName.c_str(), UserdataPadding);
+    void* Userdata = NewUserdataWithPadding(L, Size, ClassDesc->m_UEClassName, UserdataPadding);
     ScriptStruct->InitializeStruct(Userdata);
     return Userdata;
 }
@@ -175,7 +175,7 @@ const char* GetPropertyType(lua_State* L, int Idx)
         FCObjRef *ObjRef = (FCObjRef *)FCScript::GetObjRefPtr(L, Idx);
         if(ObjRef && ObjRef->ClassDesc)
         {
-            return ObjRef->ClassDesc->m_UEClassName.c_str();
+            return ObjRef->ClassDesc->m_UEClassName;
         }
         break;
     }
@@ -192,7 +192,7 @@ int ScriptStruct_New(lua_State* L)
     // 结构体的话，可以由lua自己维护
     //NewUserDataByClass(L, ClassDesc);
     int64 ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
-    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
     return 1;
 }
 int Class_StaticClass(lua_State* L)
@@ -353,7 +353,7 @@ bool GlbReigterClassEx(lua_State* L, FCDynamicClassDesc* ClassDesc, const char* 
 
     if (ClassDesc->m_Super)
     {
-        const char* InSuperClassName = ClassDesc->m_SuperName.c_str();
+        const char* InSuperClassName = ClassDesc->m_SuperName;
         lua_pushstring(L, "ParentClass");                   // 2
         Type = luaL_getmetatable(L, InSuperClassName);
         if (Type != LUA_TTABLE)
@@ -572,7 +572,7 @@ int BindScript_GetBPObject(lua_State* L)
     if (ObjRef && ObjRef->IsValid())
     {
         ObjRef->Ref++;
-        FCScript::PushBindObjRef(L, ObjID, ObjRef->ClassDesc->m_UEClassName.c_str());
+        FCScript::PushBindObjRef(L, ObjID, ObjRef->ClassDesc->m_UEClassName);
         return 1;
     }
     lua_pushnil(L);

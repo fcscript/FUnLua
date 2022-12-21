@@ -146,7 +146,7 @@ int FCIntVectorWrap::obj_New(lua_State* L)
     V->X = (uint8)lua_tonumber(L, 2);
     V->Y = (uint8)lua_tonumber(L, 3);
     V->Z = (uint8)lua_tonumber(L, 4);
-    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
     return 1;
 }
 int FCIntVectorWrap::obj_Index(lua_State* L)

@@ -220,7 +220,7 @@ int FCRotatorWrap::obj_New(lua_State* L)
     V->Pitch = lua_tonumber(L, 2);
     V->Yaw = lua_tonumber(L, 3);
     V->Roll = lua_tonumber(L, 4);
-    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
     return 1;
 }
 int FCRotatorWrap::obj_Index(lua_State* L)

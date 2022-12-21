@@ -134,7 +134,7 @@ int FCLinearColorWrap::obj_New(lua_State* L)
     V->G = lua_tonumber(L, 3);
     V->B = lua_tonumber(L, 4);
     V->A = lua_tonumber(L, 5);
-    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
     return 1;
 }
 int FCLinearColorWrap::obj_Index(lua_State* L)

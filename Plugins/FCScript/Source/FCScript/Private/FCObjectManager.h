@@ -116,18 +116,6 @@ protected:
 	void  RemoveObjectDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty);
     void  RemoveOverrideRefByObject(const class UObjectBase *Object);
 protected:
-	const char *NameToName(const char *InName)
-	{
-		CScriptNamePtrMap::iterator itName = m_NamePtrMap.find(InName);
-		if(itName != m_NamePtrMap.end())
-		{
-			return itName->first.c_str();
-		}
-        m_NamePtrMap[InName] = true;
-		itName = m_NamePtrMap.find(InName);
-		return itName->first.c_str();
-	}
-protected:
 	struct FDynmicBindClassInfo
 	{
 		UClass  *Class;
@@ -141,14 +129,12 @@ protected:
 	};
 	typedef  std::unordered_map<const UObjectBase*, FBindObjectInfo>   CBindObjectInfoMap;
 	typedef  std::unordered_map<const UClass*, FBindReceiveBeginPlayInfo>   CBindReceiveBeginPlayRefMap;
-	typedef  std::unordered_map<std::string, bool>   CScriptNamePtrMap;
 
 	std::vector<FDynmicBindClassInfo>   m_DynamicBindClassInfo;
 	UClass*             m_pCurrentBindClass;
 	const char *        m_ScriptsClassName;
  
 	CBindObjectInfoMap  m_BindObjects;
-	CScriptNamePtrMap   m_NamePtrMap;
 
 	// ------------------------------	
 	typedef std::unordered_map<UFunction*, FCDynamicOverrideFunction*> COverrideFunctionMap;

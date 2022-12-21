@@ -97,7 +97,7 @@ int64  FCGetObj::PushNewObject(FCDynamicClassDesc* ClassDesc, const FName& Name,
 	m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
 
     // 后创建对象
-#if ENGINE_MINOR_VERSION < 26
+#if OLD_UE_ENGINE
     Obj = StaticConstructObject_Internal(Class, Outer, Name);
 #else
     FStaticConstructObjectParameters ObjParams(Class);

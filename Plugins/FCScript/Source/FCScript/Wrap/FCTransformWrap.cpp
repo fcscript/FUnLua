@@ -237,7 +237,7 @@ int FCTransformWrap::obj_New(lua_State* L)
     if (Scale)
         V->SetScale3D(*Scale);
 
-    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
     return 1;
 }
 int FCTransformWrap::obj_Index(lua_State* L)

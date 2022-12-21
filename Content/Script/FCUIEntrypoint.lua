@@ -9,6 +9,16 @@ function FCUIEntrypoint:ReceiveBeginPlay()
     local objAvatar = obj.AvatarParams	
 	objAvatar.BoneAdjustItem.SlotName = "abc"
 
+	local v = FVector(1, 2, 3)
+	local vecList = TArray("FVector")
+	vecList:Add(v)
+	vecList:Add(v)
+	vecList:Add(v)
+
+	local v1 = vecList:Get(1)
+	v1.X = 100
+	print("[FCTestScript]v1=", v1, ",[1]:", vecList:Get(1))
+
 	local a = TArray("int")
 	a:Add(1)
 	a:Add(2)

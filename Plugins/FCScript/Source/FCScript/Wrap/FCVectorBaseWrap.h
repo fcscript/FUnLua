@@ -145,7 +145,7 @@ int Vector_AnyCrossWrap(lua_State* L, const _Ty&Type)
 	{
 		*V = (*A) ^ (*B);
 	}
-	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
 	return 1;
 }
 
@@ -310,7 +310,7 @@ int Vector_Double_Operator_Wrap(lua_State* L, const char* ClassName, const _TyOp
 	int64 ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
 	_Ty* V = (_Ty*)FCGetObj::GetIns()->GetPropertyAddr(ObjID);
 	Vector_DoubleOperator(*V, *A, *B, opType);
-	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
 	return 1;
 }
 
@@ -350,7 +350,7 @@ int Vector_Double_Mul_float_Wrap(lua_State* L)
 	_Ty* V = (_Ty*)FCGetObj::GetIns()->GetPropertyAddr(ObjID);
 	if (A)
 		*V = *A * B;
-	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
 	return 1;
 }
 
@@ -373,7 +373,7 @@ int Vector_Double_Div_float_Wrap(lua_State* L)
 	_Ty* V = (_Ty*)FCGetObj::GetIns()->GetPropertyAddr(ObjID);
 	if (A)
 		*V = *A / B;
-	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
 	return 1;
 }
 
@@ -385,7 +385,7 @@ int Vector_unm_Wrap(lua_State* L, const char *ClassName)
 	int64 ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
 	_Ty* V = (_Ty*)FCGetObj::GetIns()->GetPropertyAddr(ObjID);
 	*V = -(*A);
-	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
 	return 1;
 }
 
@@ -397,7 +397,7 @@ int Vector_ToOrientationRotator_Wrap(lua_State* L)
 	int64 ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
 	FRotator* V = (FRotator*)FCGetObj::GetIns()->GetPropertyAddr(ObjID);
 	*V = A->ToOrientationRotator();
-	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
 	return 1;
 }
 
@@ -409,6 +409,6 @@ int Vector_ToOrientationQuat_Wrap(lua_State* L)
 	int64 ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
 	FQuat* V = (FQuat *)FCGetObj::GetIns()->GetPropertyAddr(ObjID);
 	*V = A->ToOrientationQuat();
-	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
 	return 1;
 }

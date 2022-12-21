@@ -135,7 +135,7 @@ int FCColorWrap::ToLinearColor_wrap(lua_State* L)
     if(A)
         *V = A->ReinterpretAsLinear();
 
-    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
     return 1;
 }
 
@@ -153,7 +153,7 @@ int FCColorWrap::double_add_wrap(lua_State* L)
         *V = *A;
         *V += *B;
     }
-    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
     return 1;
 }
 
@@ -182,7 +182,7 @@ int FCColorWrap::obj_New(lua_State* L)
     V->G = (uint8)lua_tonumber(L, 3);
     V->B = (uint8)lua_tonumber(L, 4);
     V->A = (uint8)lua_tonumber(L, 5);
-    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
     return 1;
 }
 int FCColorWrap::obj_Index(lua_State* L)

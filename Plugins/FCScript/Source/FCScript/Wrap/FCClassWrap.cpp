@@ -51,20 +51,20 @@ int FCClassWrap::New_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
                     Name = FName((const TCHAR*)ObjectName);
                 }
                 int64  ObjID = FCGetObj::GetIns()->PushNewObject(ClassDesc, Name, Outer);
-                FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+                FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
                 return 1;
             }
             if (ClassDesc->m_Class->HasAnyCastFlag(CASTCLASS_UClass))
             {
                 int64  ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
-                FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+                FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
                 return 1;
             }
         }
         else if(ClassDesc->m_Struct)
         {
             int64  ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
-            FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+            FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
             return 1;
         }
     }

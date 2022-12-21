@@ -105,7 +105,7 @@ void FC_SetArgValue_Object(lua_State* L, const UObject* Object)
     int64 ObjID = FCGetObj::GetIns()->PushUObject((UObject *)Object);
     FCObjRef* ObjRef = FCGetObj::GetIns()->FindValue(ObjID);
     if(ObjRef)
-        FC_PushBindLuaValue(L, ObjID, ObjRef->ClassDesc->m_UEClassName.c_str());
+        FC_PushBindLuaValue(L, ObjID, ObjRef->ClassDesc->m_UEClassName);
     else
         FC_PushBindLuaValue(L, ObjID, "UObject");
 }

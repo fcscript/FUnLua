@@ -178,7 +178,7 @@ int FCUEUtilWrap::DoGetBPObject_wrap(lua_State* L, void* ObjRefPtr, UObject* Thi
     if (ObjRef && ObjRef->IsValid())
     {
         ObjRef->Ref++;
-        FCScript::PushBindObjRef(L, ObjRef->PtrIndex, ObjRef->ClassDesc->m_UEClassName.c_str());
+        FCScript::PushBindObjRef(L, ObjRef->PtrIndex, ObjRef->ClassDesc->m_UEClassName);
         return 1;
     }
     lua_pushnil(L);
@@ -322,7 +322,7 @@ int FCUEUtilWrap::NewObject_wrap(lua_State* L)
             UObject* Object = FCGetObj::GetIns()->GetUObject(ObjID);
             FFCObjectdManager::GetSingleIns()->CallBindScript(Object, ScriptClassName);
         }
-        FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+        FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
         return 1;
 	}
     lua_pushnil(L);

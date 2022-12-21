@@ -30,7 +30,6 @@ void  FFCObjectdManager::Clear()
 	m_pCurrentBindClass = nullptr;
 	m_ScriptsClassName = nullptr;
 	m_BindObjects.clear();
-	m_NamePtrMap.clear();
 
     m_OverrideFunctionScriptInsMap.clear();
     m_OverrideObjectFunctionMap.clear();
@@ -49,7 +48,7 @@ void  FFCObjectdManager::BindScript(const class UObjectBaseUtility *Object, UCla
 
 void  FFCObjectdManager::BindToScript(const class UObjectBaseUtility* Object, UClass* Class, const char* ScriptClassName)
 {
-	ScriptClassName = NameToName(ScriptClassName);
+	ScriptClassName = GetConstName(ScriptClassName);
 	FBindObjectInfo &Info = m_BindObjects[Object];
 	Info.Set(Object, Object->GetLinkerIndex(), ScriptClassName);
 	RegisterReceiveBeginPlayFunction((UObject*)Object, Class);
@@ -57,7 +56,7 @@ void  FFCObjectdManager::BindToScript(const class UObjectBaseUtility* Object, UC
 
 void  FFCObjectdManager::CallBindScript(UObject *InObject, const char *ScriptClassName)
 {
-    ScriptClassName = NameToName(ScriptClassName);
+    ScriptClassName = GetConstName(ScriptClassName);
     FBindObjectInfo &Info = m_BindObjects[InObject];
     Info.Set(InObject, InObject->GetLinkerIndex(), ScriptClassName);
     Info.m_ScriptIns = FCDynamicBindScript(InObject);
@@ -96,7 +95,7 @@ void  FFCObjectdManager::NotifyDeleteUObject(const class UObjectBase* Object, in
 
 void  FFCObjectdManager::PushDynamicBindClass(UClass* Class, const char *ScriptClassName)
 {
-	ScriptClassName = NameToName(ScriptClassName);
+	ScriptClassName = GetConstName(ScriptClassName);
 	FDynmicBindClassInfo  Info = {Class, ScriptClassName};
 	m_DynamicBindClassInfo.push_back(Info);
 	m_pCurrentBindClass = Class;

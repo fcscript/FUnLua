@@ -152,7 +152,7 @@ int FCVector4Wrap::obj_New(lua_State* L)
     V->Y = lua_tonumber(L, 3);
     V->Z = lua_tonumber(L, 4);
     V->W = lua_tonumber(L, 5);
-    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName.c_str());
+    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
     return 1;
 }
 

@@ -4,10 +4,12 @@
 typedef  std::unordered_map<void*, FCPropertyType>   CPropertyTypeMap;
 typedef  std::unordered_map<const char *, FCPropertyType, FCStringHash, FCStringEqual>   CGraphyTypeMap;
 typedef  std::unordered_map<FCPropertyType, const char *>   CPropertyClassNameMap;
+typedef std::unordered_map<const char*, char*, FCStringHash, FCStringEqual> CCppName2NameMap;
 CPropertyTypeMap  gPropertyTypeMap;
 CGraphyTypeMap   gGraphyTypeMap;
 CPropertyTypeMap gCachePropertyTypeMap;
 CPropertyClassNameMap gPropertyClassNameMap;
+CCppName2NameMap      GCppName2NameMap;
 
 void  InitPropertyTable()
 {
@@ -54,10 +56,12 @@ void  InitPropertyTable()
 	gPropertyTypeMap[FMulticastSparseDelegateProperty::StaticClass()] = FCPROPERTY_MulticastDelegateProperty;
 	#endif
 
-	//gGraphyTypeMap["Vector2"] = FCPROPERTY_Vector2;
-	//gGraphyTypeMap["Vector3"] = FCPROPERTY_Vector3;
-	//gGraphyTypeMap["Vector4"] = FCPROPERTY_Vector4;
- //   gGraphyTypeMap["Vector"] = FCPROPERTY_Vector3;
+	gGraphyTypeMap["Vector2"] = FCPROPERTY_Vector2;
+	gGraphyTypeMap["Vector3"] = FCPROPERTY_Vector3;
+	gGraphyTypeMap["Vector4"] = FCPROPERTY_Vector4;
+    gGraphyTypeMap["Vector2D"] = FCPROPERTY_Vector2;
+    gGraphyTypeMap["Vector4D"] = FCPROPERTY_Vector4;
+    gGraphyTypeMap["Vector"] = FCPROPERTY_Vector3;
 }
 
 void  InitProperyNameTable()
@@ -96,7 +100,7 @@ void  InitProperyNameTable()
 	gPropertyClassNameMap[FCPROPERTY_DelegateProperty] = "DelegateEvent";
 	gPropertyClassNameMap[FCPROPERTY_MulticastDelegateProperty] = "MulticastDelegateEvent";
 
-#if ENGINE_MINOR_VERSION > 22
+#if OLD_UE_ENGINE == 0
 	gPropertyClassNameMap[FCPROPERTY_MulticastDelegateProperty] = "MulticastDelegateEvent";
 #endif
 }
@@ -107,6 +111,24 @@ void  ReleasePropertyTable()
 	gPropertyClassNameMap.clear();
 	gGraphyTypeMap.clear();
 	gCachePropertyTypeMap.clear();
+    ReleasePtrMap(GCppName2NameMap);
+}
+
+const char* GetConstName(const char* InName)
+{
+    if (!InName)
+        return "";
+    CCppName2NameMap::iterator itName = GCppName2NameMap.find(InName);
+    if (itName != GCppName2NameMap.end())
+    {
+        return itName->second;
+    }
+    int  Len = strlen(InName);
+    char* buffer = new char[Len + 1];
+    memcpy(buffer, InName, Len);
+    buffer[Len] = 0;
+    GCppName2NameMap[buffer] = buffer;
+    return buffer;
 }
 
 FCPropertyType  GetScriptPropertyType(const FProperty *Property)
@@ -138,22 +160,21 @@ FCPropertyType  GetScriptPropertyType(const FProperty *Property)
 	return FCPROPERTY_Unkonw;
 }
 
-void GetScriptPropertyClassName(std::string& OutName, FCPropertyType PropertyType, const FProperty* Property)
+const char * GetScriptPropertyClassName(FCPropertyType PropertyType, const FProperty* Property)
 {
 	InitProperyNameTable();
 	CPropertyClassNameMap::iterator itName = gPropertyClassNameMap.find(PropertyType);
 	if (itName != gPropertyClassNameMap.end())
 	{
-		OutName = itName->second;
-		return;
+		return itName->second;
 	}
 	if (FCPROPERTY_StructProperty == PropertyType)
 	{
 		FStructProperty* StructProperty = (FStructProperty*)Property;
-		OutName = TCHAR_TO_UTF8(*StructProperty->Struct->GetName());
-		return;
+		const char *Name = TCHAR_TO_UTF8(*StructProperty->Struct->GetName());
+		return GetConstName(Name);
 	}
 
-	OutName = TCHAR_TO_UTF8(*(Property->GetClass()->GetName()));
-	//return "UnknowProperty";
+	const char *Name = TCHAR_TO_UTF8(*(Property->GetClass()->GetName()));
+    return GetConstName(Name);
 }

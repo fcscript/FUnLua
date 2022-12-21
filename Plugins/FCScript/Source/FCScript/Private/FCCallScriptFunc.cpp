@@ -69,15 +69,15 @@ void  PushScriptFText(lua_State* L, const FCDynamicPropertyBase* DynamicProperty
 }
 void  PushScriptFVector(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
-	LuaPushValue(L, *((const FVector*)ValueAddr), false);
+    PushScriptStruct(L, DynamicProperty, ValueAddr, ThisObj, ObjRefPtr);
 }
 void  PushScriptFVector2D(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
-    LuaPushValue(L, *((const FVector2D*)ValueAddr), false);
+    PushScriptStruct(L, DynamicProperty, ValueAddr, ThisObj, ObjRefPtr);
 }
 void  PushScriptFVector4D(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
-    LuaPushValue(L, *((const FVector4*)ValueAddr), false);
+    PushScriptStruct(L, DynamicProperty, ValueAddr, ThisObj, ObjRefPtr);
 }
 
 // 功能：根据脚本变量得到UE对象的描述类
@@ -117,8 +117,8 @@ bool  IsCanCastToScript(lua_State* L, int Idx, const FCDynamicPropertyBase *Dyna
 			return true;
 		}
 
-		const char* Name = GetUEClassName(ClassDesc->m_UEClassName.c_str());
-		if (DynamicProperty->Name == Name)
+		const char* Name = GetUEClassName(ClassDesc->m_UEClassName);
+        if (DynamicProperty->Name == Name || strcmp(DynamicProperty->Name, Name) == 0)
 		{
 			return true;
 		}
@@ -320,13 +320,13 @@ void  InitDynamicPropertyWriteFunc(FCDynamicProperty *DynamicProperty, FCPropert
 			DynamicProperty->m_WriteScriptFunc = PushScriptStruct;
 			break;
 		case FCPROPERTY_Vector2:
-			DynamicProperty->m_WriteScriptFunc = PushScriptFVector2D;
+			DynamicProperty->m_WriteScriptFunc = PushScriptStruct;
 			break;
 		case FCPROPERTY_Vector3:
-			DynamicProperty->m_WriteScriptFunc = PushScriptFVector;
+			DynamicProperty->m_WriteScriptFunc = PushScriptStruct;
 			break;
 		case FCPROPERTY_Vector4:
-			DynamicProperty->m_WriteScriptFunc = PushScriptFVector4D;
+			DynamicProperty->m_WriteScriptFunc = PushScriptStruct;
 			break;
 		case FCPROPERTY_Array:
 			DynamicProperty->m_WriteScriptFunc = PushScriptTArray;
@@ -408,6 +408,34 @@ void  ReadScriptFText(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* D
 		InStr = UTF8_TO_TCHAR(StrParam);
 	FText* value = (FText*)ValueAddr;
 	*value = FText::FromString(InStr);
+}
+// 将脚本对象写入到UE对象
+void  ReadScriptFVector2D(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_Vector2)
+    {
+        *((FVector2D*)ValueAddr) = *((const FVector2D*)ObjRef->GetPropertyAddr());
+    }
+}
+void  ReadScriptFVector(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_Vector3)
+    {
+        *((FVector*)ValueAddr) = *((const FVector*)ObjRef->GetPropertyAddr());
+    }
+}
+void  ReadScriptFVector4D(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_Vector4)
+    {
+        *((FVector4*)ValueAddr) = *((const FVector4*)ObjRef->GetPropertyAddr());
+    }
 }
 // 将脚本对象写入到UE对象
 void  ReadScriptStruct(lua_State* L, int ValueIdx, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
@@ -635,14 +663,14 @@ void  InitDynamicPropertyReadFunc(FCDynamicProperty *DynamicProperty, FCProperty
 			DynamicProperty->m_ReadScriptFunc = ReadScriptStruct;
 			break;
         case FCPROPERTY_Vector2:
-            DynamicProperty->m_ReadScriptFunc = ReadScriptStruct;
-			break;
+            DynamicProperty->m_ReadScriptFunc = ReadScriptFVector2D;
+            break;
         case FCPROPERTY_Vector3:
-            DynamicProperty->m_ReadScriptFunc = ReadScriptStruct;
-			break;
+            DynamicProperty->m_ReadScriptFunc = ReadScriptFVector;
+            break;
         case FCPROPERTY_Vector4:
-            DynamicProperty->m_ReadScriptFunc = ReadScriptStruct;
-			break;
+            DynamicProperty->m_ReadScriptFunc = ReadScriptFVector4D;
+            break;
 		case FCPROPERTY_Array:
 			DynamicProperty->m_ReadScriptFunc = ReadScriptTArray;
 			break;
@@ -782,7 +810,7 @@ void  FCCallScriptDelegate(FCScriptContext *Context, UObject *Object, int64 Scri
 			FCInnerCallScriptFunc(Context, Object, ScriptIns, DynamicFunction, TheStack, ScriptDelegatePrepareCall, &DelegateInfo);
 		else
 		{
-			UE_LOG(LogFCScript, Error, TEXT("Invalid Script call, FunctionRef = %d : %s"), DelegateInfo.FunctionRef, UTF8_TO_TCHAR(DynamicFunction->Name.c_str()));
+			UE_LOG(LogFCScript, Error, TEXT("Invalid Script call, FunctionRef = %d : %s"), DelegateInfo.FunctionRef, UTF8_TO_TCHAR(DynamicFunction->Name));
 		}
 		int CurIdx = lua_gettop(L);
 		if (CurIdx > StartIdx)

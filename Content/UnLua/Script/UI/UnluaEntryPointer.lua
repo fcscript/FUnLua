@@ -16,12 +16,18 @@ function UnluaEntryPointer:ReceiveBeginPlay()
     UEPrint("[Unlua]UnluaEntryPointer:ReceiveBeginPlay")
     local AvatarClass = UClass.Load("UFCTest")
     local obj = NewObject(AvatarClass)
+    obj.ID = 10
+    local ID = obj.ID
     
+    -- local a = TArray(_G.FString)
+    -- a:Add("aaa")
+    -- a:Add("aaa")
+
 	local map = TMap(_G.int32, _G.int32)
 	map:Add(1, 10)
 	map:Add(2, 20)
-	obj:SetIDMap(map)
-	obj:SetIDMap(map)
+	obj:GetIDList(map)
+	-- obj:SetIDMap(a)
 
     local world = self:GetWorld()
     local UIManager = require "UnLua.Script.UI.UIManager"
