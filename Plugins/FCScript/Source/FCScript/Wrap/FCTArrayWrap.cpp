@@ -8,9 +8,13 @@
 #include "FCRunTimeRegister.h"
 #include "../LuaCore/LuaContext.h"
 
+static FCExportedClass  GTArrayWrapClass("TArray");
+
 void FCTArrayWrap::Register(lua_State* L)
 {
-	luaL_requiref(L, "TArray", LibOpen_wrap, 1);
+    luaL_requiref(L, "TArray", LibOpen_wrap, 1);
+    luaL_requiref(L, "Array", LibOpen_wrap, 1);
+	//luaL_requiref(L, "TArray", LibOpen_wrap, 1);
 }
 
 int FCTArrayWrap::LibOpen_wrap(lua_State* L)
@@ -38,17 +42,25 @@ int FCTArrayWrap::LibOpen_wrap(lua_State* L)
 		{ "Contains", Contains_wrap },
 		{ "Append", Add_wrap },
 		{ "ToTable", ToList_wrap },
-		{ "__gc", FCExportedClass::obj_Delete },
-		{ "__call", obj_new },
-		{ "__eq", FCExportedClass::obj_equal },
-		//{ "__index", obj_Index },
-		//{ "__newindex", obj_NewIndex },
-		//{ "__pairs", obj_pairs },
-		{ "__len", GetNumb_wrap },
 		{ nullptr, nullptr }
 	};
-	const char* ClassName = lua_tostring(L, 1);
-	FCExportedClass::RegisterLibClass(L, ClassName, LibFuncs);
+    const LuaRegAttrib LibAttrib[] =
+    {
+        { nullptr, nullptr, nullptr }
+    };
+    const LuaRegFunc LibTable[] =
+    {
+        { "__gc", FCExportedClass::obj_Delete },
+        { "__call", obj_new },
+        { "__eq", FCExportedClass::obj_equal },
+        { "__index", obj_Index },
+        { "__newindex", obj_NewIndex },
+        { "__pairs", obj_pairs },
+        { "__len", GetNumb_wrap },
+        { nullptr, nullptr }
+    };
+    const char* ClassName = lua_tostring(L, 1);
+    GTArrayWrapClass.RegisterLibClass(L, ClassName, LibFuncs, LibAttrib, LibTable);
 	return 1;
 }
 
@@ -58,17 +70,9 @@ int FCTArrayWrap::obj_Index(lua_State* L)
 	int Type = lua_type(L, 2);
 	if (Type == LUA_TNUMBER)
 	{
-		if (lua_isinteger(L, 2))
-		{
-			return GetIndex_wrap(L);
-		}
+        return GetIndex_wrap(L);
 	}
-	else if (Type == LUA_TSTRING)
-	{
-		const char* key = lua_tostring(L, 2);
-		int iii = 0;
-	}
-	return lua_rawget(L, 1);
+    return GTArrayWrapClass.DoLibIndex(L);
 }
 
 int FCTArrayWrap::obj_NewIndex(lua_State* L)
@@ -76,13 +80,45 @@ int FCTArrayWrap::obj_NewIndex(lua_State* L)
 	int Type = lua_type(L, 2);
 	if (Type == LUA_TNUMBER)
 	{
-		if (lua_isinteger(L, 2))
-		{
-			return SetIndex_wrap(L);
-		}
+        return SetIndex_wrap(L);
 	}
-	lua_rawset(L, 1);
-	return 0;
+    return GTArrayWrapClass.DoLibNewIndex(L);
+}
+
+int FCTArrayWrap::obj_NextPairs(lua_State* L)
+{
+// for k, v in pairs(t) do
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
+    FCTArrayHelper  Helper(ObjRef);
+    if(Helper.IsValid())
+    {
+        int Type = lua_type(L, 2);
+        if (Type == LUA_TNUMBER)
+        {
+            int Index = lua_tointeger(L, 2);
+            if(Index >= 0 && Index < Helper.Num())
+            {
+                lua_pushinteger(L, Index + 1);
+                Helper.GetAt(L, Index);
+                return 2;
+            }
+        }
+        else if (Type == LUA_TNIL)
+        {
+            lua_pushinteger(L, 1);
+            Helper.GetAt(L, 0);
+            return 2;
+        }
+    }
+    return 0;
+}
+
+int FCTArrayWrap::obj_pairs(lua_State* L)
+{
+    lua_pushcfunction(L, obj_NextPairs);
+    lua_pushvalue(L, 1);
+    lua_pushnil(L);
+    return 3;
 }
 
 int FCTArrayWrap::obj_new(lua_State* L)
@@ -107,16 +143,8 @@ int FCTArrayWrap::obj_new(lua_State* L)
 int FCTArrayWrap::GetNumb_wrap(lua_State* L)
 {
 	FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
-	if(ObjRef)
-	{
-		FScriptArray *ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-		int Num = ScriptArray->Num();
-        lua_pushinteger(L, Num);
-	}
-	else
-	{
-        lua_pushinteger(L, 0);
-	}
+    FCTArrayHelper  Helper(ObjRef);
+    lua_pushinteger(L, Helper.Num());
 	return 1;
 }
 
@@ -168,32 +196,9 @@ int FCTArrayWrap::SetNumb_wrap(lua_State* L)
 int FCTArrayWrap_GetAt_Wrap(lua_State* L)
 {
 	FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
-	if (ObjRef && ObjRef->DynamicProperty)
-	{
-        if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
-		{
-			int Index = lua_tointeger(L, 2) - 1;  // lua 从 1开始
-
-			FScriptArray *ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-			FArrayProperty  *ArrayProperty = (FArrayProperty *)ObjRef->DynamicProperty->Property;
-			int32 Num = ScriptArray->Num();
-			if(Index >= 0 && Index < Num)
-			{
-				FProperty *Inner = ArrayProperty->Inner;
-				int ElementSize = Inner->GetSize();
-				uint8 *ObjAddr = (uint8 *)ScriptArray->GetData();
-				uint8 *ValueAddr = ObjAddr + Index * ElementSize;
-
-				FCDynamicProperty * ElementProperty = GetDynamicPropertyByUEProperty(Inner);
-
-                // 这个地方拷贝一个对象，不能引用，所以不能传父对象
-				//ElementProperty->m_WriteScriptFunc(L, ElementProperty, ValueAddr, NULL, ObjRef);
-                ElementProperty->m_WriteScriptFunc(L, ElementProperty, ValueAddr, NULL, NULL);  // 断绝引用关系
-                return 1;
-			}
-		}
-	}
-    lua_pushnil(L);
+    FCTArrayHelper  Helper(ObjRef);
+    int Index = lua_tointeger(L, 2) - 1; // lua 从 1开始
+    Helper.GetAt(L, Index);
     return 1;
 }
 

@@ -9,6 +9,8 @@ public:
 
 	static int obj_Index(lua_State* L);
 	static int obj_NewIndex(lua_State* L);
+    static int obj_NextPairs(lua_State* L);
+    static int obj_pairs(lua_State* L);
 	static int obj_new(lua_State* L);
 	static int GetNumb_wrap(lua_State* L);
 	static int SetNumb_wrap(lua_State* L);

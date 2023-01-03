@@ -100,7 +100,34 @@ public:
     {
         return ScriptArray != nullptr;
     }
+    int  Num() const
+    {
+        return ScriptArray ? ScriptArray->Num() : 0;
+    }
 public:
     void  Resize(int NewNum);
     void  Copy(const FScriptArray *OtherArray);
+
+    // index : [0, numb-1]
+    int  GetAt(lua_State* L, int Index)
+    {
+        if(IsValid())
+        {
+            int32 Num = ScriptArray->Num();
+            if (Index >= 0 && Index < Num)
+            {
+                FProperty* Inner = ArrayProperty->Inner;
+                uint8* ObjAddr = (uint8*)ScriptArray->GetData();
+                uint8* ValueAddr = ObjAddr + Index * ElementSize;
+
+                FCDynamicProperty* ElementProperty = GetDynamicPropertyByUEProperty(Inner);
+
+                // 这个地方拷贝一个对象，不能引用，所以不能传父对象
+                ElementProperty->m_WriteScriptFunc(L, ElementProperty, ValueAddr, NULL, NULL);  // 断绝引用关系
+                return 1;
+            }
+        }
+        lua_pushnil(L);
+        return 1;
+    }
 };

@@ -25,6 +25,12 @@ function FCUIEntrypoint:ReceiveBeginPlay()
 	a:Add(201)
 	a:Add(501)
 
+	local len = #a
+	print("[FCTestScript]len=", len)
+	for k, v in pairs(a) do
+		print("[FCTestScript]k=", k, ",v=", v)
+	end
+
 	-- local map = obj.IDMap
 	local map = TMap("int32", "int32")
 	map:Add(1, 10)
