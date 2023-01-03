@@ -37,6 +37,8 @@ void FCUEUtilWrap::Register(lua_State* L)
     lua_register(L, "GetBindObjectCount", GetBindObjectCount_wrap);
     lua_register(L, "GetTotalObjRef", GetTotalObjRef_wrap);
     lua_register(L, "GetTotalIntPtr", GetTotalIntPtr_wrap);
+    lua_register(L, "GetObjRefSize", GetObjRefSize_wrap);
+    lua_register(L, "GetClassDescMemSize", GetClassDescMemSize_wrap);
 
     // 注册基础数据类型，兼容UnLua
     RegisterBaseType(L);
@@ -71,6 +73,7 @@ int FCUEUtilWrap::LibOpen_wrap(lua_State* L)
         { "GetBindObjectCount", GetBindObjectCount_wrap },
         { "GetTotalObjRef", GetTotalObjRef_wrap },
         { "GetTotalIntPtr", GetTotalIntPtr_wrap },
+        { "GetObjRefSize", GetObjRefSize_wrap },
         { nullptr, nullptr }
     };
 
@@ -405,5 +408,24 @@ int FCUEUtilWrap::GetTotalObjRef_wrap(lua_State* L)
 int FCUEUtilWrap::GetTotalIntPtr_wrap(lua_State* L)
 {
     lua_pushinteger(L, FCGetObj::GetIns()->GetTotalIntPtr());
+    return 1;
+}
+int FCUEUtilWrap::GetObjRefSize_wrap(lua_State* L)
+{
+    lua_pushinteger(L, sizeof(FCObjRef));
+    return 1;
+}
+int FCUEUtilWrap::GetClassDescMemSize_wrap(lua_State* L)
+{
+    const char *ClassName = lua_tostring(L, 1);
+    if(ClassName)
+    {
+        FCDynamicClassDesc *DynamicClassDesc = GetScriptContext()->RegisterUClass(ClassName);
+        lua_pushinteger(L, DynamicClassDesc ? DynamicClassDesc->GetMemSize() : 0);
+    }
+    else
+    {
+        lua_pushinteger(L, GetScriptContext()->GetMemSize());
+    }
     return 1;
 }

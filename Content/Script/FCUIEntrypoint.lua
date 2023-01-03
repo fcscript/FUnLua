@@ -31,6 +31,9 @@ function FCUIEntrypoint:ReceiveBeginPlay()
 		print("[FCTestScript]k=", k, ",v=", v)
 	end
 
+	local objRefMemSize = GetObjRefSize()
+	print("[FCTestScript]ObjRef MemSize:", objRefMemSize, ",UFCTest class mem size:", GetClassDescMemSize("UFCTest"))
+
 	-- local map = obj.IDMap
 	local map = TMap("int32", "int32")
 	map:Add(1, 10)

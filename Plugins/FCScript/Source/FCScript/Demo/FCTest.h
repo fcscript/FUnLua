@@ -44,6 +44,14 @@ struct FTestAvatarSystemInitParams
 	FVector   Offset;
 };
 
+UENUM(BlueprintType)
+enum EFCTestEnum
+{
+    One,
+    Two,
+    Three
+};
+
 UCLASS()
 class UFCTest : public UObject
 {
@@ -97,6 +105,17 @@ public:
 	
 	UPROPERTY()
 	TSoftObjectPtr<UObject>  ResPtr;
+
+    UPROPERTY(BlueprintReadWrite)
+    TSoftClassPtr<UClass> TSoftClassPtrVar;
+
+    //UPROPERTY(BlueprintReadWrite)
+    //TScriptInterface<IFCTestInterface> TScriptInterfaceVar;
+    UPROPERTY(BlueprintReadWrite)
+    TSubclassOf<UObject> TSubclassOfVar;
+
+    UPROPERTY(BlueprintReadWrite)
+    TEnumAsByte<enum EFCTestEnum> EnumAsByteVar;
 
 	UPROPERTY()
 	class UFCTest* NextPtr;

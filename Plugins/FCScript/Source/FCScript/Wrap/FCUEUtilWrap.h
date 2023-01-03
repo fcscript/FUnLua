@@ -31,4 +31,6 @@ public:
     static int GetBindObjectCount_wrap(lua_State* L);
     static int GetTotalObjRef_wrap(lua_State* L);
     static int GetTotalIntPtr_wrap(lua_State* L);
+    static int GetObjRefSize_wrap(lua_State* L);
+    static int GetClassDescMemSize_wrap(lua_State* L);
 };

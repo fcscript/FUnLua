@@ -18,6 +18,7 @@ struct FCDynamicField
 	virtual int DoSet(lua_State* L, void* ObjRefPtr, void *ClassDescPtr) { return 0; }
 	virtual const char* GetFieldName() const { return ""; }
 	virtual FCDynamicField* Clone() const { return nullptr; }
+    virtual int GetMemSize() const{ return sizeof(FCDynamicField);}
 };
 
 // 动态属性(反射)
@@ -26,19 +27,17 @@ struct FCDynamicPropertyBase : public FCDynamicField
 	int		ElementSize;      // 元素所点字节
 	int		Offset_Internal;  // 相对偏移
 	int     PropertyIndex;    // 参数或属性索引(序号)
-	int     ScriptParamIndex; // 脚本参数索引号
 	const char* Name;        // 变量名,调试时用的(常引用)
     const char* ClassName;   // 类名
 	
 	FCPropertyType    Type;       // 类型
-	EPropertyFlags    Flags;      // 属性类型（用于强制转换的检测)
 	const FProperty  *Property;
 	bool              bRef;       // 是不是引用类型
 	bool              bOuter;     // 是不是输出类型
     bool              bTempNeedRef;  // 临时的上下拷贝参数标记
     bool              bTempRealRef;  // 
 	
-	FCDynamicPropertyBase() :ElementSize(0), Offset_Internal(0), PropertyIndex(0), ScriptParamIndex(0), Name(nullptr), ClassName(nullptr), Type(FCPropertyType::FCPROPERTY_Unkonw), Flags(CPF_None), Property(nullptr), bRef(false), bOuter(false), bTempNeedRef(false), bTempRealRef(false)
+	FCDynamicPropertyBase() :ElementSize(0), Offset_Internal(0), PropertyIndex(0), Name(nullptr), ClassName(nullptr), Type(FCPropertyType::FCPROPERTY_Unkonw), Property(nullptr), bRef(false), bOuter(false), bTempNeedRef(false), bTempRealRef(false)
 	{
 	}
 	bool  IsRef() const
@@ -72,6 +71,7 @@ struct FCDynamicPropertyBase : public FCDynamicField
 		}
 		return nullptr;
 	}
+    virtual int GetMemSize() const { return sizeof(FCDynamicPropertyBase); }
 };
 
 typedef  void(*LPPushScriptValueFunc)(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void *ObjRefPtr);
@@ -91,6 +91,7 @@ struct FCDynamicProperty : public FCDynamicPropertyBase
 	virtual FCDynamicField* Clone() const { return new FCDynamicProperty(*this); }
 	virtual int DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
 	virtual int DoSet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
+    virtual int GetMemSize() const { return sizeof(FCDynamicProperty); }
 };
 
 struct  FCDynamicFunction : public FCDynamicField
@@ -123,6 +124,7 @@ struct  FCDynamicFunction : public FCDynamicField
 	virtual FCDynamicField* Clone() const { return new FCDynamicFunction(*this); }
 	virtual int DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
 	virtual int DoSet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
+    virtual int GetMemSize() const { return sizeof(FCDynamicFunction); }
 };
 
 struct FCDynamicOverrideFunction : public FCDynamicFunction
@@ -135,6 +137,7 @@ struct FCDynamicOverrideFunction : public FCDynamicFunction
 	FCDynamicOverrideFunction() : OleNativeFuncPtr(nullptr), CurOverrideFuncPtr(nullptr), m_NativeBytecodeIndex(0), m_bLockCall(false)
 	{
 	}
+    virtual int GetMemSize() const { return sizeof(FCDynamicOverrideFunction); }
 };
 
 typedef int (*LPWrapLibFunction)(lua_State* L, void *ObjRefPtr, UObject *ThisObject);
@@ -151,6 +154,7 @@ struct FCDynamicWrapField : public FCDynamicField
 	{
 		return Name;
 	}
+    virtual int GetMemSize() const { return sizeof(FCDynamicWrapField); }
 };
 
 struct FCDynamicWrapLibFunction : public FCDynamicFunction
@@ -162,6 +166,7 @@ struct FCDynamicWrapLibFunction : public FCDynamicFunction
 	virtual FCDynamicField* Clone() const { return new FCDynamicWrapLibFunction(*this); }
 	virtual int DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
 	virtual int DoSet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
+    virtual int GetMemSize() const { return sizeof(FCDynamicWrapLibFunction); }
 };
 
 struct FCDynamicWrapLibAttrib : public FCDynamicWrapField
@@ -171,6 +176,7 @@ struct FCDynamicWrapLibAttrib : public FCDynamicWrapField
 	virtual FCDynamicField* Clone() const { return new FCDynamicWrapLibAttrib(*this); }
 	virtual int DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
 	virtual int DoSet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
+    virtual int GetMemSize() const { return sizeof(FCDynamicWrapLibAttrib); }
 };
 
 struct FCDelegateInfo
@@ -250,8 +256,9 @@ struct FCDynamicClassDesc
 	CDynamicFieldNameMap         m_LibFields;   // 扩展属性与方法
     CDynamicFieldNameMap         m_Fileds;      // 属性
 	LPLuaLibOpenCallback         m_LibOpenCallback;
+    bool                         m_bFullPrepare;
 	
-	FCDynamicClassDesc():m_Struct(nullptr), m_Class(nullptr), m_ScriptStruct(nullptr), m_Super(nullptr), m_ClassFlags(CASTCLASS_None), m_SuperName(nullptr), m_UEClassName(nullptr), m_LibOpenCallback(nullptr)
+	FCDynamicClassDesc():m_Struct(nullptr), m_Class(nullptr), m_ScriptStruct(nullptr), m_Super(nullptr), m_ClassFlags(CASTCLASS_None), m_SuperName(nullptr), m_UEClassName(nullptr), m_LibOpenCallback(nullptr), m_bFullPrepare(false)
 	{
 	}
 	~FCDynamicClassDesc();
@@ -266,12 +273,14 @@ struct FCDynamicClassDesc
 
 	void  OnRegisterStruct(UStruct *Struct, void *Context);
 	void  OnAddStructMember(UStruct* Struct, void* Context);
+    FCDynamicField *RegisterFieldByCString(UStruct* Struct, const char *InFieldName);
+    int   GetMemSize() const;
 
 	// 功能：注册一个函数
 	FCDynamicFunction*  RegisterUEFunc(const char *pcsFuncName);
 	
 	// 功能：注册一个类的属性
-	FCDynamicProperty*  RegisterProperty(const char *pcsPropertyName);
+	FCDynamicProperty*  RegisterProperty(const char *InPropertyName);
 	// 功能：注册一个函数
 	FCDynamicFunction*  RegisterFunc(const char *pcsFuncName);
 
@@ -299,6 +308,10 @@ struct FCDynamicClassDesc
 		{
 			return itFunction->second;
         }
+        if(!m_bFullPrepare)
+        {
+            return RegisterFunc(FuncName);
+        }
         if (m_Super)
         {
             return m_Super->FindFunctionByName(FuncName);
@@ -312,6 +325,10 @@ struct FCDynamicClassDesc
 		{
 			return itAttrib->second;
 		}
+        if(!m_bFullPrepare)
+        {
+            return RegisterProperty(AttribName);
+        }
 		if(m_Super)
 		{
 			return m_Super->FindAttribByName(AttribName);
@@ -338,7 +355,15 @@ struct FCDynamicClassDesc
         {
             return itFiled->second;
         }
-		FCDynamicField* Filed = TryFindFiled(InFieldName);
+		FCDynamicField* Filed = nullptr;
+        if(m_bFullPrepare)
+        {
+            Filed = TryFindFiled(InFieldName);
+        }
+        else
+        {
+            Filed = RegisterFieldByCString(m_Struct, InFieldName);
+        }
 		if (Filed)
 		{
 			m_Fileds[Filed->GetFieldName()] = Filed;
@@ -406,6 +431,8 @@ struct FCScriptContext
 	FCDynamicClassDesc*  RegisterUStruct(UStruct *Struct);
     FCDynamicClassDesc*  RegisterByProperty(FProperty *Property);
     FDynamicEnum*        RegisterEnum(const char *InEnumName);
+    int GetMemSize() const;
+    int GetClassMemSize(const char *InClassName) const;
 	void Clear();
 };
 
