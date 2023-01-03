@@ -75,21 +75,6 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
 	}
 }
 
-
-#if OLD_UE_ENGINE
-struct FFakeProperty : public UField
-#else
-struct FFakeProperty : public FField
-#endif
-{
-    int32       ArrayDim;
-    int32       ElementSize;
-    uint64      PropertyFlags;
-    uint16      RepIndex;
-    TEnumAsByte<ELifetimeCondition> BlueprintReplicationCondition;
-    int32       Offset_Internal;
-};
-
 int FCDynamicDelegateList::FindDelegate(const FCDelegateInfo &Info) const
 {
 	for(int i = 0; i<Delegates.size(); ++i)
