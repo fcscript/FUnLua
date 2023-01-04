@@ -142,6 +142,7 @@ FCDynamicClassDesc &FCDynamicClassDesc::CopyDesc(const FCDynamicClassDesc &other
 	Clear();
 	m_Struct = other.m_Struct;
 	m_Class = other.m_Class;
+    m_ScriptStruct = other.m_ScriptStruct;
 	m_Super = other.m_Super;
 	m_ClassFlags = other.m_ClassFlags;
 	m_SuperName = other.m_SuperName;
@@ -187,55 +188,12 @@ void  FCDynamicClassDesc::OnRegisterStruct(UStruct *Struct, void *Context)
 	m_Class = Cast<UClass>(Struct);
     m_ScriptStruct = Cast<UScriptStruct>(m_Struct);
 
-	//OnAddStructMember(Struct, Context);
-
     FCScriptContext* ScriptContext = (FCScriptContext*)Context;
     UStruct* SuperStruct = Struct->GetSuperStruct();
 	if(SuperStruct)
 	{
 		m_Super = ScriptContext->RegisterUStruct(SuperStruct);
 	}
-}
-
-void  FCDynamicClassDesc::OnAddStructMember(UStruct* Struct, void* Context)
-{
-    // 注册成员变量
-    m_bFullPrepare = true;
-    const FProperty* PropertyLink = Struct->PropertyLink;
-    const FProperty* Property = nullptr;
-    for (; PropertyLink != nullptr; PropertyLink = PropertyLink->PropertyLinkNext)
-    {
-        Property = PropertyLink;
-
-        FCDynamicProperty* FCProperty = new FCDynamicProperty();
-        FCProperty->InitProperty(Property);
-        FCProperty->PropertyIndex = m_Property.size();
-        FCProperty->bOuter = false;
-
-		const char* FieldName = FCProperty->Name;
-        m_Property.push_back(FCProperty);
-        m_Name2Property[FieldName] = FCProperty;
-		m_Fileds[FieldName] = FCProperty;
-    }
-    // 注册一下原生的函数
-    UField* Children = Struct->Children;
-    for (; Children != nullptr; Children = Children->Next)
-    {
-        UFunction* Function = Cast<UFunction>(Children);
-        if (Function)
-        {
-            FCDynamicFunction* DynamicFunction = new FCDynamicFunction();
-            DynamicFunction->InitParam(Function);
-			const char* FieldName = DynamicFunction->Name;
-            m_Functions[FieldName] = DynamicFunction;
-			m_Fileds[FieldName] = DynamicFunction;
-        }
-    }
-	//UStruct *SuperStruct = Struct->GetSuperStruct();
-	//if(SuperStruct)
-	//{
-	//	OnAddStructMember(SuperStruct, Context);
-	//}
 }
 
 FCDynamicField* FCDynamicClassDesc::RegisterFieldByCString(UStruct* Struct, const char* InFieldName)
@@ -356,7 +314,13 @@ FCDynamicProperty*  FCDynamicClassDesc::RegisterProperty(const char * InProperty
 
     if(m_Super)
     {
-        return m_Super->RegisterProperty(InPropertyName);
+        FCDynamicProperty* FCProperty = m_Super->RegisterProperty(InPropertyName);
+        if (FCProperty)
+        {
+            const char* FieldName = FCProperty->Name;
+            m_Name2Property[FieldName] = FCProperty;
+            return FCProperty;
+        }
     }
 	return nullptr;
 }

@@ -256,9 +256,8 @@ struct FCDynamicClassDesc
 	CDynamicFieldNameMap         m_LibFields;   // 扩展属性与方法
     CDynamicFieldNameMap         m_Fileds;      // 属性
 	LPLuaLibOpenCallback         m_LibOpenCallback;
-    bool                         m_bFullPrepare;
 	
-	FCDynamicClassDesc():m_Struct(nullptr), m_Class(nullptr), m_ScriptStruct(nullptr), m_Super(nullptr), m_ClassFlags(CASTCLASS_None), m_SuperName(nullptr), m_UEClassName(nullptr), m_LibOpenCallback(nullptr), m_bFullPrepare(false)
+	FCDynamicClassDesc():m_Struct(nullptr), m_Class(nullptr), m_ScriptStruct(nullptr), m_Super(nullptr), m_ClassFlags(CASTCLASS_None), m_SuperName(nullptr), m_UEClassName(nullptr), m_LibOpenCallback(nullptr)
 	{
 	}
 	~FCDynamicClassDesc();
@@ -272,7 +271,6 @@ struct FCDynamicClassDesc
 	FCDynamicClassDesc &CopyDesc(const FCDynamicClassDesc &other);
 
 	void  OnRegisterStruct(UStruct *Struct, void *Context);
-	void  OnAddStructMember(UStruct* Struct, void* Context);
     FCDynamicField *RegisterFieldByCString(UStruct* Struct, const char *InFieldName);
     int   GetMemSize() const;
 
@@ -308,15 +306,16 @@ struct FCDynamicClassDesc
 		{
 			return itFunction->second;
         }
-        if(!m_bFullPrepare)
+        // 没有找到，就动态注册一个
+        FCDynamicFunction* Function = RegisterUEFunc(FuncName);
+        if (Function)
         {
-            return RegisterFunc(FuncName);
+            return Function;
         }
-        if (m_Super)
-        {
-            return m_Super->FindFunctionByName(FuncName);
-        }
-		return nullptr;
+        // 如果还是没有找到，就是设置一个空的, 避免反复查找
+        FuncName = GetConstName(FuncName);
+        m_Functions[FuncName] = nullptr;
+        return nullptr;
 	}
 	FCDynamicProperty *FindAttribByName(const char *AttribName)
 	{
@@ -325,28 +324,16 @@ struct FCDynamicClassDesc
 		{
 			return itAttrib->second;
 		}
-        if(!m_bFullPrepare)
+        // 没有找到，就动态注册一个
+        FCDynamicProperty* Property = RegisterProperty(AttribName);
+        if (Property)
         {
-            return RegisterProperty(AttribName);
+            return Property;
         }
-		if(m_Super)
-		{
-			return m_Super->FindAttribByName(AttribName);
-		}
-		return nullptr;
-	}
-	FCDynamicField* TryFindFiled(const char* FieldName)
-	{
-		CDynamicFieldNameMap::iterator itFiled = m_Fileds.find(FieldName);
-		if (itFiled != m_Fileds.end())
-		{
-			return (FCDynamicWrapField*)(itFiled->second);
-		}
-		if (m_Super)
-		{
-			return m_Super->TryFindFiled(FieldName);
-		}
-		return nullptr;
+        // 如果还是没有找到，就是设置一个空的, 避免反复查找
+        AttribName = GetConstName(AttribName);
+        m_Name2Property[AttribName] = nullptr;
+        return nullptr;
 	}
     FCDynamicField  *FindFieldByName(const char *InFieldName)
     {
@@ -355,18 +342,10 @@ struct FCDynamicClassDesc
         {
             return itFiled->second;
         }
-		FCDynamicField* Filed = nullptr;
-        if(m_bFullPrepare)
-        {
-            Filed = TryFindFiled(InFieldName);
-        }
-        else
-        {
-            Filed = RegisterFieldByCString(m_Struct, InFieldName);
-        }
+        // 没有找到，就动态注册一个
+		FCDynamicField* Filed = RegisterFieldByCString(m_Struct, InFieldName);
 		if (Filed)
 		{
-			m_Fileds[Filed->GetFieldName()] = Filed;
 			return Filed;
 		}
         // 都没有找到的情况下，尝试注册一个空的，以免再次查找

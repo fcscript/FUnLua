@@ -13,6 +13,7 @@ function FCMainPanel:ReceiveBeginPlay()
 		localPlayerControler.bShowMouseCursor = 1
 	end
 	print("[FCTestScript]FCMainPanel:ReceiveBeginPlay, world=", world, ",localPlayerControler=", localPlayerControler)
+	self.MapName:SetText(world:GetName())
 end
 
 function FCMainPanel:ReceiveBeginDestroy()
