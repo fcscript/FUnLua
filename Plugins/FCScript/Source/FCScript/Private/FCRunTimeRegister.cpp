@@ -63,20 +63,6 @@ int32 Class_Index(lua_State* L)
     return Global_GetUProperty(L);
 }
 
-void*  NewUserDataByClass(lua_State* L, FCDynamicClassDesc* ClassDesc)
-{
-    UScriptStruct* ScriptStruct = ClassDesc->m_ScriptStruct; // Cast<UScriptStruct>(ClassDesc->m_Struct);
-    UScriptStruct::ICppStructOps* CppStructOps = ScriptStruct->GetCppStructOps();
-    int32 Alignment = CppStructOps ? CppStructOps->GetAlignment() : ScriptStruct->GetMinAlignment();
-    int Size = CppStructOps ? CppStructOps->GetSize() : ScriptStruct->GetStructureSize();
-    int32 UserdataPadding = CalcUserdataPadding(Alignment);       // calculate padding size for userdata
-
-    // 结构体的话，可以由lua自己维护
-    void* Userdata = NewUserdataWithPadding(L, Size, ClassDesc->m_UEClassName, UserdataPadding);
-    ScriptStruct->InitializeStruct(Userdata);
-    return Userdata;
-}
-
 int ScriptStruct_Copy(lua_State* L)
 {
     FCDynamicClassDesc* ClassDesc = (FCDynamicClassDesc*)lua_touserdata(L, lua_upvalueindex(1));
@@ -190,7 +176,6 @@ int ScriptStruct_New(lua_State* L)
 {
     FCDynamicClassDesc* ClassDesc = (FCDynamicClassDesc*)lua_touserdata(L, lua_upvalueindex(1));
     // 结构体的话，可以由lua自己维护
-    //NewUserDataByClass(L, ClassDesc);
     int64 ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
     FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
     return 1;
