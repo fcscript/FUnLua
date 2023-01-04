@@ -29,7 +29,6 @@ struct TMapIterator
 
 struct FCObjRef
 {
-	FCObjRef  *m_pLast;
 	FCObjRef  *m_pNext;
 	FCObjRef  *Parent; // 父节点
 	FCDynamicClassDesc* ClassDesc;
@@ -43,10 +42,37 @@ struct FCObjRef
     uint8*     ThisObjAddr;     // 对象自己的地址
 	int        Ref;             // 引用计数
 	EFCObjRefType  RefType;
-	CFastList<FCObjRef>  Childs;
-	FCObjRef():m_pLast(NULL), m_pNext(NULL), Parent(NULL), ClassDesc(NULL), DynamicProperty(NULL), PtrIndex(0), ThisObjAddr(NULL), Ref(0), RefType(RefNone)
+    FCObjRef *Childs; // 使用单链表
+	FCObjRef():m_pNext(NULL), Parent(NULL), ClassDesc(NULL), DynamicProperty(NULL), PtrIndex(0), ThisObjAddr(NULL), Ref(0), RefType(RefNone), Childs(nullptr)
 	{
 	}
+    void PushChild(FCObjRef* ChildRef)
+    {
+        ChildRef->m_pNext = Childs;
+        Childs = ChildRef;
+    }
+    void EraseChild(FCObjRef *ChildRef)
+    {
+        if(Childs == ChildRef)
+        {
+            Childs = Childs->m_pNext;
+        }
+        else
+        {
+            FCObjRef *pList = Childs;
+            FCObjRef *pNext = nullptr;
+            while(pList)
+            {
+                pNext = pList->m_pNext;
+                if(pNext == ChildRef)
+                {
+                    pList->m_pNext = pNext ? pNext->m_pNext : nullptr;
+                    break;
+                }
+                pList = pNext;
+            }
+        }
+    }
 	ObjRefKey GetRefKey() const
 	{
 		return ObjRefKey(Parent ? Parent->ThisObjAddr : nullptr, ThisObjAddr);

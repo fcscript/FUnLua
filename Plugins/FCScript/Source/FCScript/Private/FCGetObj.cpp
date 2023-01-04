@@ -189,7 +189,7 @@ int64  FCGetObj::PushChildProperty(FCObjRef* Parent, const FCDynamicProperty* Dy
 	++(Parent->Ref);
 
 	ObjRef->Parent = Parent;
-	Parent->Childs.push_back(ObjRef);
+    Parent->PushChild(ObjRef);
 	return ObjRef->PtrIndex;
 }
 
@@ -439,7 +439,7 @@ void  FCGetObj::ReleaseObjRef(FCObjRef* ObjRef)
         FCObjRef* ParentRef = ObjRef->Parent;
         if (ParentRef)
         {
-            ParentRef->Childs.erase(ParentRef->Childs.MakeIterator(ObjRef));
+            ParentRef->EraseChild(ObjRef);
         }
         DestroyChildRef(ObjRef);
 
@@ -454,10 +454,10 @@ void  FCGetObj::ReleaseObjRef(FCObjRef* ObjRef)
 void  FCGetObj::DestroyChildRef(FCObjRef* ObjRef)
 {
 	// 父节点没有，儿子也没有必要留下, 儿子的儿子也不能留, 斩草要除根, 一脉不留存
-	while (ObjRef->Childs.size() > 0)
+	while (ObjRef->Childs)
 	{
-		FCObjRef* ChildPtr = ObjRef->Childs.front_ptr();
-		ObjRef->Childs.pop_front();
+		FCObjRef* ChildPtr = ObjRef->Childs;
+        ObjRef->Childs = ObjRef->Childs->m_pNext;
 		DestroyChildRef(ChildPtr);
 	}
 	DestroyObjRef(ObjRef);
