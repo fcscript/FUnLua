@@ -438,6 +438,17 @@ FCDynamicClassDesc*  FCScriptContext::RegisterUClass(const char *UEClassName)
 		return itClass->second;
 	}
 	int  NameOffset = (UEClassName[0] == 'U' || UEClassName[0] == 'A' || UEClassName[0] == 'F' || UEClassName[0] == 'E') ? 1 : 0;
+    if(NameOffset > 0)
+    {
+        itClass = m_ClassFinder.find(UEClassName + NameOffset);
+        if (itClass != m_ClassFinder.end())
+        {
+            UEClassName = GetConstName(UEClassName) + NameOffset;
+            m_ClassFinder[UEClassName] = itClass->second;
+            return itClass->second;
+        }
+    }
+
 	const TCHAR *InName = UTF8_TO_TCHAR(UEClassName);
 	const TCHAR *Name = InName + NameOffset;
 	UStruct *Struct = FindObject<UStruct>(ANY_PACKAGE, Name);       // find first
@@ -474,6 +485,8 @@ FCDynamicClassDesc*  FCScriptContext::RegisterUClass(const char *UEClassName)
 
 FCDynamicClassDesc*  FCScriptContext::RegisterUStruct(UStruct *Struct)
 {
+    if(!Struct)
+        return nullptr;
 	CDynamicUStructMap::iterator itStruct = m_StructMap.find(Struct);
 	if(itStruct != m_StructMap.end())
 	{

@@ -11,6 +11,7 @@
 void FCTSetWrap::Register(lua_State* L)
 {
     luaL_requiref(L, "TSet", LibOpen_wrap, 1);
+    SetWrapClassName("TSet");
 }
 
 int FCTSetWrap::LibOpen_wrap(lua_State* L)

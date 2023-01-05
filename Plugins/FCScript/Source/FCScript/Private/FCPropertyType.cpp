@@ -5,11 +5,13 @@ typedef  std::unordered_map<void*, FCPropertyType>   CPropertyTypeMap;
 typedef  std::unordered_map<const char *, FCPropertyType, FCStringHash, FCStringEqual>   CGraphyTypeMap;
 typedef  std::unordered_map<FCPropertyType, const char *>   CPropertyClassNameMap;
 typedef std::unordered_map<const char*, char*, FCStringHash, FCStringEqual> CCppName2NameMap;
+typedef std::unordered_map<const char*, bool, FCStringHash, FCStringEqual> CWrapClassFlagMap;
 CPropertyTypeMap  gPropertyTypeMap;
 CGraphyTypeMap   gGraphyTypeMap;
 CPropertyTypeMap gCachePropertyTypeMap;
 CPropertyClassNameMap gPropertyClassNameMap;
 CCppName2NameMap      GCppName2NameMap;
+CWrapClassFlagMap     GWrapClassFlagMap;
 
 void  InitPropertyTable()
 {
@@ -112,6 +114,7 @@ void  ReleasePropertyTable()
 	gGraphyTypeMap.clear();
 	gCachePropertyTypeMap.clear();
     ReleasePtrMap(GCppName2NameMap);
+    GWrapClassFlagMap.clear();
 }
 
 const char* GetConstName(const char* InName)
@@ -129,6 +132,17 @@ const char* GetConstName(const char* InName)
     buffer[Len] = 0;
     GCppName2NameMap[buffer] = buffer;
     return buffer;
+}
+
+void  SetWrapClassName(const char* InWrapClassName)
+{
+    GWrapClassFlagMap[InWrapClassName] = true;
+}
+
+bool  IsWrapClassName(const char* InClassName)
+{
+    CWrapClassFlagMap::const_iterator itWrap = GWrapClassFlagMap.find(InClassName);
+    return itWrap != GWrapClassFlagMap.end();    
 }
 
 FCPropertyType  GetScriptPropertyType(const FProperty *Property)

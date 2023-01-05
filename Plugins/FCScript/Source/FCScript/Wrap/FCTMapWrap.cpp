@@ -13,6 +13,8 @@ void FCTMapWrap::Register(lua_State* L)
 {
 	luaL_requiref(L, "TMap", LibOpen_wrap, 1);
     luaL_requiref(L, "MapProperty", LibOpen_wrap, 1);
+    SetWrapClassName("TMap");
+    SetWrapClassName("MapProperty");
 }
 
 int FCTMapWrap::LibOpen_wrap(lua_State* L)

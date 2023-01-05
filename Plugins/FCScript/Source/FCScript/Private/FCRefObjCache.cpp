@@ -94,7 +94,9 @@ void  FCRefObjCache::PushBindLuaValue(lua_State* L, int64 ObjID, const char* Cla
 		return;
 	}
 
-	GlbRegisterClass(L, ClassName);
+    // 如果是内部的类，比如TArray这种，就不要再注册了
+    if(!IsWrapClassName(ClassName))
+        GlbRegisterClass(L, ClassName);
 
 	FRefCacheInfo* CacheInfo = m_InvalidList.front_ptr();
 	if (CacheInfo)

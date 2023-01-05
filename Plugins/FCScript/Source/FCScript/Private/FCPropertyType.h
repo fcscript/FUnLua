@@ -108,6 +108,8 @@ void  InitPropertyTable();
 void  ReleasePropertyTable();
 
 const char* GetConstName(const char* InName);
+void  SetWrapClassName(const char *InWrapClassName);
+bool  IsWrapClassName(const char *InClassName);
 
 // 功能：得到反射属性的类型（脚本所支持的）
 FCPropertyType  GetScriptPropertyType(const FProperty *Property);

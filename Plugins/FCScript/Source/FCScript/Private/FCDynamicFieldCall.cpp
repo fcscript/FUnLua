@@ -10,20 +10,30 @@
 int FCDynamicProperty::DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr)
 {
     FCObjRef* ObjRef = (FCObjRef*)ObjRefPtr;
-    uint8* ObjAddr = (uint8*)(ObjRef->GetPropertyAddr());
-    uint8* ValueAddr = ObjAddr + this->Offset_Internal;
-    UObject* ThisObj = ObjRef->GetUObject();
-    this->m_WriteScriptFunc(L, this, ValueAddr, ThisObj, ObjRef);
+    if(ObjRef)
+    {
+        uint8* ObjAddr = (uint8*)(ObjRef->GetPropertyAddr());
+        uint8* ValueAddr = ObjAddr + this->Offset_Internal;
+        UObject* ThisObj = ObjRef->GetUObject();
+        this->m_WriteScriptFunc(L, this, ValueAddr, ThisObj, ObjRef);
+    }
+    else
+    {
+        lua_pushnil(L);
+    }
     return 1;
 }
 
 int FCDynamicProperty::DoSet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr)
 {
     FCObjRef* ObjRef = (FCObjRef*)ObjRefPtr;
-    uint8* ObjAddr = (uint8*)(ObjRef->GetPropertyAddr());
-    uint8* ValueAddr = ObjAddr + this->Offset_Internal;
-    UObject* ThisObj = ObjRef->GetUObject();
-    this->m_ReadScriptFunc(L, 3, this, ValueAddr, ThisObj, ObjRef);
+    if(ObjRef)
+    {
+        uint8* ObjAddr = (uint8*)(ObjRef->GetPropertyAddr());
+        uint8* ValueAddr = ObjAddr + this->Offset_Internal;
+        UObject* ThisObj = ObjRef->GetUObject();
+        this->m_ReadScriptFunc(L, 3, this, ValueAddr, ThisObj, ObjRef);
+    }
     return 0;
 }
 

@@ -4,6 +4,7 @@
 #include "FCRunTimeRegister.h"
 #include "FCTemplateType.h"
 #include "FCCore.h"
+#include "FCVectorBaseWrap.h"
 
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
@@ -28,9 +29,15 @@ void FCUEUtilWrap::Register(lua_State* L)
         //ClassDesc->RegisterWrapLibAttrib("ClassDesc", DoGetClassDesc_wrap, nullptr);
         ClassDesc->RegisterWrapLibFunction("StaticClass", DoGetStaticClass_wrap, nullptr);
     }
+    ClassDesc = GetScriptContext()->RegisterUClass("UWorld");
+    if(ClassDesc)
+    {
+        ClassDesc->RegisterWrapLibFunction("SpawnActor", DoSpawActor_wrap, nullptr);
+    }
 
     lua_register(L, "NewObject", NewObject_wrap);
     lua_register(L, "SpawActor", SpawActor_wrap);
+    lua_register(L, "SpawnActor", SpawActor_wrap);
     lua_register(L, "LoadObject", LoadObject_wrap);
     lua_register(L, "LoadClass", LoadClass_wrap);
     lua_register(L, "LoadUserWidget", LoadUserWidget_wrap);
@@ -262,6 +269,11 @@ int FCUEUtilWrap::DoGetStaticClass_wrap(lua_State* L, void* ObjRefPtr, UObject* 
     return 1;
 }
 
+int FCUEUtilWrap::DoSpawActor_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    return SpawActor_wrap(L);
+}
+
 FCDynamicClassDesc *UEUtil_FindClassDesc(const char *ClassName)
 {
     if(!ClassName)
@@ -302,9 +314,9 @@ int FCUEUtilWrap::NewObject_wrap(lua_State* L)
     }
     else
     {
-        UObject* Arg1 = FCScript::GetUObject(L, 1);
-        UStruct *ObjStruct = Cast<UStruct>(Arg1);
-        ClassDesc = GetScriptContext()->RegisterUStruct(ObjStruct);
+        UStruct *ObjStruct = FCScript::GetUStruct(L, 1);
+        if(ObjStruct)
+            ClassDesc = GetScriptContext()->RegisterUStruct(ObjStruct);
     }
 
     UObject* Arg2 = FCScript::GetUObject(L, 2);
@@ -333,7 +345,82 @@ int FCUEUtilWrap::NewObject_wrap(lua_State* L)
 }
 int FCUEUtilWrap::SpawActor_wrap(lua_State* L)
 {
-	return NewObject_wrap(L);
+    FTransform Transform;
+    FActorSpawnParameters SpawnParameters;
+
+    int32 NumParams = lua_gettop(L);
+    UWorld* World = Cast<UWorld>(FCScript::GetUObject(L, 1));
+    UClass* Class = Cast<UClass>(FCScript::GetUStruct(L, 2));
+    if(NumParams > 2)
+    {
+        FTransform* Arg3 = (FTransform*)VectorBase_GetAddr(L, 3, "FTransform");
+        if(Arg3)
+        {
+            Transform = *Arg3;
+        }
+    }
+    if(NumParams > 3)
+    {
+        SpawnParameters.SpawnCollisionHandlingOverride = (ESpawnActorCollisionHandlingMethod)lua_tointeger(L, 4);
+    }
+    AActor* Owner = nullptr;
+    if(NumParams > 4)
+    {
+        Owner = Cast<AActor>(FCScript::GetUObject(L, 5));
+        if(World && Owner && Owner->GetWorld() != World)
+        {
+            Owner = nullptr;
+        }
+        SpawnParameters.Owner = Owner;
+    }
+
+    if (NumParams > 5)
+    {
+        AActor* Actor = Cast<AActor>(FCScript::GetUObject(L, 6));
+        if (Actor)
+        {
+            APawn* Instigator = Cast<APawn>(Actor);
+            if (!Instigator)
+            {
+                Instigator = Actor->GetInstigator();
+            }
+            SpawnParameters.Instigator = Instigator;
+        }
+    }
+    if (NumParams > 8)
+    {
+        ULevel* Level = Cast<ULevel>(FCScript::GetUObject(L, 9));
+        if (Level)
+        {
+            SpawnParameters.OverrideLevel = Level;
+        }
+    }
+    if (NumParams > 9)
+    {
+        SpawnParameters.Name = FName(lua_tostring(L, 10));
+    }
+    if(!World || !Class)
+    {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUStruct(Class);
+    const char* ModuleName = NumParams > 6 ? lua_tostring(L, 7) : nullptr;
+    AActor* NewActor = World->SpawnActor(Class, &Transform, SpawnParameters);
+    if(!NewActor)
+    {
+        lua_pushnil(L);
+        return 1;
+    }
+    int64  ObjID = FCGetObj::GetIns()->PushUObject(NewActor);
+    if (ModuleName && ModuleName[0] != 0)
+    {
+        FFCObjectdManager::GetSingleIns()->CallBindScript(NewActor, ModuleName);
+    }
+    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
+
+    return 1;
 }
 
 // UObject.Load("/Game/Core/Blueprints/AI/BehaviorTree_Enemy.BehaviorTree_Enemy")

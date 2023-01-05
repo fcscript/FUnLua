@@ -14,6 +14,8 @@ void FCTArrayWrap::Register(lua_State* L)
 {
     luaL_requiref(L, "TArray", LibOpen_wrap, 1);
     luaL_requiref(L, "Array", LibOpen_wrap, 1);
+    SetWrapClassName("TArray");
+    SetWrapClassName("Array");
 	//luaL_requiref(L, "TArray", LibOpen_wrap, 1);
 }
 

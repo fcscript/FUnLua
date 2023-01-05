@@ -318,6 +318,11 @@ bool GlbReigterClassEx(lua_State* L, FCDynamicClassDesc* ClassDesc, const char* 
     {
         return true;
     }
+    if(!ClassDesc)
+    {
+        ClassDesc = GetScriptContext()->RegisterUClass(ClassName);
+    }
+
     if (!ClassDesc)
     {
         // 为免存泄露，也需要创建一个
@@ -430,8 +435,7 @@ bool GlbReigterClassEx(lua_State* L, FCDynamicClassDesc* ClassDesc, const char* 
 
 bool  GlbRegisterClass(lua_State* L, const char* ClassName)
 {
-    FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUClass(ClassName);
-    return GlbReigterClassEx(L, ClassDesc, ClassName);
+    return GlbReigterClassEx(L, nullptr, ClassName);
 }
 
 // 注册元表类(无返回值的函数)

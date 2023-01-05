@@ -95,6 +95,37 @@ UObject* FC_GetArgValue_Object(lua_State* L, int Index)
     return nullptr;
 }
 
+UStruct* FC_GetArgValue_UStruct(lua_State* L, int Index)
+{
+    int Type = lua_type(L, Index);
+    if (LUA_TTABLE == Type)
+    {
+        // 直接取类名吧    
+        lua_pushstring(L, "__name");        // 3
+        int ClassType = lua_rawget(L, -2);                 // 3
+        const char* UETypeName = lua_tostring(L, -1);
+        if(UETypeName)
+        {
+            FCDynamicClassDesc *DynamicClassDesc = GetScriptContext()->RegisterUClass(UETypeName);
+            if(DynamicClassDesc)
+                return DynamicClassDesc->m_Struct;
+        }
+    }
+    else if(LUA_TSTRING == Type)
+    {
+        const char* UEClassName = lua_tostring(L, 1);
+        if(UEClassName)
+        {
+            FCDynamicClassDesc* DynamicClassDesc = GetScriptContext()->RegisterUClass(UEClassName);
+            if (DynamicClassDesc)
+                return DynamicClassDesc->m_Struct;
+        }
+    }
+    UObject *ArgObj = FC_GetArgValue_Object(L, Index);
+    UStruct* ObjStruct = Cast<UStruct>(ArgObj);
+    return ObjStruct;
+}
+
 void FC_SetArgValue_Object(lua_State* L, const UObject* Object)
 {
     if (!Object)

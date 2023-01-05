@@ -3,12 +3,11 @@
 #include "FCObjectManager.h"
 #include "FCGetObj.h"
 
-int VectorBase_SetWrap(lua_State* L, int MemberCount)
+int VectorBase_SetWrap(lua_State* L, int MemberCount, const char* ClassName)
 {
-    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
-    if (ObjRef && ObjRef->IsValid())
+    float *v = (float*)VectorBase_GetAddr(L, 1, ClassName);
+    if (v)
     {
-        float* v = (float*)ObjRef->GetPropertyAddr();
         int ParamCount = lua_gettop(L);
         if (ParamCount > MemberCount)
             ParamCount = MemberCount;
