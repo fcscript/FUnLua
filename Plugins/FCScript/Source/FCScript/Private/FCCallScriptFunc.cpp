@@ -446,6 +446,10 @@ void  ReadScriptStruct(lua_State* L, int ValueIdx, const FCDynamicPropertyBase *
 	{
 		StructProperty->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), StructProperty->ArrayDim);
 	}
+    else
+    {
+        ReportLuaError(L, "invalid struct param, none copy");
+    }
 }
 void  ReadScriptUObject(lua_State* L, int ValueIdx, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
@@ -460,6 +464,7 @@ void  ReadScriptUObject(lua_State* L, int ValueIdx, const FCDynamicPropertyBase 
     else
     {
         *((UObject**)ValueAddr) = nullptr;
+        ReportLuaError(L, "invalid object param, cast to nullptr");
     }
 }
 

@@ -324,7 +324,7 @@ int FCUEUtilWrap::NewObject_wrap(lua_State* L)
 
     const char* ObjectName = lua_tostring(L, 3);
     const char* ScriptClassName = lua_tostring(L, 4);
-	if(ClassDesc)
+	if(ClassDesc && ClassDesc->m_Class)
 	{
 		FName  Name(NAME_None);
 		if(ObjectName && ObjectName[0] != 0)

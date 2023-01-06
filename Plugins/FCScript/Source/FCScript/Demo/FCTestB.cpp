@@ -157,3 +157,16 @@ void  PushStringToArray(int64 ObjID, const char* AttribName, const char* InStr)
 		new(ValudAddr) FString(InName);
 	}
 }
+
+void UFCTestB::SetBasePtr(UFCTestB* Obj, UObject* Ptr)
+{
+    if(Obj)
+    {
+        Obj->BasePtr = Ptr;
+    }
+}
+
+void UFCTestB::SetPtr(UObject* Ptr)
+{
+    BasePtr = Ptr;
+}

@@ -199,6 +199,29 @@ function TestCrash:Crash9(worldContextObject)
     UEPrint("[TestCrash]run Crash9")
 end
 
+-- 调用C++接口，传错误的参数
+function TestCrash:Crash10(worldContextObject)
+    if self.TestB == nil then
+        self.TestB = NewObject(UE4.UFCTestB)
+        self.TestObj = NewObject(UE4.UFCTest)
+        UEPrint("[TestCrash]run Crash10, TestB=", self.TestB, ",TestObj=", self.TestObj)
+    end
+    local testB = self.TestB
+    local testObj = self.TestObj
+    testB:SetBasePtr(testObj, testObj)
+    testB.SetPtr(testObj, testObj)
+    testObj:SetActor(testObj)
+    UEPrint("[TestCrash]run Crash10")
+end
+
+-- 调用C++接口，传错误的Struct参数
+function TestCrash:Crash11(worldContextObject)
+    local testB = NewObject(UE4.UFCTestB)    
+    local param = UE4.FTestBoneAdjustItemInfo()
+    testB:SetAvatarParam(param)
+    UEPrint("[TestCrash]run Crash11, testB=", testB, ",param=", param)
+end
+
 function  TestCrash:DoCrash(worldContextObject)
     local nextFuncIndex = self.NextFuncIndex or 0
     nextFuncIndex = nextFuncIndex + 1
@@ -209,7 +232,7 @@ function  TestCrash:DoCrash(worldContextObject)
     local funcName = "Crash" .. nextFuncIndex
     local func = self[funcName]
     func(self, worldContextObject)
-    
+
     -- self:Crash1(worldContextObject) -- 正常
     -- self:Crash2(worldContextObject) -- 修改C++后正常
     -- self:Crash3(worldContextObject) -- 会Crash， 但第二次测试又不会了
@@ -219,6 +242,8 @@ function  TestCrash:DoCrash(worldContextObject)
     -- self:Crash7(worldContextObject) -- 第二次执行Crash
     -- self:Crash8(worldContextObject) -- 会Crash
     -- self:Crash9(worldContextObject) -- 会延迟Crash
+    -- self:Crash10(worldContextObject) -- 会Crash
+    self:Crash11(worldContextObject) -- 会Crash
 
     ----- 下面是FUnLua的测试结果
     -- self:Crash1(worldContextObject) -- 正常
@@ -230,6 +255,7 @@ function  TestCrash:DoCrash(worldContextObject)
     -- self:Crash7(worldContextObject) -- 正常
     -- self:Crash8(worldContextObject) -- 正常
     -- self:Crash9(worldContextObject) -- 正常
+    -- self:Crash10(worldContextObject) -- 正常
 end
 
 return TestCrash

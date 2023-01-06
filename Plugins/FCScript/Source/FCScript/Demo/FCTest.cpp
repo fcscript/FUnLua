@@ -56,3 +56,17 @@ void UFCTest::CallClicked()
 {
 	OnClicked.Broadcast();
 }
+
+void UFCTest::SetActor(AActor* Actor)
+{
+    if(Actor)
+    {
+        Actor->bHiddenEdLevel = true;
+        Actor->Tags.Add(FName("Test"));
+    }    
+}
+
+void UFCTest::SetAvatarParam(const FTestAvatarSystemInitParams& Param)
+{
+    AvatarParams = Param;
+}

@@ -11,4 +11,11 @@ class UFCTestB : public UFCTest
 public:
 	UPROPERTY()
 	class UObject* BasePtr;
+
+public:
+    UFUNCTION(BlueprintCallable, Category = "Attributes")
+    void SetBasePtr(UFCTestB *Obj, UObject *Ptr);
+
+    UFUNCTION(BlueprintCallable, Category = "Attributes")
+    void SetPtr(UObject* Ptr);
 };

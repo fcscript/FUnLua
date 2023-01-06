@@ -190,6 +190,14 @@ int ReportLuaCallError(lua_State* L)
     return 0;
 }
 
+int ReportLuaError(lua_State* L, const char* ErrorTips)
+{
+    luaL_traceback(L, L, ErrorTips, 1);
+    ErrorTips = lua_tostring(L, -1);
+    UE_LOG(LogFCScript, Error, TEXT("Lua error message: %s"), UTF8_TO_TCHAR(ErrorTips));
+    return 0;
+}
+
 bool GlobDoRequireFileData(lua_State* L, const char* ModuleName, TArray<uint8> &Data)
 {
     int FileLen = Data.Num();

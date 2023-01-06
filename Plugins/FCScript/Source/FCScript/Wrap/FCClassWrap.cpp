@@ -17,10 +17,27 @@ void FCClassWrap::Register(lua_State* L)
     }
 }
 
+const char *GetMetaClassName(lua_State* L, int Idx)
+{
+    int Type = lua_type(L, Idx);
+    if (LUA_TSTRING == Type)
+    {
+        return lua_tostring(L, Idx);
+    }
+    else if (LUA_TTABLE == Type)
+    {
+        lua_pushstring(L, "__name");        // 3
+        int ClassType = lua_rawget(L, -2);                 // 3
+        const char* UETypeName = lua_tostring(L, -1);
+        return UETypeName;
+    }
+    return nullptr;
+}
+
 FCDynamicClassDesc* UEUtil_FindClassDesc(const char* ClassName);
 int FCClassWrap::DoLoad_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
 {
-    const char* ClassName = lua_tostring(L, 1);
+    const char* ClassName = GetMetaClassName(L, 1);
     if (!ClassName)
     {
         return 0;
@@ -33,7 +50,7 @@ int FCClassWrap::DoLoad_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
 int FCClassWrap::New_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
 {
 // UClass.New("Class_name")
-    const char* ClassName = lua_tostring(L, 1);
+    const char* ClassName = GetMetaClassName(L, 1);
     FCDynamicClassDesc* ClassDesc = UEUtil_FindClassDesc(ClassName);
     if(ClassDesc)
     {

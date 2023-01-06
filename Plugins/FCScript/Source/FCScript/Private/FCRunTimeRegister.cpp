@@ -477,6 +477,7 @@ int Global_GetUProperty(lua_State* L)
             return Field->DoGet(L, ObjRef, ClassDesc);
         }
     }
+    ReportLuaError(L, "invalid property, failed to call GetUProperty");
     // 查找函数
     lua_pushnil(L);
     return 1;
@@ -511,18 +512,19 @@ int Global_SetUProperty(lua_State* L)
             return Field->DoSet(L, ObjRef, ClassDesc);
         }
     }
-    const char* ClassName = GetUETypeNameFromLua(L, 1);
-    FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUClass(ClassName);
-    if (ClassDesc)
-    {
-        const char* FieldName = lua_tostring(L, 2); // value
-        FCDynamicField* Field = ClassDesc->FindFieldByName(FieldName);
-        if (Field)
-        {
-            //return Field->DoSet(L, ObjRef, ClassDesc);  // 不支持全局变量的写入了
-        }
-    }
-    //Global_SetTableValue(L);
+    ReportLuaError(L, "invalid property, failed to call SetUProperty");
+    //const char* ClassName = GetUETypeNameFromLua(L, 1);
+    //FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUClass(ClassName);
+    //if (ClassDesc)
+    //{
+    //    const char* FieldName = lua_tostring(L, 2); // value
+    //    FCDynamicField* Field = ClassDesc->FindFieldByName(FieldName);
+    //    if (Field)
+    //    {
+    //        //return Field->DoSet(L, ObjRef, ClassDesc);  // 不支持全局变量的写入了
+    //    }
+    //}
+    ////Global_SetTableValue(L);
     return 0;    
 }
 
@@ -815,6 +817,7 @@ int   Class_CallFunction(lua_State* L)
         {
             if (FUNC_Static != (FUNC_Static & DynamicFunc->Function->FunctionFlags))
             {
+                ReportLuaError(L, "invalid object, failed call function");
                 return 0;
             }
         }

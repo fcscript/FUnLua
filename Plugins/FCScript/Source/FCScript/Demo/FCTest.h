@@ -92,7 +92,12 @@ public:
 	
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "CallClicked"))
 	void CallClicked();
-	
+
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "SetActor"))
+    void SetActor(AActor *Actor);
+
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "SetAvatarParam"))
+    void SetAvatarParam(const FTestAvatarSystemInitParams &Param);	
 	
 	//UPROPERTY()
 	//TSharedPtr<UFCTest> SharedPtr;  // 这个是不支持的
