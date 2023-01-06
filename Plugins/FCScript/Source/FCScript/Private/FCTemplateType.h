@@ -22,6 +22,18 @@ enum FCInnerBaseType
     FC_INNER_TYPE_FTEXT,           // FText
 };
 
+#if ENGINE_MAJOR_VERSION >=5
+#define ScriptArray_Add(ScriptArray, Count, ElementSize)  ScriptArray->Add(Count, ElementSize, __STDCPP_DEFAULT_NEW_ALIGNMENT__)
+#define ScriptArray_Insert(ScriptArray, Index, Count, ElementSize) ScriptArray->Insert(Index, Count, ElementSize, __STDCPP_DEFAULT_NEW_ALIGNMENT__)
+#define ScriptArray_Remove(ScriptArray, Index, Count, ElementSize)  ScriptArray->Remove(Index, Count, ElementSize, __STDCPP_DEFAULT_NEW_ALIGNMENT__)
+#define ScriptArray_Empty(ScriptArray, Size, ElementSize)  ScriptArray->Empty(Size, ElementSize, __STDCPP_DEFAULT_NEW_ALIGNMENT__)
+#else
+#define ScriptArray_Add(ScriptArray, Count, ElementSize)  ScriptArray->Add(Count, ElementSize)
+#define ScriptArray_Insert(ScriptArray, Index, Count, ElementSize) ScriptArray->Insert(Index, Count, ElementSize)
+#define ScriptArray_Remove(ScriptArray, Count, Count, ElementSize)  ScriptArray->Remove(Count, Count, ElementSize)
+#define ScriptArray_Empty(ScriptArray, Size, ElementSize)  ScriptArray->Empty(Size, ElementSize)
+#endif
+
 struct FCTArrayDynamicProperty : public FCDynamicProperty
 {
     FArrayProperty* ArrayProperty;

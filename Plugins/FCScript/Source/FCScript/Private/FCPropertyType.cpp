@@ -82,6 +82,11 @@ void  InitProperyNameTable()
 	gPropertyClassNameMap[FCPROPERTY_FloatProperty] = "float";
 	gPropertyClassNameMap[FCPROPERTY_DoubleProperty] = "double";
 	gPropertyClassNameMap[FCPROPERTY_NumericProperty] = "double";
+
+    gPropertyClassNameMap[FCPROPERTY_Vector2] = "FVector2D";
+    gPropertyClassNameMap[FCPROPERTY_Vector3] = "FVector";
+    gPropertyClassNameMap[FCPROPERTY_Vector4] = "FVector4";
+
 	gPropertyClassNameMap[FCPROPERTY_FILED] = "FProperty";
 	gPropertyClassNameMap[FCPROPERTY_Enum] = "FEnumProperty";
 	//gPropertyClassNameMap[FCPROPERTY_ScriptStruct] = "UStruct";

@@ -162,7 +162,7 @@ void  FCTArrayWrap_SetNumb(FScriptArray *ScriptArray, FProperty *Inner, int NewN
 	uint8 *ValueAddr = ObjAddr;
 	if (OldNum < NewNum)
 	{
-		int32 Index = ScriptArray->Add(NewNum - OldNum, ElementSize);
+		int32 Index = ScriptArray_Add(ScriptArray, NewNum - OldNum, ElementSize);
 		for (; Index < NewNum; ++Index)
 		{
 			ValueAddr = ObjAddr + Index * ElementSize;
@@ -176,7 +176,7 @@ void  FCTArrayWrap_SetNumb(FScriptArray *ScriptArray, FProperty *Inner, int NewN
 			ValueAddr = ObjAddr + Index * ElementSize;
 			Inner->DestroyValue(ValueAddr);
 		}
-		ScriptArray->Remove(OldNum, NewNum - OldNum, ElementSize);
+        ScriptArray_Remove(ScriptArray, OldNum, NewNum - OldNum, ElementSize);
 	}
 }
 int FCTArrayWrap::SetNumb_wrap(lua_State* L)
@@ -292,7 +292,7 @@ int  TArrayWrap_Add(lua_State* L, FCObjRef* ObjRef, int Idx)
 			FArrayProperty* ArrayProperty = (FArrayProperty*)ObjRef->DynamicProperty->Property;
 			FProperty* Inner = ArrayProperty->Inner;
 			int ElementSize = Inner->GetSize();
-			Index = ScriptArray->Add(1, ElementSize);
+			Index = ScriptArray_Add(ScriptArray, 1, ElementSize);
 			uint8* ObjAddr = (uint8*)ScriptArray->GetData();
 			uint8* ValueAddr = ObjAddr + Index * ElementSize;
 			Inner->InitializeValue(ValueAddr);
@@ -382,7 +382,7 @@ int FCTArrayWrap::Insert_wrap(lua_State* L)
 
 			if (Index >= 0 && Index < Numb)
 			{
-				ScriptArray->Insert(Index, 1, ElementSize);
+                ScriptArray_Insert(ScriptArray, Index, 1, ElementSize);
 				uint8* ObjAddr = (uint8*)ScriptArray->GetData();
 				uint8* ValueAddr = ObjAddr + Index * ElementSize;
 				Inner->InitializeValue(ValueAddr);
@@ -410,7 +410,7 @@ void TArrayWrap_Remove(FCObjRef* ObjRef, int Index)
 				uint8* ObjAddr = (uint8*)ScriptArray->GetData();
 				uint8* ValueAddr = ObjAddr + Index * ElementSize;
 				Inner->DestroyValue(ValueAddr);
-				ScriptArray->Remove(Index, 1, ElementSize);
+                ScriptArray_Remove(ScriptArray, Index, 1, ElementSize);
 			}
 		}
 	}
@@ -436,7 +436,7 @@ int FCTArrayWrap::RemoveItem_wrap(lua_State* L)
 			if (Inner->Identical(Value.ElementCache, ValueAddr))
 			{
 				Inner->DestroyValue(ValueAddr);
-				ScriptArray->Remove(Index, 1, ElementSize);
+                ScriptArray_Remove(ScriptArray, Index, 1, ElementSize);
 
 				++RemoveCount;
 			}
@@ -465,7 +465,7 @@ int FCTArrayWrap::Remove_wrap(lua_State* L)
 				uint8 *ObjAddr = (uint8 *)ScriptArray->GetData();
 				uint8 *ValueAddr = ObjAddr + Index * ElementSize;
 				Inner->DestroyValue(ValueAddr);
-				ScriptArray->Remove(Index, 1, ElementSize);
+                ScriptArray_Remove(ScriptArray, Index, 1, ElementSize);
 			}
 		}
 	}
@@ -499,7 +499,7 @@ int FCTArrayWrap::Reserve_wrap(lua_State* L)
 			FArrayProperty* ArrayProperty = (FArrayProperty*)ObjRef->DynamicProperty->Property;
 			FProperty* Inner = ArrayProperty->Inner;
 			int ElementSize = Inner->GetSize();
-			ScriptArray->Empty(Size, ElementSize);
+            ScriptArray_Empty(ScriptArray, Size, ElementSize);
 		}
 	}
 	return 0;

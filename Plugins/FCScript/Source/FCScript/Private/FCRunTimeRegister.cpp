@@ -82,6 +82,31 @@ int ScriptStruct_Copy(lua_State* L)
     }
     return 0;
 }
+
+int ScriptStruct_CopyFrom(lua_State* L)
+{
+    FCDynamicClassDesc* ClassDesc = (FCDynamicClassDesc*)lua_touserdata(L, lua_upvalueindex(1));
+    UScriptStruct* ScriptStruct = ClassDesc->m_ScriptStruct; // 确认不会为空
+
+    FCObjRef* A = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
+    FCObjRef* B = (FCObjRef*)FCScript::GetObjRefPtr(L, 2);
+
+    if(A && A->IsValid())
+    {
+        if(B && B->IsValid())
+        {
+            ScriptStruct->CopyScriptStruct(A->GetThisAddr(), B->GetThisAddr());
+        }
+        else
+        {
+            // 构建一个默认的，再拷贝, 这个地方不安全，理论上需要释放所有引用的子对象
+            ScriptStruct->DestroyStruct(A->GetThisAddr(), 1);
+            ScriptStruct->InitializeStruct(A->GetThisAddr(), 1);
+        }
+    }
+    return 1;
+}
+
 int ScriptStruct_Compare(lua_State* L)
 {
     // Compare(A, B)
@@ -369,6 +394,11 @@ bool GlbReigterClassEx(lua_State* L, FCDynamicClassDesc* ClassDesc, const char* 
         lua_pushstring(L, "Copy");                          // Key
         lua_pushvalue(L, -2);                               // FClassDesc
         lua_pushcclosure(L, ScriptStruct_Copy, 1);          // closure
+        lua_rawset(L, -4);
+
+        lua_pushstring(L, "CopyFrom");
+        lua_pushvalue(L, -2);
+        lua_pushcclosure(L, ScriptStruct_CopyFrom, 1);
         lua_rawset(L, -4);
 
         lua_pushstring(L, "__eq");                          // Key

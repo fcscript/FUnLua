@@ -1,31 +1,46 @@
 #include "FCTemplateType.h"
 
 
-#if OLD_UE_ENGINE
-template<class _Ty>
-_Ty * NewUEProperty(UScriptStruct* ScriptStruct)
-{
-	_Ty* Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) _Ty(FObjectInitializer(), EC_CppProperty, 0, CPF_HasGetValueTypeHash);
-	return Property;
-}
-#else 
 template<class _Ty>
 _Ty* NewUEProperty(UScriptStruct* ScriptStruct)
 {
+#if OLD_UE_ENGINE
+    _Ty* Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) _Ty(FObjectInitializer(), EC_CppProperty, 0, CPF_HasGetValueTypeHash);
+#elif ENGINE_MAJOR_VERSION >= 5 
+    _Ty* Property = new _Ty(ScriptStruct, NAME_None, RF_Transient);
+    Property->PropertyFlags = CPF_ZeroConstructor | CPF_IsPlainOldData | CPF_NoDestructor | CPF_HasGetValueTypeHash;
+#else
 	_Ty* Property = new _Ty(ScriptStruct, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash);
-	return Property;
+#endif
+    return Property;
 }
-#endif 
 
 FProperty  *NewUEBoolProperty(UScriptStruct* ScriptStruct)
 {
 #if OLD_UE_ENGINE
 	// see overloaded operator new that defined in DECLARE_CLASS(...)
 	UBoolProperty* Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UBoolProperty(FObjectInitializer(), EC_CppProperty, 0, (EPropertyFlags)0, 0xFF, 1, true);
+#elif ENGINE_MAJOR_VERSION >= 5 
+    constexpr auto Params = UECodeGen_Private::FBoolPropertyParams
+    {
+        nullptr,
+        nullptr,
+        CPF_None,
+        UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool,
+        RF_Transient,
+        1,
+        nullptr,
+        nullptr,
+        sizeof(bool),
+        sizeof(ScriptStruct),
+        nullptr,
+        METADATA_PARAMS(nullptr, 0)
+    };
+    FBoolProperty* Property = new FBoolProperty(ScriptStruct, Params);
 #else
 	FBoolProperty* Property = new FBoolProperty(ScriptStruct, NAME_None, RF_Transient, 0, (EPropertyFlags)0, 0xFF, 1, true);
 #endif
-	return Property;
+    return Property;
 }
 
 FProperty* NewUEStructProperty(UScriptStruct* Struct, UScriptStruct* ScriptStruct)
@@ -33,6 +48,26 @@ FProperty* NewUEStructProperty(UScriptStruct* Struct, UScriptStruct* ScriptStruc
 #if OLD_UE_ENGINE
 	// see overloaded operator new that defined in DECLARE_CLASS(...)
     UStructProperty *Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UStructProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_HasGetValueTypeHash, Struct);
+#elif ENGINE_MAJOR_VERSION >= 5 
+    const auto Params = UECodeGen_Private::FStructPropertyParams
+    {
+        nullptr,
+        nullptr,
+        ScriptStruct->GetCppStructOps()
+            ? ScriptStruct->GetCppStructOps()->GetComputedPropertyFlags() | CPF_HasGetValueTypeHash
+            : CPF_HasGetValueTypeHash,
+        UECodeGen_Private::EPropertyGenFlags::Struct,
+        RF_Transient,
+        1,
+        nullptr,
+        nullptr,
+        0,
+        nullptr,
+        METADATA_PARAMS(nullptr, 0)
+    };
+    FStructProperty* Property = new FStructProperty(ScriptStruct, Params);
+    Property->Struct = Struct;
+    Property->ElementSize = Struct->PropertiesSize;
 #else
 	FStructProperty* Property = new FStructProperty(ScriptStruct, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash, Struct);
 #endif
@@ -45,6 +80,23 @@ FProperty  *NewUEClassProperty(UClass *Class, UScriptStruct* ScriptStruct)
 	// see overloaded operator new that defined in DECLARE_CLASS(...)
     //UObjectProperty* Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UObjectProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_HasGetValueTypeHash, Class);
     UClassProperty *Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UClassProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_HasGetValueTypeHash | CPF_UObjectWrapper, Class, nullptr);
+#elif ENGINE_MAJOR_VERSION >= 5 
+    constexpr auto Params = UECodeGen_Private::FObjectPropertyParams
+    {
+        nullptr,
+        nullptr,
+        CPF_HasGetValueTypeHash,
+        UECodeGen_Private::EPropertyGenFlags::Object,
+        RF_Transient,
+        1,
+        nullptr,
+        nullptr,
+        0,
+        nullptr,
+        METADATA_PARAMS(nullptr, 0)
+    };
+    FObjectProperty* Property = new FObjectProperty(ScriptStruct, Params);
+    Property->PropertyClass = Class;
 #else
 	FObjectProperty* Property = new FObjectProperty(ScriptStruct, NAME_None, RF_Transient, 0, CPF_HasGetValueTypeHash, Class);
 #endif
@@ -472,7 +524,7 @@ void TArray_Clear(FScriptArray *ScriptArray, FProperty *Inner)
 		ValueAddr = ObjAddr + Index * ElementSize;
 		Inner->DestroyValue(ValueAddr);
 	}
-	ScriptArray->Remove(0, Numb, ElementSize);
+    ScriptArray_Remove(ScriptArray, 0, Numb, ElementSize);
 }
 
 void TMap_Clear(FScriptMap* ScriptMap, FMapProperty* MapProperty)

@@ -94,7 +94,7 @@ int FCVector3Wrap::num_wrap(lua_State* L)
 
 int FCVector3Wrap::tostring_wrap(lua_State* L)
 {
-    FVector* A = (FVector*)VectorBase_GetAddr(L, 1);
+    FVector* A = (FVector*)VectorBase_GetAddr(L, 1, "FVector");
     if (A)
     {
         FString  Str = FString::Printf(TEXT("%p(X=%f,Y=%f,Z=%f)"), A, A->X, A->Y, A->Z);

@@ -5,7 +5,6 @@
 #include "FCObjectManager.h"
 #include "FCGetObj.h"
 
-
 struct TArrayCacheValue
 {
     uint8 Buffer[64];

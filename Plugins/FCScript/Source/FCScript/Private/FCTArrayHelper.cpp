@@ -9,7 +9,7 @@ void  FCTArrayHelper::Resize(int NewNum)
     uint8* ValueAddr = ObjAddr;
     if (OldNum < NewNum)
     {
-        int32 Index = ScriptArray->Add(NewNum - OldNum, ElementSize);
+        int32 Index = ScriptArray_Add(ScriptArray, NewNum - OldNum, ElementSize);
         for (; Index < NewNum; ++Index)
         {
             ValueAddr = ObjAddr + Index * ElementSize;
@@ -23,7 +23,7 @@ void  FCTArrayHelper::Resize(int NewNum)
             ValueAddr = ObjAddr + Index * ElementSize;
             Inner->DestroyValue(ValueAddr);
         }
-        ScriptArray->Remove(OldNum, NewNum - OldNum, ElementSize);
+        ScriptArray_Remove(ScriptArray, OldNum, NewNum - OldNum, ElementSize);
     }
 }
 
