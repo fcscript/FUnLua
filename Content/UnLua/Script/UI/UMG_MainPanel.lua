@@ -1,4 +1,5 @@
 require "UnLua.Script.UnLua"
+local TestCrash = require "UnLua.Script.UI.UnLuaCrashTest"
 local UMG_MainPanel = LuaUnrealClass()
 
 _G.handle = function  (target, func)
@@ -20,6 +21,9 @@ function UMG_MainPanel:Construct()
 
     self.Button_Print.OnClicked:Clear()
     self.Button_Print.OnClicked:Add(self, handle(self, self.OnClickPrint))
+    
+    self.ButtonCrash.OnClicked:Clear()
+    self.ButtonCrash.OnClicked:Add(self, handle(self, self.OnButtonCrashClicked))
     
 	local world = self:GetWorld()
 	local localPlayerControler = _G.UGameplayStatics.GetPlayerController(world, 0)
@@ -49,6 +53,11 @@ function UMG_MainPanel:OnClickPrint()
 	local ClassName = "/Game/UnLua/UI/UMG/UMG_Profile"    
 	local world = self:GetWorld()
     UIManager.OpenPanel(world, ClassName)
+end
+
+function UMG_MainPanel:OnButtonCrashClicked()    
+	local world = self:GetWorld()
+    TestCrash:DoCrash(world)
 end
 
 function UMG_MainPanel:OnMouseButtonDown(MyGeometry, MouseEvent)

@@ -1,4 +1,5 @@
 local FCMainPanel = {}
+local TestCrash = require "UnLua.Script.UI.UnLuaCrashTest"
 
 function FCMainPanel:ReceiveBeginPlay()
 	print("[FCTestScript]FCMainPanel:ReceiveBeginPlay")
@@ -7,6 +8,7 @@ function FCMainPanel:ReceiveBeginPlay()
 	self.Button_1.OnClicked:AddListener(FCMainPanel.OnChangeMapButtonClicked, self)	
 	self.Button_Print.OnClicked:AddListener(FCMainPanel.PrintRefInfo, self)	
 	self.ButtonProfile.OnClicked:AddListener(FCMainPanel.OnButtonProfileClicked, self)	
+	self.ButtonCrash.OnClicked:AddListener(FCMainPanel.OnButtonCrashClicked, self)	
 	local world = self:GetWorld()
 	local localPlayerControler = _G.UGameplayStatics.GetPlayerController(world, 0)
 	if localPlayerControler ~= nil then
@@ -41,6 +43,11 @@ function FCMainPanel:OnButtonProfileClicked()
 	local ClassName = "/Game/UMG/UMG_Profile.UMG_Profile_C"
 	local UIManager = require "UIManager"
 	UIManager.OpenPanel(world, ClassName)
+end
+
+function FCMainPanel:OnButtonCrashClicked()
+	local world = self:GetWorld()
+    TestCrash:DoCrash(world)
 end
 
 function FCMainPanel:PrintRefInfo()
