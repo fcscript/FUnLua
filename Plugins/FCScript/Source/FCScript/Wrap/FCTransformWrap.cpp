@@ -16,6 +16,8 @@ int FCTransformWrap::LibOpen_wrap(lua_State* L)
 {
     const LuaRegFunc LibFuncs[] =
     {
+        { "Copy", Vector_CopyWrap<FTransform> },
+        { "CopyFrom", Vector_CopyFromWrap<FTransform> },
         { "Add", Vector_AddWrap<FTransform> },
         { "Mul", Vector_MulWrap<FTransform> },
 

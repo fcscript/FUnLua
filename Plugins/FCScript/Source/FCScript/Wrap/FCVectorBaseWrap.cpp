@@ -2,6 +2,8 @@
 
 #include "FCObjectManager.h"
 #include "FCGetObj.h"
+#include "../LuaCore/LuaContext.h"
+
 
 int VectorBase_SetWrap(lua_State* L, int MemberCount, const char* ClassName)
 {
@@ -28,7 +30,13 @@ void* VectorBase_GetAddr(lua_State* L, int Idx, const char* ClassName)
         if (ObjRef && ObjRef->IsValid() && ObjRef->ClassDesc == ClassDesc)
             return ObjRef->GetPropertyAddr();
         else
+        {
+            if(ObjRef)
+            {
+                ReportLuaError(L, "unsame struct class type");
+            }
             return nullptr;
+        }
     }
     else
     {

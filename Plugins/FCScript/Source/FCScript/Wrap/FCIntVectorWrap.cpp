@@ -16,6 +16,8 @@ int FCIntVectorWrap::LibOpen_wrap(lua_State* L)
 {
     const LuaRegFunc LibFuncs[] =
     {
+        { "Copy", Vector_CopyWrap<FIntVector> },
+        { "CopyFrom", Vector_CopyFromWrap<FIntVector> },
         { "Set", Set_wrap },
         { "SizeSquared", SizeSquared_wrap },
         { "Add", Vector_AddWrap<FIntVector> },

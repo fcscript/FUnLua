@@ -222,6 +222,16 @@ function TestCrash:Crash11(worldContextObject)
     UEPrint("[TestCrash]run Crash11, testB=", testB, ",param=", param)
 end
 
+-- 结构体拷贝，类型不一致, 内存写坏，很隐秘，会破坏虚拟机, 出现奇怪的异常
+function TestCrash:Crash12(worldContextObject)
+    local A = UE4.FTransform()
+    local B = UE4.FVector2D()
+    A:Copy(B)
+    UEPrint("[TestCrash]run Crash12, A=", A, ",B=", B)
+    A:CopyFrom(B)
+    UEPrint("[TestCrash]run Crash12, A=", A, ",B=", B)
+end
+
 function  TestCrash:DoCrash(worldContextObject)
     local nextFuncIndex = self.NextFuncIndex or 0
     nextFuncIndex = nextFuncIndex + 1
@@ -231,8 +241,7 @@ function  TestCrash:DoCrash(worldContextObject)
     self.NextFuncIndex = nextFuncIndex
     local funcName = "Crash" .. nextFuncIndex
     local func = self[funcName]
-    func(self, worldContextObject)
-
+    -- func(self, worldContextObject)
     -- self:Crash1(worldContextObject) -- 正常
     -- self:Crash2(worldContextObject) -- 修改C++后正常
     -- self:Crash3(worldContextObject) -- 会Crash， 但第二次测试又不会了
@@ -243,7 +252,8 @@ function  TestCrash:DoCrash(worldContextObject)
     -- self:Crash8(worldContextObject) -- 会Crash
     -- self:Crash9(worldContextObject) -- 会延迟Crash
     -- self:Crash10(worldContextObject) -- 会Crash
-    self:Crash11(worldContextObject) -- 会Crash
+    -- self:Crash11(worldContextObject) -- 正常
+    self:Crash12(worldContextObject) -- 多次执行+反复GC后 Crash
 
     ----- 下面是FUnLua的测试结果
     -- self:Crash1(worldContextObject) -- 正常
@@ -256,6 +266,8 @@ function  TestCrash:DoCrash(worldContextObject)
     -- self:Crash8(worldContextObject) -- 正常
     -- self:Crash9(worldContextObject) -- 正常
     -- self:Crash10(worldContextObject) -- 正常
+    -- self:Crash11(worldContextObject) -- 正常
+    -- self:Crash12(worldContextObject) -- 正常
 end
 
 return TestCrash

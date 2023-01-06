@@ -16,6 +16,8 @@ int FCRotatorWrap::LibOpen_wrap(lua_State* L)
 {
     const LuaRegFunc LibFuncs[] =
     {
+        { "Copy", Vector_CopyWrap<FRotator> },
+        { "CopyFrom", Vector_CopyFromWrap<FRotator> },
         { "Set", Set_wrap },
 
         { "Add", Vector_AddWrap<FRotator> },

@@ -16,6 +16,8 @@ int FCColorWrap::LibOpen_wrap(lua_State* L)
 {
     const LuaRegFunc LibFuncs[] =
     {
+        { "Copy", Vector_CopyWrap<FColor> },
+        { "CopyFrom", Vector_CopyFromWrap<FColor> },
         { "Set", Set_wrap },
         { "Add", Add_wrap },
         { "ToLinearColor", ToLinearColor_wrap },

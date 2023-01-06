@@ -17,6 +17,55 @@ int Vector_SetWrap(lua_State* L)
 }
 
 template<class _Ty>
+int Vector_CopyWrap(lua_State* L)
+{
+    // A:Copy(B) 有参数，就修改B, 并返回B
+    // A:Copy() 没有参数，就返回一个新的
+    const char* ClassName = FCScript::ExtractTypeName(_Ty());
+    _Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
+    _Ty* B = (_Ty*)VectorBase_GetAddr(L, 2, ClassName);
+    if(A)
+    {
+        if(B)
+        {
+            *B = *A;
+            lua_pushvalue(L, 2);
+        }
+        else
+        {
+            _Ty V(*A);
+            FCScript::SetArgValue(L, V);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+template<class _Ty>
+int Vector_CopyFromWrap(lua_State* L)
+{
+    // Struct.CopyFrom(A, B) 有参数，就修改A, 并返回A
+    // Struct.CopyFrom(A)    没有参数，就相当于重置A
+    const char* ClassName = FCScript::ExtractTypeName(_Ty());
+    _Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
+    _Ty* B = (_Ty*)VectorBase_GetAddr(L, 2, ClassName);
+    if (A)
+    {
+        if (B)
+        {
+            *A = *B;
+        }
+        else
+        {
+            *A = _Ty();
+        }
+        lua_pushvalue(L, 1);
+        return 1;
+    }
+    return 0;
+}
+
+template<class _Ty>
 int Vector_NormalizeWrap(lua_State* L)
 {
 	FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);

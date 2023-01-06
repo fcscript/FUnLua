@@ -68,16 +68,32 @@ int ScriptStruct_Copy(lua_State* L)
     FCDynamicClassDesc* ClassDesc = (FCDynamicClassDesc*)lua_touserdata(L, lua_upvalueindex(1));
     UScriptStruct* ScriptStruct = ClassDesc->m_ScriptStruct; // 确认不会为空
     
-    // Copy(A , b)
+    // A:Copy(B) 有参数，就修改B, 并返回B
+    // A:Copy() 没有参数，就返回一个新的
     // 必要的话，检查一下来源的类型
     FCObjRef* A = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     FCObjRef* B = (FCObjRef*)FCScript::GetObjRefPtr(L, 2);
-    if (A && B && A->IsValid() && B->IsValid())
+    if (A && A->IsValid())
     {
-        // 类型必须是一样的
-        if (A->GetStructProperty() == B->GetStructProperty())
+        if (B && B->IsValid())
         {
+            if(A->ClassDesc == B->ClassDesc)
+            {
+                ScriptStruct->CopyScriptStruct(B->GetThisAddr(), A->GetThisAddr());
+                lua_pushvalue(L, 2);
+                return 1;
+            }
+            ReportLuaError(L, "unsame class, failed to copy struct");
+            return 0;
+        }
+        else
+        {
+            // 构建一个默认的，再拷贝, 这个地方不安全，理论上需要释放所有引用的子对象
+            int64 ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
+            B = FCGetObj::GetIns()->FindValue(ObjID);
             ScriptStruct->CopyScriptStruct(A->GetThisAddr(), B->GetThisAddr());
+            FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
+            return 1;
         }
     }
     return 0;
@@ -88,23 +104,34 @@ int ScriptStruct_CopyFrom(lua_State* L)
     FCDynamicClassDesc* ClassDesc = (FCDynamicClassDesc*)lua_touserdata(L, lua_upvalueindex(1));
     UScriptStruct* ScriptStruct = ClassDesc->m_ScriptStruct; // 确认不会为空
 
+    // Struct.CopyFrom(A, B) 有参数，就修改A, 并返回A
+    // Struct.CopyFrom(A)    没有参数，就相当于重置A
+    // 必要的话，检查一下来源的类型
     FCObjRef* A = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     FCObjRef* B = (FCObjRef*)FCScript::GetObjRefPtr(L, 2);
-
-    if(A && A->IsValid())
+    if (A && A->IsValid())
     {
-        if(B && B->IsValid())
+        if (B && B->IsValid())
         {
-            ScriptStruct->CopyScriptStruct(A->GetThisAddr(), B->GetThisAddr());
+            if (A->ClassDesc == B->ClassDesc)
+            {
+                ScriptStruct->CopyScriptStruct(A->GetThisAddr(), B->GetThisAddr());
+                lua_pushvalue(L, 2);
+                return 1;
+            }
+            ReportLuaError(L, "unsame class, failed to copy struct");
+            return 0;
         }
         else
         {
             // 构建一个默认的，再拷贝, 这个地方不安全，理论上需要释放所有引用的子对象
-            ScriptStruct->DestroyStruct(A->GetThisAddr(), 1);
-            ScriptStruct->InitializeStruct(A->GetThisAddr(), 1);
+            ScriptStruct->DestroyStruct(A->GetPropertyAddr(), 1);
+            ScriptStruct->InitializeStruct(A->GetPropertyAddr(), 1);
+            lua_pushvalue(L, 1);
+            return 1;
         }
     }
-    return 1;
+    return 0;
 }
 
 int ScriptStruct_Compare(lua_State* L)

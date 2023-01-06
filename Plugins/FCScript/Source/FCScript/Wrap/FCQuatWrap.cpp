@@ -16,6 +16,8 @@ int FCQuatWrap::LibOpen_wrap(lua_State* L)
 {
     const LuaRegFunc LibFuncs[] =
     {
+        { "Copy", Vector_CopyWrap<FQuat> },
+        { "CopyFrom", Vector_CopyFromWrap<FQuat> },
         { "Set", Set_wrap },
 
         { "Add", Vector_AddWrap<FQuat> },

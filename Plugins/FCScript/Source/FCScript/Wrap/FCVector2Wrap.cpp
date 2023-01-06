@@ -16,6 +16,8 @@ int FCVector2Wrap::LibOpen_wrap(lua_State* L)
 {
     const LuaRegFunc LibFuncs[] =
     {
+        { "Copy", Vector_CopyWrap<FVector2D> },
+        { "CopyFrom", Vector_CopyFromWrap<FVector2D> },
         { "Set", Vector_SetWrap<FVector2D> },
         { "Normalize", Vector_NormalizeWrap<FVector2D> },
         { "IsNormalized", IsNormalized_wrap },

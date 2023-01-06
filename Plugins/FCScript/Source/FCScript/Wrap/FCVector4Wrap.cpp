@@ -16,6 +16,8 @@ int FCVector4Wrap::LibOpen_wrap(lua_State* L)
 {
     const LuaRegFunc LibFuncs[] =
     {
+        { "Copy", Vector_CopyWrap<FVector4> },
+        { "CopyFrom", Vector_CopyFromWrap<FVector4> },
         { "Set", Vector_SetWrap<FVector4> },
         { "Add", Vector_AddWrap<FVector4> },
         { "Sub", Vector_SubWrap<FVector4> },
