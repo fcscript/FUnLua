@@ -23,7 +23,7 @@ void  PushScriptUObject(lua_State* L, const FCDynamicPropertyBase *DynamicProper
 void  PushScriptCppPtr(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr);
 void  PushScriptMapIterator(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr);
 
-void  InitDynamicPropertyWriteFunc(FCDynamicProperty *DynamicProperty, FCPropertyType Flag);
+LPPushScriptValueFunc  InitDynamicPropertyWriteFunc(FCPropertyType Flag);
 
 //---------------------------------------------------------------------------------
 
@@ -57,6 +57,7 @@ bool  CallAnyScriptFunc(FCScriptContext* Context, int64 ScriptIns, const char *S
 	if(L)
 	{
         int StartTop = lua_gettop(L);
+        lua_pushcfunction(L, ReportLuaCallError);
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ScriptIns);
 		int TabldIdx = lua_gettop(L);
         bool bSuc = CallTableVoidFunction(L, TabldIdx, ScriptFuncName, Args...);

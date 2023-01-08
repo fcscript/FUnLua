@@ -18,7 +18,10 @@ void UFCTicker::Tick(float DeltaTime)
 	// 
 	if (ScriptContext->m_LuaState)
 	{
-		CallGlobalVoidLua(ScriptContext->m_LuaState, "MainTick", DeltaTime);
+        lua_State *L = ScriptContext->m_LuaState;
+        lua_pushcfunction(L, ReportLuaCallError);
+		CallGlobalVoidLua(L, "MainTick", DeltaTime);
+        lua_pop(L, 1);
 	}
 	FFCObjectdManager::GetSingleIns()->CheckGC();
 	FCRefObjCache::GetIns()->CheckGC(DeltaTime);

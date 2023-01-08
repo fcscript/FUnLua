@@ -76,14 +76,16 @@ struct FCDynamicPropertyBase : public FCDynamicField
 
 typedef  void(*LPPushScriptValueFunc)(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void *ObjRefPtr);
 typedef  void(*LPOuterScriptValueFunc)(lua_State* L, int ValueIdx, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr);
+typedef  bool(*LPCopyScriptValueFunc)(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr);
 
 // 动态属性(反射)
 struct FCDynamicProperty : public FCDynamicPropertyBase
 {
 	LPPushScriptValueFunc    m_WriteScriptFunc;   // 将UE变量写入到脚本
 	LPOuterScriptValueFunc   m_ReadScriptFunc;    // 将脚本变量写入到UE对象
+    LPCopyScriptValueFunc    m_CopyScriptValue;   // 将数据拷贝批指定的脚本变量
 
-	FCDynamicProperty():m_WriteScriptFunc(nullptr), m_ReadScriptFunc(nullptr)
+	FCDynamicProperty():m_WriteScriptFunc(nullptr), m_ReadScriptFunc(nullptr), m_CopyScriptValue(nullptr)
 	{
 	}
 

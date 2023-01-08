@@ -131,6 +131,7 @@ struct FCObjRef
 typedef  std::unordered_map<ObjRefKey, FCObjRef*>   CScriptRefObjMap;  // ptr ==> FCObjRef
 typedef  std::unordered_map<int64, FCObjRef*>   CIntPtr2RefObjMap; // IntPtr ==> FCObjRef
 typedef  std::unordered_map<int64, int64>   CIntPtr2IntPtrMap; // IntPtr ==> IntPtr
+typedef  std::vector<int64>            CIntPtrList; // 
 
 class FCGetObj
 {	
@@ -152,6 +153,7 @@ public:
 	int64  PushNewStruct(FCDynamicClassDesc* ClassDesc);
 	// 功能：压入一个UObject的属性(生成周期随父对象)的引用
 	int64  PushProperty(UObject *Parent, const FCDynamicProperty *DynamicProperty, void *pValueAddr);
+    int64  PushTempRefProperty(const FCDynamicProperty* DynamicProperty, void* pValueAddr);
 	// 功能：压入一个子属性(UObject或UStruct的成员变量)的引用
 	int64  PushChildProperty(FCObjRef *Parent, const FCDynamicProperty* DynamicProperty, void* pValueAddr);
 	// 功能：压入一个纯Struct对象(没有父对象，一般是临时的)
@@ -171,6 +173,9 @@ public:
 
 	// 功能：对象释放事件
 	void  NotifyDeleteUObject(const class UObjectBase* Object, int32 Index);
+
+    // 功能：清除临时的对象(用于C++侧调用lua的临时参数，使用引用传递）
+    void  ClearTempIDList(int nStart);
 
 	// 功能：删除一个对象(由脚本是通过new创建的)
 	void   DeleteValue(int64 ObjID);
@@ -231,6 +236,10 @@ public:
 	{
 		return (int)m_IntPtrMap.size();
 	}
+    int  GetTempObjIDCount() const
+    {
+        return (int)m_TempObjIDList.size();
+    }
 protected:
 	FCObjRef  *NewObjRef();
 	void  ReleaseObjRef(FCObjRef* ObjRef);
@@ -244,4 +253,5 @@ protected:
 	CIntPtr2RefObjMap  m_IntPtrMap;
 	FCDynamicProperty  m_CppProperty;
 	FCDynamicProperty  m_MapIteratorProperty;
+    CIntPtrList        m_TempObjIDList;
 };

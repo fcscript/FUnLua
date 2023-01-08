@@ -69,6 +69,7 @@ template <typename... T>
 FLuaRetValues CallGlobalLua(lua_State* L, const char* FuncName, T&&... Args)
 {
     int nStackValueNumb = lua_gettop(L); // 取当前栈内元素个数
+    //lua_pushcfunction(L, ReportLuaCallError);
     lua_getglobal(L, FuncName);
     if (lua_isfunction(L, -1) == false)
     {
@@ -99,6 +100,7 @@ template <typename... T>
 bool CallGlobalVoidLua(lua_State* L, const char* FuncName, T&&... Args)
 {
     int nStackValueNumb = lua_gettop(L); // 取当前栈内元素个数
+    //lua_pushcfunction(L, ReportLuaCallError);
     lua_getglobal(L, FuncName);
     if (lua_isfunction(L, -1) == false)
     {
@@ -124,6 +126,7 @@ FLuaRetValues CallTableFunction(lua_State* L, int TableIdx, const char* FuncName
         return FLuaRetValues();
     }
     int StartIdx = lua_gettop(L);
+    //lua_pushcfunction(L, ReportLuaCallError);
     lua_pushstring(L, FuncName);
     lua_gettable(L, -2);
 
@@ -157,6 +160,7 @@ bool CallTableVoidFunction(lua_State* L, int TableIdx, const char* FuncName, T&&
         return false;
     }
     int StartIdx = lua_gettop(L);
+    //lua_pushcfunction(L, ReportLuaCallError);
     lua_pushstring(L, FuncName);
     lua_gettable(L, -2);
 
@@ -164,10 +168,10 @@ bool CallTableVoidFunction(lua_State* L, int TableIdx, const char* FuncName, T&&
     lua_pushvalue(L, TableIdx); // push self
     int32 NumArgs = PushLuaArgs<false>(L, Forward<T>(Args)...);
     int32 Code = lua_pcall(L, NumArgs + 1, LUA_MULTRET, MessageHandlerIdx);
-    if(Code != LUA_OK)
-    {
-        ReportLuaCallError(L);
-    }
+    //if(Code != LUA_OK)
+    //{
+    //    ReportLuaCallError(L);
+    //}
     // 说明：lua_pcall 调用后，会自动输入的相关参数(函数名+函数参数)
     int32 CurIdx = lua_gettop(L);
     if (CurIdx > StartIdx)

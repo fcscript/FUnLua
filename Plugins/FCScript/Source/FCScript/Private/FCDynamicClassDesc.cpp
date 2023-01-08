@@ -16,8 +16,9 @@ void  FCDynamicProperty::InitProperty(const FProperty *InProperty)
 	Type = GetScriptPropertyType(Property);
     ClassName = GetScriptPropertyClassName(Type, InProperty);
 
-	InitDynamicPropertyWriteFunc(this, Type);
+    m_WriteScriptFunc = InitDynamicPropertyWriteFunc(Type);
 	InitDynamicPropertyReadFunc(this, Type);
+    InitDynamicPropertyCopyFunc(this, Type);
 }
 
 void  FCDynamicFunction::InitParam(UFunction *InFunction)

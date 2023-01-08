@@ -135,7 +135,11 @@ void  PushScriptStruct(lua_State* L, const FCDynamicPropertyBase *DynamicPropert
 	{
 		int64 ObjID = 0;
 		{
-			if (ThisObj)
+            if(DynamicProperty->bTempNeedRef)
+            {
+                ObjID = FCGetObj::GetIns()->PushTempRefProperty((const FCDynamicProperty*)DynamicProperty, ValueAddr);
+            }
+			else if (ThisObj)
 			{
 				ObjID = FCGetObj::GetIns()->PushProperty(ThisObj, (const FCDynamicProperty*)DynamicProperty, ValueAddr);
 			}
@@ -222,13 +226,20 @@ void  PushScriptTArray(lua_State* L, const FCDynamicPropertyBase* DynamicPropert
 	FArrayProperty* ArrayProperty = (FArrayProperty*)DynamicProperty->Property;
 	int64 ObjID = 0;
 	// 如果变量是UObject的属性
-	if (ThisObj)
+    if(DynamicProperty->bTempNeedRef)
+    {
+        ObjID = FCGetObj::GetIns()->PushTempRefProperty((const FCDynamicProperty*)DynamicProperty, ValueAddr);
+    }
+	else if (ThisObj)
 	{
 		ObjID = FCGetObj::GetIns()->PushProperty(ThisObj, (const FCDynamicProperty*)DynamicProperty, ValueAddr);
 	}
 	else
 	{
-		ObjID = FCGetObj::GetIns()->PushNewTArray((const FCDynamicProperty*)DynamicProperty, ValueAddr);
+        if(ObjRefPtr)
+            ObjID = FCGetObj::GetIns()->PushChildProperty((FCObjRef *)ObjRefPtr, (const FCDynamicProperty*)DynamicProperty, ValueAddr);
+        else
+            ObjID = FCGetObj::GetIns()->PushNewTArray((const FCDynamicProperty*)DynamicProperty, ValueAddr);
 	}
 	FCScript::PushBindObjRef(L, ObjID, DynamicProperty->GetClassName());
 }
@@ -238,13 +249,20 @@ void  PushScriptTMap(lua_State* L, const FCDynamicPropertyBase* DynamicProperty,
     FMapProperty* MapProperty = (FMapProperty*)DynamicProperty->Property;
     int64 ObjID = 0;
     // 如果变量是UObject的属性
-    if (ThisObj)
+    if (DynamicProperty->bTempNeedRef)
+    {
+        ObjID = FCGetObj::GetIns()->PushTempRefProperty((const FCDynamicProperty*)DynamicProperty, ValueAddr);
+    }
+    else if (ThisObj)
     {
         ObjID = FCGetObj::GetIns()->PushProperty(ThisObj, (const FCDynamicProperty*)DynamicProperty, ValueAddr);
     }
     else
     {
-        ObjID = FCGetObj::GetIns()->PushNewTMap((const FCDynamicProperty*)DynamicProperty, ValueAddr);
+        if (ObjRefPtr)
+            ObjID = FCGetObj::GetIns()->PushChildProperty((FCObjRef*)ObjRefPtr, (const FCDynamicProperty*)DynamicProperty, ValueAddr);
+        else
+            ObjID = FCGetObj::GetIns()->PushNewTMap((const FCDynamicProperty*)DynamicProperty, ValueAddr);
     }
     FCScript::PushBindObjRef(L, ObjID, DynamicProperty->GetClassName());    
 }
@@ -254,96 +272,100 @@ void  PushScriptTSet(lua_State* L, const FCDynamicPropertyBase* DynamicProperty,
     FSetProperty* MapProperty = (FSetProperty*)DynamicProperty->Property;
     int64 ObjID = 0;
     // 如果变量是UObject的属性
-    if (ThisObj)
+    if (DynamicProperty->bTempNeedRef)
+    {
+        ObjID = FCGetObj::GetIns()->PushTempRefProperty((const FCDynamicProperty*)DynamicProperty, ValueAddr);
+    }
+    else if (ThisObj)
     {
         ObjID = FCGetObj::GetIns()->PushProperty(ThisObj, (const FCDynamicProperty*)DynamicProperty, ValueAddr);
     }
     else
     {
-        ObjID = FCGetObj::GetIns()->PushNewTSet((const FCDynamicProperty*)DynamicProperty, ValueAddr);
+        if (ObjRefPtr)
+            ObjID = FCGetObj::GetIns()->PushChildProperty((FCObjRef*)ObjRefPtr, (const FCDynamicProperty*)DynamicProperty, ValueAddr);
+        else
+            ObjID = FCGetObj::GetIns()->PushNewTSet((const FCDynamicProperty*)DynamicProperty, ValueAddr);
     }
     FCScript::PushBindObjRef(L, ObjID, DynamicProperty->GetClassName());
 }
 
-void  InitDynamicPropertyWriteFunc(FCDynamicProperty *DynamicProperty, FCPropertyType Flag)
+LPPushScriptValueFunc  InitDynamicPropertyWriteFunc(FCPropertyType Flag)
 {
-	if(DynamicProperty->m_WriteScriptFunc)
-	{
-		return ;
-	}
-	DynamicProperty->m_WriteScriptFunc = PushScriptDefault;
+    LPPushScriptValueFunc WriteFunc = PushScriptDefault;
 	switch(Flag)
 	{
 		case FCPROPERTY_BoolProperty:
-			DynamicProperty->m_WriteScriptFunc = PushScriptBool;
+            WriteFunc = PushScriptBool;
 			break;
 		case FCPROPERTY_Int8Property:
 		case FCPROPERTY_ByteProperty:
-			DynamicProperty->m_WriteScriptFunc = PushScriptInt8;
+            WriteFunc = PushScriptInt8;
 			break;
 		case FCPROPERTY_Int16Property:
-			DynamicProperty->m_WriteScriptFunc = PushScriptInt16;
+            WriteFunc = PushScriptInt16;
 			break;
 		case FCPROPERTY_IntProperty:
 		case FCPROPERTY_UInt32Property:
-			DynamicProperty->m_WriteScriptFunc = PushScriptInt32;
+            WriteFunc = PushScriptInt32;
 			break;
 		case FCPROPERTY_FloatProperty:
-			DynamicProperty->m_WriteScriptFunc = PushScriptFloat;
+            WriteFunc = PushScriptFloat;
 			break;
 		case FCPROPERTY_DoubleProperty:
-			DynamicProperty->m_WriteScriptFunc = PushScriptDouble;
+            WriteFunc = PushScriptDouble;
 			break;
 		case FCPROPERTY_Int64Property:
 		case FCPROPERTY_UInt64Property:
-			DynamicProperty->m_WriteScriptFunc = PushScriptInt64;
+            WriteFunc = PushScriptInt64;
 			break;
 		case FCPROPERTY_NameProperty:
-			DynamicProperty->m_WriteScriptFunc = PushScriptFName;
+            WriteFunc = PushScriptFName;
 			break;
 		case FCPROPERTY_StrProperty:
-			DynamicProperty->m_WriteScriptFunc = PushScriptFString;
+            WriteFunc = PushScriptFString;
 			break;
 		case FCPROPERTY_TextProperty:
-			DynamicProperty->m_WriteScriptFunc = PushScriptFText;
+            WriteFunc = PushScriptFText;
 			break;
 		case FCPROPERTY_ObjectProperty:
-			DynamicProperty->m_WriteScriptFunc = PushScriptUObject;
+            WriteFunc = PushScriptUObject;
 			break;
 		case FCPROPERTY_WeakObjectPtr:
-			DynamicProperty->m_WriteScriptFunc = PushScriptWeakObject;
+            WriteFunc = PushScriptWeakObject;
 			break;
 		case FCPROPERTY_LazyObjectPtr:
-			DynamicProperty->m_WriteScriptFunc = PushScriptLazyObject;
+            WriteFunc = PushScriptLazyObject;
 			break;
 		case FCPROPERTY_StructProperty:
-			DynamicProperty->m_WriteScriptFunc = PushScriptStruct;
+            WriteFunc = PushScriptStruct;
 			break;
 		case FCPROPERTY_Vector2:
-			DynamicProperty->m_WriteScriptFunc = PushScriptStruct;
+            WriteFunc = PushScriptStruct;
 			break;
 		case FCPROPERTY_Vector3:
-			DynamicProperty->m_WriteScriptFunc = PushScriptStruct;
+            WriteFunc = PushScriptStruct;
 			break;
 		case FCPROPERTY_Vector4:
-			DynamicProperty->m_WriteScriptFunc = PushScriptStruct;
+            WriteFunc = PushScriptStruct;
 			break;
 		case FCPROPERTY_Array:
-			DynamicProperty->m_WriteScriptFunc = PushScriptTArray;
+            WriteFunc = PushScriptTArray;
 			break;
         case FCPROPERTY_Map:
-            DynamicProperty->m_WriteScriptFunc = PushScriptTMap;
+            WriteFunc = PushScriptTMap;
             break;
         case FCPROPERTY_Set:
-            DynamicProperty->m_WriteScriptFunc = PushScriptTSet;
+            WriteFunc  = PushScriptTSet;
             break;
 		case FCPROPERTY_DelegateProperty:
 		case FCPROPERTY_MulticastDelegateProperty:
-			DynamicProperty->m_WriteScriptFunc = PushScriptDelegate;
+            WriteFunc = PushScriptDelegate;
 			break;
 		default:
 			break;
 	}
+    return WriteFunc;
 }
 
 //---------------------------------------------------------------------------------
@@ -692,6 +714,211 @@ void  InitDynamicPropertyReadFunc(FCDynamicProperty *DynamicProperty, FCProperty
 
 //---------------------------------------------------------------------------------
 
+bool  CopyScriptDefault(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    return false;
+}
+
+// 将已经存在上的栈变量，添加到lua
+// 说明：直接将lua栈上的变量再push回去，不能增加C++端对象的引用计数,因为lua虚拟机不会增加引用计数
+void PushLuaExitValue(lua_State* L, int ValueIdx, FCObjRef* ObjRef)
+{
+    lua_pushvalue(L, ValueIdx);
+}
+
+// 将脚本对象写入到UE对象
+bool  CopyScriptStruct(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef && ObjRef->ClassDesc && ObjRef->ClassDesc->m_Struct == StructProperty->Struct)
+    {
+        StructProperty->CopyValuesInternal(ObjRef->GetPropertyAddr(), ValueAddr, StructProperty->ArrayDim);
+        PushLuaExitValue(L, ValueIdx, ObjRef);
+        return true;
+    }
+    else
+    {
+        ReportLuaError(L, "invalid struct param, none copy");
+    }
+    return false;
+}
+
+// 将脚本对象写入到UE对象
+bool  CopyScriptFVector2D(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_Vector2)
+    {
+        *((FVector2D*)ObjRef->GetPropertyAddr()) = *((const FVector2D*)ValueAddr);
+        PushLuaExitValue(L, ValueIdx, ObjRef);
+        return true;
+    }
+    return false;
+}
+bool  CopyScriptFVector(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_Vector3)
+    {
+        *((FVector*)ObjRef->GetPropertyAddr()) = *((const FVector*)ValueAddr);
+        PushLuaExitValue(L, ValueIdx, ObjRef);
+        return true;
+    }
+    return false;
+}
+bool  CopyScriptFVector4D(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_Vector4)
+    {
+        *((FVector4*)ObjRef->GetPropertyAddr()) = *((const FVector4*)ValueAddr);
+        PushLuaExitValue(L, ValueIdx, ObjRef);
+        return true;
+    }
+    return false;
+}
+
+bool  CopyScriptTArray(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    // 将UE对象拷贝到指定lua栈上参数
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef)
+    {
+        if (EFCObjRefType::NewTArray == ObjRef->RefType)
+        {
+            FArrayProperty* Property = (FArrayProperty*)DynamicProperty->Property;
+            if (DynamicProperty->bTempRealRef)
+            {
+                FMemory::Memcpy(ObjRef->GetPropertyAddr(), ValueAddr, sizeof(FScriptArray));
+            }
+            else
+            {
+                Property->CopyValuesInternal(ObjRef->GetPropertyAddr(), ValueAddr, DynamicProperty->Property->ArrayDim);
+            }
+            PushLuaExitValue(L, ValueIdx, ObjRef);
+            return true;
+        }
+        else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
+        {
+            FArrayProperty* Property = (FArrayProperty*)DynamicProperty->Property;
+            if (ObjRef->GetPropertyType() == DynamicProperty->Type)
+            {
+                Property->CopyValuesInternal(ObjRef->GetPropertyAddr(), ValueAddr, DynamicProperty->Property->ArrayDim);
+                PushLuaExitValue(L, ValueIdx, ObjRef);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool CopyScriptTMap(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef)
+    {
+        if (EFCObjRefType::NewTMap == ObjRef->RefType)
+        {
+            FMapProperty* Property = (FMapProperty*)DynamicProperty->Property;
+            if (DynamicProperty->bTempRealRef)
+            {
+                FMemory::Memcpy(ObjRef->GetPropertyAddr(), ValueAddr, sizeof(FScriptMap));
+            }
+            else
+            {
+                Property->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+            }
+            PushLuaExitValue(L, ValueIdx, ObjRef);
+            return true;
+        }
+        else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
+        {
+            FMapProperty* Property = (FMapProperty*)DynamicProperty->Property;
+            if (ObjRef->GetPropertyType() == DynamicProperty->Type)
+            {
+                Property->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+                PushLuaExitValue(L, ValueIdx, ObjRef);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool CopyScriptTSet(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef)
+    {
+        if (EFCObjRefType::NewTSet == ObjRef->RefType)
+        {
+            FSetProperty* Property = (FSetProperty*)DynamicProperty->Property;
+            if (DynamicProperty->bTempRealRef)
+            {
+                FMemory::Memcpy(ObjRef->GetPropertyAddr(), ValueAddr, sizeof(FScriptSet));
+            }
+            else
+            {
+                Property->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+            }
+            PushLuaExitValue(L, ValueIdx, ObjRef);
+            return true;
+        }
+        else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
+        {
+            FSetProperty* Property = (FSetProperty*)DynamicProperty->Property;
+            if (ObjRef->GetPropertyType() == DynamicProperty->Type)
+            {
+                Property->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+                PushLuaExitValue(L, ValueIdx, ObjRef);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void InitDynamicPropertyCopyFunc(FCDynamicProperty* DynamicProperty, FCPropertyType Flag)
+{
+    if (DynamicProperty->m_CopyScriptValue)
+    {
+        return;
+    }
+    DynamicProperty->m_CopyScriptValue = CopyScriptDefault;
+    switch (Flag)
+    {
+    case FCPROPERTY_StructProperty:
+        DynamicProperty->m_CopyScriptValue = CopyScriptStruct;
+        break;
+    case FCPROPERTY_Vector2:
+        DynamicProperty->m_CopyScriptValue = CopyScriptFVector2D;
+        break;
+    case FCPROPERTY_Vector3:
+        DynamicProperty->m_CopyScriptValue = CopyScriptFVector;
+        break;
+    case FCPROPERTY_Vector4:
+        DynamicProperty->m_CopyScriptValue = CopyScriptFVector4D;
+        break;
+    case FCPROPERTY_Array:
+        DynamicProperty->m_CopyScriptValue = CopyScriptTArray;
+        break;
+    case FCPROPERTY_Map:
+        DynamicProperty->m_CopyScriptValue = CopyScriptTMap;
+        break;
+    case FCPROPERTY_Set:
+        DynamicProperty->m_CopyScriptValue = CopyScriptTSet;
+        break;
+    default:
+        break;
+    }
+}
+
+//---------------------------------------------------------------------------------
+
 //---------------------------------------------------------------------------------
 int  FCInnerCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 ScriptIns, FCDynamicFunction* DynamicFunction, FFrame& TheStack, int (*LPPreparePushCallback)(FCScriptContext *, const void *), const void *UserData)
 {
@@ -703,9 +930,11 @@ int  FCInnerCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 Scri
 	int32 MessageHandlerIdx = lua_gettop(L) - 1;
 
 	int nParamCount = DynamicFunction->ParamCount;
-	const FCDynamicProperty *BeginProperty = DynamicFunction->m_Property.data();
-	const FCDynamicProperty *EndProperty = BeginProperty + nParamCount;
-	const FCDynamicProperty *DynamicProperty = BeginProperty;
+	FCDynamicProperty *BeginProperty = DynamicFunction->m_Property.data();
+	FCDynamicProperty *EndProperty = BeginProperty + nParamCount;
+	FCDynamicProperty *DynamicProperty = BeginProperty;
+
+    FOutParmRec *OutParms = TheStack.OutParms;
 
 	uint8  *Locals = TheStack.Locals;
 	uint8  *ValueAddr = Locals;
@@ -719,18 +948,50 @@ int  FCInnerCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 Scri
 	{
 		nParamCount += LPPreparePushCallback(Context, UserData);
 	}
+
+    int TempObjIDCount = FCGetObj::GetIns()->GetTempObjIDCount();
+    int ParamStart = lua_gettop(L);
 	int Index = 0;
 	for (; DynamicProperty < EndProperty; ++DynamicProperty, ++Index)
 	{
 		ValueAddr = Locals + DynamicProperty->Offset_Internal;
-		DynamicProperty->m_WriteScriptFunc(L, DynamicProperty, ValueAddr, nullptr, nullptr);
+        // 引用对象, 实际上，非&标记的可以使用引用，隐藏规则是lua里面不能对这个变量保存，如果要保存，就需要clone这个变量
+        // 主要是针对TArray, TSet, TMap 这些容器，可以大幅度优化性能，然后面后统一删除这个对象
+        if(DynamicProperty->bOuter)
+        {
+            if(OutParms)
+            {
+                ValueAddr = OutParms->PropAddr;
+                if(!DynamicProperty->Property->HasAnyPropertyFlags(CPF_ConstParm))
+                {
+                    DynamicProperty->bTempNeedRef = true;
+                    DynamicProperty->bTempRealRef = false;
+                    DynamicProperty->m_WriteScriptFunc(L, DynamicProperty, ValueAddr, nullptr, nullptr);
+                    DynamicProperty->bTempNeedRef = false;
+                }
+                else
+                {
+                    DynamicProperty->m_WriteScriptFunc(L, DynamicProperty, ValueAddr, nullptr, nullptr);
+                }
+                OutParms = OutParms->NextOutParm;
+            }
+            else
+            {
+                DynamicProperty->m_WriteScriptFunc(L, DynamicProperty, ValueAddr, nullptr, nullptr);
+            }
+        }
+        else
+        {
+            DynamicProperty->m_WriteScriptFunc(L, DynamicProperty, ValueAddr, nullptr, nullptr);
+        }
 	}
 
+    int StartCallIndex = lua_gettop(L);
     // 执行脚本代码
 	int32 Code = lua_pcall(L, nParamCount, LUA_MULTRET, MessageHandlerIdx);
 	if (Code != LUA_OK)
 	{
-		ReportLuaCallError(L);
+		//ReportLuaCallError(L);
 	}
     int32 TopIdx = lua_gettop(L);
 
@@ -738,27 +999,21 @@ int  FCInnerCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 Scri
 	int RetCount = 0;
 	if( DynamicFunction->ReturnPropertyIndex >= 0)
 	{
-		const FCDynamicProperty *ReturnProperty = BeginProperty + DynamicFunction->ReturnPropertyIndex;
-		ValueAddr = Locals + ReturnProperty->Offset_Internal;
-		ReturnProperty->m_WriteScriptFunc(L, ReturnProperty, ValueAddr, nullptr, nullptr);
-		++RetCount;
+        int RetIdx = StartCallIndex - nParamCount; // 因为前面还有一个函数名字, 所以要减掉这个, 取第一个变量
+        if(RetIdx <= TopIdx)
+        {
+            const FCDynamicProperty* ReturnProperty = BeginProperty + DynamicFunction->ReturnPropertyIndex;
+            ValueAddr = Locals + ReturnProperty->Offset_Internal;
+            if(OutParms)
+                ValueAddr = OutParms->PropAddr;
+            DynamicProperty->m_ReadScriptFunc(L, RetIdx, DynamicProperty, ValueAddr, nullptr, nullptr);
+            ++RetCount;
+        }
 	}
 
 	// 如果有返回值的话(这里脚本层限制上栈变量的访问范围，不可越过当前函数的设置)
-	if (DynamicFunction->bOuter)
-	{
-		DynamicProperty = BeginProperty;
-		Index = 0;
-		for (; DynamicProperty < EndProperty; ++DynamicProperty, ++Index)
-		{
-			if (DynamicProperty->bOuter)
-			{
-				ValueAddr = Locals + DynamicProperty->Offset_Internal;
-				DynamicProperty->m_WriteScriptFunc(L, DynamicProperty, ValueAddr, nullptr, nullptr);
-				++RetCount;
-			}
-		}
-	}
+    FCGetObj::GetIns()->ClearTempIDList(TempObjIDCount);
+
 	return RetCount;
 }
 bool  FCCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 ScriptIns, const char *ScriptFuncName, FCDynamicFunction* DynamicFunction, FFrame& TheStack)
@@ -769,6 +1024,7 @@ bool  FCCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 ScriptIn
         return false;
     }
 	int StartIdx = lua_gettop(L);
+    lua_pushcfunction(L, ReportLuaCallError);
 	if (ScriptIns > 0)
 	{
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ScriptIns);
@@ -810,6 +1066,7 @@ void  FCCallScriptDelegate(FCScriptContext *Context, UObject *Object, int64 Scri
 	if(L)
     {
 		int StartIdx = lua_gettop(L);
+        lua_pushcfunction(L, ReportLuaCallError);
 		lua_rawgeti(L, LUA_REGISTRYINDEX, DelegateInfo.FunctionRef);
 		if(lua_isfunction(L, -1))
 			FCInnerCallScriptFunc(Context, Object, ScriptIns, DynamicFunction, TheStack, ScriptDelegatePrepareCall, &DelegateInfo);

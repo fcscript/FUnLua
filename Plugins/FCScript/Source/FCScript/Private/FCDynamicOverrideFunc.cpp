@@ -147,6 +147,7 @@ int64 FCDynamicBindScript(UObject* InObject)
 		int StartTop = lua_gettop(L);
 		int TableIdx = lua_gettop(L);
 		bool bValidTable = false;
+        lua_pushcfunction(L, ReportLuaCallError);
 		FLuaRetValues  RetValue = CallGlobalLua(L, "require", BindInfo->m_ScriptName);
 		if (RetValue.size() == 1)
 		{
@@ -218,7 +219,7 @@ int64 FCDynamicBindScript(UObject* InObject)
 		lua_pushvalue(L, -1);                           // set metatable to self
 		lua_setmetatable(L, -2);
 
-		SetTableForClass(L, ClassName);                // 测试发现，这一步是不需要的
+		//SetTableForClass(L, ClassName);                // 测试发现，这一步是不需要的, 就不能设置
 
 		int CurTop = lua_gettop(L);
 		if (CurTop > StartTop)

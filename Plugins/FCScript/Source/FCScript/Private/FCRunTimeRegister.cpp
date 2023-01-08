@@ -831,7 +831,13 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
         Index = *OuterIndexs++;
         DynamicProperty = BeginProperty + Index;
         if (!DynamicProperty->Property->HasAnyPropertyFlags(CPF_ConstParm))
-            DynamicProperty->m_WriteScriptFunc(L, DynamicProperty, ValueAddr, nullptr, nullptr);
+        {
+            if(!DynamicProperty->m_CopyScriptValue(L, ParamIndex + Index, DynamicProperty, ValueAddr, nullptr, nullptr)) // 尝试修改栈上的变量
+            {
+                DynamicProperty->m_WriteScriptFunc(L, DynamicProperty, ValueAddr, nullptr, nullptr); // 返回多个值
+            }
+            ++RetCount;
+        }
         //DynamicProperty->Property->DestroyValue(ValueAddr);
         OuterParms = OuterParms->NextOutParm;
     }

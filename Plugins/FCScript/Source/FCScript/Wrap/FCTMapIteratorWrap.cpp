@@ -25,7 +25,7 @@ int FCTMapIteratorWrap::LibOpen_wrap(lua_State* L)
     };
     const LuaRegAttrib LibAttrib[] =
     {
-        { "key", GetValue_wrap, nullptr },
+        { "key", Key_wrap, nullptr },
         { "value", GetValue_wrap, SetValue_wrap },
         { nullptr, nullptr, nullptr }
     };

@@ -145,9 +145,16 @@ int64  FCGetObj::PushProperty(UObject *Parent, const FCDynamicProperty *DynamicP
 	return PushChildProperty(ParentRef, DynamicProperty, pValueAddr);
 }
 
+int64  FCGetObj::PushTempRefProperty(const FCDynamicProperty* DynamicProperty, void* pValueAddr)
+{
+    int64 ObjID = PushChildProperty(nullptr, DynamicProperty, pValueAddr);
+    m_TempObjIDList.push_back(ObjID);
+    return ObjID;
+}
+
 int64  FCGetObj::PushChildProperty(FCObjRef* Parent, const FCDynamicProperty* DynamicProperty, void* pValueAddr)
 {
-	uint8  *ParentAddr = Parent->GetThisAddr();
+	uint8  *ParentAddr = Parent ? Parent->GetThisAddr() : nullptr;
 	ObjRefKey  ObjKey(ParentAddr, (const void*)(pValueAddr));
 
 	CScriptRefObjMap::iterator itObj = m_ObjMap.find(ObjKey);
@@ -181,10 +188,12 @@ int64  FCGetObj::PushChildProperty(FCObjRef* Parent, const FCDynamicProperty* Dy
 	m_ObjMap[ObjKey] = ObjRef;
 	m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
 
-	++(Parent->Ref);
-
-	ObjRef->Parent = Parent;
-    Parent->PushChild(ObjRef);
+    if(Parent)
+    {
+        ++(Parent->Ref);
+        ObjRef->Parent = Parent;
+        Parent->PushChild(ObjRef);
+    }
 	return ObjRef->PtrIndex;
 }
 
@@ -387,6 +396,23 @@ void   FCGetObj::NotifyDeleteUObject(const class UObjectBase* Object, int32 Inde
 		FCObjRef *ObjRef = itObj->second;
 		DestroyChildRef(ObjRef);
 	}
+}
+
+void  FCGetObj::ClearTempIDList(int nStart)
+{
+    if(nStart < 0)
+        nStart = 0;
+    while(m_TempObjIDList.size() > nStart)
+    {
+        int64 ObjID = m_TempObjIDList.back();
+        m_TempObjIDList.pop_back();
+        FCObjRef *ObjRef = FindValue(ObjID);
+        if(ObjRef)
+        {
+            ObjRef->Ref = 1;    // 强制删除
+            ReleaseObjRef(ObjRef);
+        }
+    }
 }
 
 void   FCGetObj::DeleteValue(int64 ObjID)

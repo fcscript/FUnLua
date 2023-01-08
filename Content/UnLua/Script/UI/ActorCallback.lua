@@ -1,10 +1,43 @@
 local ActorCallback = UnLua.Class()
+-- local ActorCallback = {}
 
 function ActorCallback:Initialize()
 end
 
 function ActorCallback:ReceiveBeginPlay()
     UEPrint("[ActorCallback]ReceiveBeginPlay")
+end
+
+function ActorCallback:NotifyIDList(OutIDList)
+    UEPrint("[ActorCallback]NotifyIDList, OutIDList=", OutIDList, ",Len=", #OutIDList)
+    local len = #OutIDList
+    for i = 1, len do
+        UEPrint("[ActorCallback]NotifyIDList, OutIDList[]=", OutIDList[i])
+    end
+    OutIDList:Add(10)
+    OutIDList:Add(12)
+    OutIDList:Add(15)
+    return #OutIDList
+end
+
+function ActorCallback:NotifyAvatarParam(AvatarParam)
+    AvatarParam.MaleFaceConfigPath = "abc_path"
+    AvatarParam.HideBoneWhiteList:Add("a1")
+    AvatarParam.HideBoneWhiteList:Add("a2")
+    AvatarParam.HideBoneWhiteList:Add("a3")
+    return "lua modify"
+end
+
+function ActorCallback:NotifyIDSet(OutIDSet)
+    OutIDSet:Add(10)
+    OutIDSet:Add(11)    
+    return #OutIDSet
+end
+
+function ActorCallback:NotifyIDMap(OutIDMap)
+    OutIDMap:Add(8, 80)
+    OutIDMap:Add(9, 90)    
+    return #OutIDMap
 end
 
 function ActorCallback:OnActorClick(TouchedActor, ButtonPressed)

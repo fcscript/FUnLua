@@ -37,6 +37,7 @@ int FCTSetWrap::LibOpen_wrap(lua_State* L)
         { "__gc", FCExportedClass::obj_Delete },
         { "__call", obj_new },
         { "__eq", FCExportedClass::obj_equal },
+        { "__len", GetNumb_wrap },
         { nullptr, nullptr }
     };
     FCExportedClass::RegisterLibClass(L, "TSet", LibFuncs);
@@ -63,7 +64,7 @@ int FCTSetWrap::obj_new(lua_State* L)
 int FCTSetWrap::GetNumb_wrap(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef *)FCScript::GetObjRefPtr(L, 1);
-    if (ObjRef && ObjRef->RefType == EFCObjRefType::NewTSet)
+    if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
         int Num = ScriptMap->Num();
@@ -80,7 +81,7 @@ int FCTSetWrap::Contains_wrap(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     int32 FindIndex = INDEX_NONE;
-    if (ObjRef && ObjRef->RefType == EFCObjRefType::NewTSet)
+    if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
         FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
         FProperty* ElementProp = SetProperty->ElementProp;
@@ -103,7 +104,7 @@ int FCTSetWrap::Add_wrap(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     int32 FindIndex = INDEX_NONE;
-    if (ObjRef && ObjRef->RefType == EFCObjRefType::NewTSet)
+    if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
         FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
         FProperty* ElementProp = SetProperty->ElementProp;
@@ -118,10 +119,10 @@ int FCTSetWrap::Add_wrap(lua_State* L)
             [ElementProp](const void* ElementKey) { return ElementProp->GetValueTypeHash(ElementKey); },
             [ElementProp](const void* A, const void* B) { return ElementProp->Identical(A, B); },
             [ElementProp, ValueBuffer](void* NewElement)
-            {
-                ElementProp->InitializeValue(NewElement); 
-                ElementProp->CopySingleValue(NewElement, ValueBuffer);
-            }
+        {
+            ElementProp->InitializeValue(NewElement);
+            ElementProp->CopySingleValue(NewElement, ValueBuffer);
+        }
         );
     }
     return 0;
@@ -131,7 +132,7 @@ int FCTSetWrap::Remove_wrap(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     int32 FindIndex = INDEX_NONE;
-    if (ObjRef && ObjRef->RefType == EFCObjRefType::NewTSet)
+    if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
         FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
         FProperty* ElementProp = SetProperty->ElementProp;
@@ -161,7 +162,7 @@ int FCTSetWrap::Clear_wrap(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     int32 FindIndex = INDEX_NONE;
-    if (ObjRef && ObjRef->RefType == EFCObjRefType::NewTSet)
+    if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
         FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
@@ -174,7 +175,7 @@ int FCTSetWrap::ToArray_wrap(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     int32 FindIndex = INDEX_NONE;
-    if (ObjRef && ObjRef->RefType == EFCObjRefType::NewTSet)
+    if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
         FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
@@ -242,7 +243,7 @@ int FCTSetWrap::SetArray_wrap(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     int32 FindIndex = INDEX_NONE;
-    if (ObjRef && ObjRef->RefType == EFCObjRefType::NewTSet)
+    if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
         int32 Type = lua_rawget(L, 2);
         if (Type != LUA_TTABLE)
@@ -270,7 +271,7 @@ int FCTSetWrap::GetMaxIndex_wrap(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     int MaxIndex = 0;
-    if (ObjRef && ObjRef->RefType == EFCObjRefType::NewTSet)
+    if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
         FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
@@ -284,7 +285,7 @@ int FCTSetWrap::ToNextValidIndex_wrap(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     int ValidIndex = 0;
-    if (ObjRef && ObjRef->RefType == EFCObjRefType::NewTSet)
+    if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
         FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
@@ -308,7 +309,7 @@ int FCTSetWrap::IsValidIndex_wrap(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     bool bValid = false;
-    if (ObjRef && ObjRef->RefType == EFCObjRefType::NewTSet)
+    if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
         FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
@@ -322,7 +323,7 @@ int FCTSetWrap::IsValidIndex_wrap(lua_State* L)
 int FCTSetWrap::GetAt_wrap(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
-    if (ObjRef && ObjRef->RefType == EFCObjRefType::NewTSet)
+    if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
         FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
@@ -348,7 +349,7 @@ int FCTSetWrap::RemoveAt_wrap(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     int ValidIndex = 0;
-    if (ObjRef && ObjRef->RefType == EFCObjRefType::NewTSet)
+    if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
         FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();

@@ -42,6 +42,42 @@ void UFCTest::SetNameList(const TArray<FString> &Names)
 	NameList = Names;
 }
 
+void UFCTest::TestCall_NotifyIDList()
+{
+    TArray<int32>  OutIDList;
+    OutIDList.Add(20);
+    OutIDList.Add(21);
+    OutIDList.Add(22);
+    int Ret = NotifyIDList(OutIDList);
+    IDList = OutIDList;
+}
+
+void UFCTest::TestCall_NotifyAvatarParam()
+{
+    FTestAvatarSystemInitParams  Params;
+    Params.MaleFaceConfigPath = TEXT("TestPath");
+    FString Ret = NotifyAvatarParam(Params);
+    AvatarParams = Params;
+}
+
+void UFCTest::TestCall_NotifyIDSet()
+{
+    TSet<int32>  OutIDSet;
+    OutIDSet.Add(30);
+    OutIDSet.Add(31);
+    int Ret = NotifyIDSet(OutIDSet);
+    IDSet = OutIDSet;
+}
+
+void UFCTest::TestCall_NotifyIDMap()
+{
+    TMap<int32, int32>  OutIDMap;
+    OutIDMap.Add(2) = 20;
+    OutIDMap.Add(3) = 30;
+    int Ret = NotifyIDMap(OutIDMap);
+    IDMap = OutIDMap;
+}
+
 int UFCTest::NotifyAll(int nType, const FVector &Pos)
 {
 	return 100 + nType;

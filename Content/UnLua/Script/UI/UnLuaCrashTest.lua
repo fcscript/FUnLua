@@ -232,6 +232,38 @@ function TestCrash:Crash12(worldContextObject)
     UEPrint("[TestCrash]run Crash12, A=", A, ",B=", B)
 end
 
+-- 测试参数TArray, 会不会有内存泄漏
+function TestCrash:Crash13(worldContextObject)
+    local nStart = os.clock()
+    local AvatarClass = UE4.UFCTest
+    local obj = NewObject(AvatarClass)    
+	local a = UE4.TArray(UE4.int32)
+    for i = 1, 10000 do
+        a:Add(i)
+    end
+	obj:SetIDList(a)
+    
+	local b = UE4.TArray(UE4.int32)
+    b:Add(1)
+    b:Add(2)
+    for i = 1, 1000 do
+        obj:GetIDList(b)
+    end    
+    local costTime = os.clock() - nStart
+    UEPrint("[TestCrash]run Crash13, cost time:", costTime)
+end
+
+-- 测试C++调用lua overiden函数，参数是引用类型, 引用是不是能生效
+function TestCrash:Crash14(worldContextObject)
+    local AvatarClass = UE4.UFCTest
+    local obj = NewObject(AvatarClass, worldContextObject, "FCTestIns", "UnLua.UI.ActorCallback")
+    obj:TestCall_NotifyIDList()
+    obj:TestCall_NotifyAvatarParam()
+    obj:TestCall_NotifyIDSet()
+    obj:TestCall_NotifyIDMap()
+    UEPrint("[TestCrash]run Crash14")
+end
+
 function  TestCrash:DoCrash(worldContextObject)
     local nextFuncIndex = self.NextFuncIndex or 0
     nextFuncIndex = nextFuncIndex + 1
@@ -253,7 +285,9 @@ function  TestCrash:DoCrash(worldContextObject)
     -- self:Crash9(worldContextObject) -- 会延迟Crash
     -- self:Crash10(worldContextObject) -- 会Crash
     -- self:Crash11(worldContextObject) -- 正常
-    self:Crash12(worldContextObject) -- 多次执行+反复GC后 Crash
+    -- self:Crash12(worldContextObject) -- 多次执行+反复GC后 Crash
+    -- self:Crash13(worldContextObject) -- 正常
+    self:Crash14(worldContextObject) --会Crash, 功能不正确
 
     ----- 下面是FUnLua的测试结果
     -- self:Crash1(worldContextObject) -- 正常
@@ -268,6 +302,8 @@ function  TestCrash:DoCrash(worldContextObject)
     -- self:Crash10(worldContextObject) -- 正常
     -- self:Crash11(worldContextObject) -- 正常
     -- self:Crash12(worldContextObject) -- 正常
+    -- self:Crash13(worldContextObject) -- 正常
+    -- self:Crash14(worldContextObject) -- 正常
 end
 
 return TestCrash

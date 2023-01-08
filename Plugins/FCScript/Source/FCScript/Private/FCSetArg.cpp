@@ -101,8 +101,9 @@ UStruct* FC_GetArgValue_UStruct(lua_State* L, int Index)
     if (LUA_TTABLE == Type)
     {
         // 直接取类名吧    
+        //lua_pushvalue(L, Index);
         lua_pushstring(L, "__name");        // 3
-        int ClassType = lua_rawget(L, -2);                 // 3
+        int ClassType = lua_rawget(L, Index);                 // 3
         const char* UETypeName = lua_tostring(L, -1);
         if(UETypeName)
         {

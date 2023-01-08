@@ -329,15 +329,26 @@ int FCUEUtilWrap::NewObject_wrap(lua_State* L)
 		FName  Name(NAME_None);
 		if(ObjectName && ObjectName[0] != 0)
 		{
-			Name = FName((const TCHAR*)ObjectName);
+			Name = FName(ObjectName);
         }
-        int64  ObjID = FCGetObj::GetIns()->PushNewObject(ClassDesc, Name, Outer);
+
+
+        // 后创建对象
+        UObject  *Obj = nullptr;
+#if OLD_UE_ENGINE
+        Obj = StaticConstructObject_Internal(ClassDesc->m_Class, Outer, Name);
+#else
+        FStaticConstructObjectParameters ObjParams(ClassDesc->m_Class);
+        ObjParams.Outer = Outer;
+        ObjParams.Name = Name;
+        Obj = StaticConstructObject_Internal(ObjParams);
+#endif
+
         if(ScriptClassName && ScriptClassName[0] != 0)
         {
-            UObject* Object = FCGetObj::GetIns()->GetUObject(ObjID);
-            FFCObjectdManager::GetSingleIns()->CallBindScript(Object, ScriptClassName);
+            FFCObjectdManager::GetSingleIns()->CallBindScript(Obj, ScriptClassName);
         }
-        FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
+        FCScript::PushUObject(L, Obj);
         return 1;
 	}
     lua_pushnil(L);
@@ -413,12 +424,11 @@ int FCUEUtilWrap::SpawActor_wrap(lua_State* L)
         lua_pushnil(L);
         return 1;
     }
-    int64  ObjID = FCGetObj::GetIns()->PushUObject(NewActor);
     if (ModuleName && ModuleName[0] != 0)
     {
         FFCObjectdManager::GetSingleIns()->CallBindScript(NewActor, ModuleName);
     }
-    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
+    FCScript::PushUObject(L, NewActor);
 
     return 1;
 }

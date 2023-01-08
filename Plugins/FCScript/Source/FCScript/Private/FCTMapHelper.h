@@ -7,6 +7,7 @@
 
 class FCTMapHelper
 {
+public:
     FScriptMap* ScriptMap;
     FMapProperty* MapProperty;
 public:
@@ -33,6 +34,17 @@ public:
     bool IsValid() const
     {
         return ScriptMap != nullptr;
+    }
+    int GetMaxIndex() const
+    {
+        return ScriptMap ? ScriptMap->GetMaxIndex() : 0;
+    }
+    bool IsValidIndex(int32 Index) const
+    {
+        if(ScriptMap)
+            return ScriptMap->IsValidIndex(Index);
+        else
+            return false;
     }
 public:
     void  Copy(const FScriptMap* OtherArray);

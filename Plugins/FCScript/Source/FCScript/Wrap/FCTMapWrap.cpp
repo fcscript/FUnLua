@@ -8,6 +8,8 @@
 #include "FCTMapIteratorWrap.h"
 #include "FTMapKeyValueBuffer.h"
 #include "../LuaCore/LuaContext.h"
+#include "FCTMapHelper.h"
+#include "FCCallScriptFunc.h"
 
 void FCTMapWrap::Register(lua_State* L)
 {
@@ -38,10 +40,87 @@ int FCTMapWrap::LibOpen_wrap(lua_State* L)
 		{ "__gc", FCExportedClass::obj_Delete },
 		{ "__call", obj_new },
 		{ "__eq", FCExportedClass::obj_equal },
+        { "__len", GetNumb_wrap },
 		{ nullptr, nullptr }
 	};
 	FCExportedClass::RegisterLibClass(L, "TMap", LibFuncs);
 	return 1;
+}
+
+// pair 的生命周期要短于Map对象，所以可以这里面直接保存TMap吧
+struct FCTMap_Pairs : public FCTMapHelper
+{
+    FCObjRef *ObjRef;
+    int    PairIndex; // 
+
+    FCDynamicProperty  KeyProperty;
+    FCDynamicProperty  ValueProperty;
+    FCTMap_Pairs(FCObjRef* InObjRef):FCTMapHelper(InObjRef), ObjRef(InObjRef), PairIndex(0)
+    {        
+    }
+    void InitProperty()
+    {
+        if(ObjRef && ObjRef->IsValid())
+        {
+            const FScriptMapLayout& MapLayout = MapProperty->MapLayout;
+
+            KeyProperty.InitProperty(MapProperty->KeyProp);
+            ValueProperty.InitProperty(MapProperty->ValueProp);
+        }        
+    }
+};
+
+
+int FCTMapWrap::pair_gc(lua_State* L)
+{
+    FCTMap_Pairs *Pairs = (FCTMap_Pairs *)lua_touserdata(L, 1);
+    if(Pairs)
+    {
+        delete Pairs;
+    }
+    return 0;
+}
+
+int FCTMapWrap::obj_NextPairs(lua_State* L)
+{
+    // for k, v in pairs(t) do
+    FCTMap_Pairs* Pairs = (FCTMap_Pairs*)lua_touserdata(L, 1);
+    if (Pairs->IsValid())
+    {
+        int NextIndex = FCTMapIteratorWrap::ToNextValidIterator(Pairs->ScriptMap, Pairs->PairIndex + 1);
+        Pairs->PairIndex = NextIndex;
+        if(Pairs->IsValidIndex(NextIndex))
+        {
+            FMapProperty* MapProperty = (FMapProperty*)Pairs->ObjRef->DynamicProperty->Property;
+            const FScriptMapLayout& MapLayout = MapProperty->MapLayout;
+
+            uint8* PairPtr = (uint8*)Pairs->ScriptMap->GetData(NextIndex, MapLayout);
+            uint8* KeyAddr = PairPtr;
+            Pairs->KeyProperty.m_WriteScriptFunc(L, &Pairs->KeyProperty, KeyAddr, nullptr, nullptr);  // 只可以引用，不可修改
+
+            uint8* ValueAddr = PairPtr + MapLayout.ValueOffset;
+            Pairs->ValueProperty.m_WriteScriptFunc(L, &Pairs->ValueProperty, ValueAddr, nullptr, nullptr);  // 这里只要引用，不可以修改
+            return 2;
+        }
+    }
+    return 0;
+}
+
+int FCTMapWrap::obj_pairs(lua_State* L)
+{
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
+    lua_pushcfunction(L, obj_NextPairs);
+    FCTMap_Pairs* Pairs = (FCTMap_Pairs*)lua_newuserdata(L, sizeof(FCTMap_Pairs));
+    *Pairs = FCTMap_Pairs(ObjRef);
+    Pairs->InitProperty();
+
+    lua_newtable(L);
+    lua_pushcfunction(L, pair_gc);
+    lua_setfield(L, -2, "__gc");
+    lua_setmetatable(L, -2);
+    lua_pushnil(L);
+
+    return 3;
 }
 
 int FCTMapWrap::obj_new(lua_State* L)
@@ -67,7 +146,7 @@ int FCTMapWrap::obj_new(lua_State* L)
 int FCTMapWrap::GetNumb_wrap(lua_State* L)
 {
 	FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
-	if (ObjRef && ObjRef->RefType == EFCObjRefType::NewTMap)
+	if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
 	{
 		FScriptMap* ScriptMap = (FScriptMap*)ObjRef->GetThisAddr();
 		int Num = ScriptMap->Num();

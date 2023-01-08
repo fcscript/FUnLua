@@ -84,6 +84,30 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "NotifyObject"))
 	void NotifyObject(int nType, float x, float y, float z);
 
+    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "NotifyEvent"))
+    int NotifyIDList(TArray<int32>& OutIDList);
+
+    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "NotifyEvent"))
+    FString NotifyAvatarParam(FTestAvatarSystemInitParams& AvatarParam);
+
+    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "NotifyEvent"))
+    int NotifyIDSet(TSet<int32>& OutIDSet);
+
+    UFUNCTION(BlueprintImplementableEvent, meta = (DisplayName = "NotifyEvent"))
+    int NotifyIDMap(TMap<int32, int32>& OutIDMap);
+
+    UFUNCTION(BlueprintCallable, Category = "TestCall")
+    void TestCall_NotifyIDList();
+
+    UFUNCTION(BlueprintCallable, Category = "TestCall")
+    void TestCall_NotifyAvatarParam();
+
+    UFUNCTION(BlueprintCallable, Category = "TestCall")
+    void TestCall_NotifyIDSet();
+
+    UFUNCTION(BlueprintCallable, Category = "TestCall")
+    void TestCall_NotifyIDMap();
+
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "NotifyAll"))
 	static int NotifyAll(int nType, const FVector &Pos);
 	
