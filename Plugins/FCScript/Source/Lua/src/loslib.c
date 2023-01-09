@@ -21,9 +21,6 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-#ifdef __APPLE__
-#include <ftw.h>
-#endif
 
 /*
 ** {==================================================================
@@ -133,52 +130,31 @@
 
 /* ISO C definitions */
 #define LUA_TMPNAMBUFSIZE	L_tmpnam
-
-// fix android build error   -- modify by hernanzhou 2021/2/20
-#ifdef __ANDROID__ 
-#if !defined(LUA_TMPNAMTEMPLATE)
-#include <unistd.h> // for close
-#define LUA_TMPNAMTEMPLATE	"/tmp/lua_XXXXXX"
-#endif
-#define lua_tmpnam(b,e) { \
-        strcpy(b, LUA_TMPNAMTEMPLATE); \
-        e = mkstemp(b); \
-        if (e != -1) close(e); \
-        e = (e == -1); }
-#else
 #define lua_tmpnam(b,e)		{ e = (tmpnam(b) == NULL); }
-#endif
 
 #endif				/* } */
 
 #endif				/* } */
 /* }================================================================== */
 
-#ifdef __APPLE__
-int unlink_cb(const char* fpath, const struct stat* sb, int typeflag, struct FTW* ftwbuf)
-{
-    int rv = remove(fpath);
-    if (rv)
-        perror(fpath);
-    return rv;
-}
-#endif
+
 
 static int os_execute (lua_State *L) {
   const char *cmd = luaL_optstring(L, 1, NULL);
+#if defined(LUA_NO_OS_EXECUTE)
+  lua_pushboolean(L, 0);
+  return 1;
+#else
   int stat;
   errno = 0;
-#ifdef __APPLE__
-  stat = nftw(cmd, unlink_cb, 64, FTW_DEPTH | FTW_PHYS);
-#else
   stat = system(cmd);
-#endif
   if (cmd != NULL)
     return luaL_execresult(L, stat);
   else {
     lua_pushboolean(L, stat);  /* true if there is a shell */
     return 1;
   }
+#endif
 }
 
 
@@ -196,13 +172,17 @@ static int os_rename (lua_State *L) {
 
 
 static int os_tmpname (lua_State *L) {
+#if defined(LUA_NO_OS_TMPNAME)
+  return 0;
+#else
   char buff[LUA_TMPNAMBUFSIZE];
   int err;
   lua_tmpnam(buff, err);
-  if (err)
+  if (l_unlikely(err))
     return luaL_error(L, "unable to generate a unique filename");
   lua_pushstring(L, buff);
   return 1;
+#endif
 }
 
 
@@ -237,7 +217,7 @@ static int os_clock (lua_State *L) {
 */
 static void setfield (lua_State *L, const char *key, int value, int delta) {
   #if (defined(LUA_NUMTIME) && LUA_MAXINTEGER <= INT_MAX)
-    if (value > LUA_MAXINTEGER - delta)
+    if (l_unlikely(value > LUA_MAXINTEGER - delta))
       luaL_error(L, "field '%s' is out-of-bound", key);
   #endif
   lua_pushinteger(L, (lua_Integer)value + delta);
@@ -282,9 +262,9 @@ static int getfield (lua_State *L, const char *key, int d, int delta) {
   int t = lua_getfield(L, -1, key);  /* get field and its type */
   lua_Integer res = lua_tointegerx(L, -1, &isnum);
   if (!isnum) {  /* field is not an integer? */
-    if (t != LUA_TNIL)  /* some other value? */
+    if (l_unlikely(t != LUA_TNIL))  /* some other value? */
       return luaL_error(L, "field '%s' is not an integer", key);
-    else if (d < 0)  /* absent field; no default? */
+    else if (l_unlikely(d < 0))  /* absent field; no default? */
       return luaL_error(L, "field '%s' missing in date table", key);
     res = d;
   }
