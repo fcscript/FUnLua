@@ -150,6 +150,8 @@ public:
 	class UFCTest* NextPtr;
 	UPROPERTY()
 	int ID;
+    UPROPERTY()
+    FString NameValue;
 	UPROPERTY()
 	float HP;
 	UPROPERTY()

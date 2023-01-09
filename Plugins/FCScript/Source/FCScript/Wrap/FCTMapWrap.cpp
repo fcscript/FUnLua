@@ -40,10 +40,12 @@ int FCTMapWrap::LibOpen_wrap(lua_State* L)
 		{ "__gc", FCExportedClass::obj_Delete },
 		{ "__call", obj_new },
 		{ "__eq", FCExportedClass::obj_equal },
+        { "__pairs", obj_pairs },
         { "__len", GetNumb_wrap },
 		{ nullptr, nullptr }
 	};
-	FCExportedClass::RegisterLibClass(L, "TMap", LibFuncs);
+    const char* ClassName = lua_tostring(L, 1);
+	FCExportedClass::RegisterLibClass(L, ClassName, LibFuncs);
 	return 1;
 }
 
@@ -51,11 +53,11 @@ int FCTMapWrap::LibOpen_wrap(lua_State* L)
 struct FCTMap_Pairs : public FCTMapHelper
 {
     FCObjRef *ObjRef;
-    int    PairIndex; // 
+    int    PairIndex; // TMap第一个有效的是0
 
     FCDynamicProperty  KeyProperty;
     FCDynamicProperty  ValueProperty;
-    FCTMap_Pairs(FCObjRef* InObjRef):FCTMapHelper(InObjRef), ObjRef(InObjRef), PairIndex(0)
+    FCTMap_Pairs(FCObjRef* InObjRef):FCTMapHelper(InObjRef), ObjRef(InObjRef), PairIndex(-1)
     {        
     }
     void InitProperty()
@@ -76,7 +78,7 @@ int FCTMapWrap::pair_gc(lua_State* L)
     FCTMap_Pairs *Pairs = (FCTMap_Pairs *)lua_touserdata(L, 1);
     if(Pairs)
     {
-        delete Pairs;
+        Pairs->~FCTMap_Pairs(); // 只需要执行析构就行了
     }
     return 0;
 }

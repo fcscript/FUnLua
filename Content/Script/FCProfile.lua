@@ -164,6 +164,8 @@ function UMG_Profile:DoOther()
 
     print("[ProfileFrame]FUnLua------------------")
     
+    ProfileFrame.Doblueprint_MemberTest(world, obj)
+
 	-- local objAvatar = UClass.New("FTestAvatarSystemInitParams")
     -- ProfileFrame.DoStruct(self:GetWorld(), objAvatar)
 end

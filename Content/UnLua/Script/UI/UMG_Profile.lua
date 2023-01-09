@@ -1,5 +1,5 @@
-require "UnLua.Script.UnLua"
-local UMG_Profile = LuaUnrealClass()
+-- require "UnLua.UnLua"
+local UMG_Profile = UnLua.Class()
 
 function UMG_Profile:Construct()
 
@@ -21,11 +21,11 @@ end
 
 function UMG_Profile:BindButton(button, func)
     button.OnClicked:Clear()
-    button.OnClicked:Add(self, handle(self, func))
+    button.OnClicked:Add(self, func)
 end
 
 function UMG_Profile:OnClickButtonClose()
-    local UIManager = require "UnLua.Script.UI.UIManager"
+    local UIManager = require "UnLua.UI.UIManager"
     UIManager.HidePanel(self)
 end
 
@@ -41,11 +41,11 @@ end
 function UMG_Profile:PrintInfo(...)
     local StrLog = BuildParams(...)
     local world = self:GetWorld()    
-	local color = FLinearColor()
+	local color = UE.FLinearColor()
 	color.A = 1	
 	color.G = 1
     UEPrint(StrLog)
-	UKismetSystemLibrary.PrintString(world, StrLog, true, false, color, 3.0)
+	UE4.UKismetSystemLibrary.PrintString(world, StrLog, true, false, color, 3.0)
 end
 
 function UMG_Profile:DoRead(funcName, valueName)
@@ -85,7 +85,7 @@ function UMG_Profile:OnClickWriteStr()
 end
 
 function UMG_Profile:OnClickWriteVector()
-    local value = _G.FVector(-1, 504, 82)
+    local value = UE4.FVector(-1, 504, 82)
     self:DoWrite("WriteVector", "VectorValue", value)    
 end
 
@@ -118,7 +118,7 @@ function UMG_Profile:DoArraySet(funcName, testArray, value)
 end
 
 function UMG_Profile:OnClickArrayInt()
-    local testArray = UE4.TArray(_G.int32)
+    local testArray = UE4.TArray(UE.int32)
     for i = 1, 10 do 
         testArray:Add(i)
     end
@@ -127,7 +127,7 @@ function UMG_Profile:OnClickArrayInt()
 end
 
 function UMG_Profile:OnClickArrayByte()
-    local testArray = UE4.TArray(_G.int8)
+    local testArray = UE4.TArray(UE.int8)
     for i = 1, 10 do 
         testArray:Add(i)
     end
@@ -145,10 +145,12 @@ function UMG_Profile:OnClickArrayStr()
 end
 
 function UMG_Profile:DoOther()
-    local AvatarClass = UClass.Load("UFCTest")
+    -- local AvatarClass = UE.UClass.Load("UFCTest")
+    -- local AvatarClass = UE.UClass.Load("FCTest")
+    local AvatarClass = UE4.UFCTest
     local obj = NewObject(AvatarClass)
     local objAvatar = obj.AvatarParams
-    local ProfileFrame = require "Script.ProfileFrame"
+    local ProfileFrame = require "ProfileFrame"
     local world = self:GetWorld()
     print("[ProfileFrame]UnLua------------------")
     ProfileFrame.DoStruct(world, objAvatar)
@@ -159,6 +161,8 @@ function UMG_Profile:DoOther()
     ProfileFrame.NotifyAll(obj)
     ProfileFrame.SetIDList(obj)
     print("[ProfileFrame]UnLua------------------")
+
+    ProfileFrame.Doblueprint_MemberTest(world, obj)
 end
 
 return UMG_Profile

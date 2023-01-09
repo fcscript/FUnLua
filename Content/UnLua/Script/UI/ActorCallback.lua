@@ -17,7 +17,7 @@ function ActorCallback:NotifyIDList(OutIDList)
     OutIDList:Add(10)
     OutIDList:Add(12)
     OutIDList:Add(15)
-    return #OutIDList
+    return #OutIDList, OutIDList
 end
 
 function ActorCallback:NotifyAvatarParam(AvatarParam)
@@ -25,19 +25,19 @@ function ActorCallback:NotifyAvatarParam(AvatarParam)
     AvatarParam.HideBoneWhiteList:Add("a1")
     AvatarParam.HideBoneWhiteList:Add("a2")
     AvatarParam.HideBoneWhiteList:Add("a3")
-    return "lua modify"
+    return "lua modify", AvatarParam
 end
 
 function ActorCallback:NotifyIDSet(OutIDSet)
     OutIDSet:Add(10)
     OutIDSet:Add(11)    
-    return #OutIDSet
+    return #OutIDSet, OutIDSet
 end
 
 function ActorCallback:NotifyIDMap(OutIDMap)
     OutIDMap:Add(8, 80)
     OutIDMap:Add(9, 90)    
-    return #OutIDMap
+    return #OutIDMap, OutIDMap
 end
 
 function ActorCallback:OnActorClick(TouchedActor, ButtonPressed)
