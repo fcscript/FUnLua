@@ -62,7 +62,7 @@ struct FCTMap_Pairs : public FCTMapHelper
     }
     void InitProperty()
     {
-        if(ObjRef && ObjRef->IsValid())
+        if(IsValid())
         {
             const FScriptMapLayout& MapLayout = MapProperty->MapLayout;
 
@@ -113,7 +113,7 @@ int FCTMapWrap::obj_pairs(lua_State* L)
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     lua_pushcfunction(L, obj_NextPairs);
     FCTMap_Pairs* Pairs = (FCTMap_Pairs*)lua_newuserdata(L, sizeof(FCTMap_Pairs));
-    *Pairs = FCTMap_Pairs(ObjRef);
+    Pairs = new (Pairs)FCTMap_Pairs(ObjRef);
     Pairs->InitProperty();
 
     lua_newtable(L);

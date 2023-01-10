@@ -381,13 +381,14 @@ FArrayProperty* CreateTArrayProperty(const char* InPropertyType)
 
 typedef std::unordered_map<const char *, FCDynamicProperty*, FCStringHash, FCStringEqual> CTempalteDynamicPropertyMap;
 typedef std::unordered_map<FCDoubleKey, FCDynamicProperty*> CMapTempalteDynamicPropertyMap;
-CTempalteDynamicPropertyMap   GTempalteDynamicPropertyMap;
-CMapTempalteDynamicPropertyMap GMapTemplateDynamicPropertyMap;
+CTempalteDynamicPropertyMap   GTArrayDynamicPropertyMap;
+CMapTempalteDynamicPropertyMap GTMapDynamicPropertyMap;
+CTempalteDynamicPropertyMap    GTSetDynamicPropertyMap;
 
 FCDynamicProperty* GetTArrayDynamicProperty(const char* InPropertyType)
 {
-	CTempalteDynamicPropertyMap::iterator itProperty = GTempalteDynamicPropertyMap.find(InPropertyType);
-	if(itProperty != GTempalteDynamicPropertyMap.end())
+	CTempalteDynamicPropertyMap::iterator itProperty = GTArrayDynamicPropertyMap.find(InPropertyType);
+	if(itProperty != GTArrayDynamicPropertyMap.end())
 	{
 		return itProperty->second;
 	}
@@ -395,12 +396,12 @@ FCDynamicProperty* GetTArrayDynamicProperty(const char* InPropertyType)
 	FArrayProperty* ArrayProperty = CreateTArrayProperty(InPropertyType);
 	if(!ArrayProperty)
 	{
-		GTempalteDynamicPropertyMap[InPropertyType] = nullptr;
+        GTArrayDynamicPropertyMap[InPropertyType] = nullptr;
 		return nullptr;
 	}
 	FCTArrayDynamicProperty  *DynamicProperty = new FCTArrayDynamicProperty(ArrayProperty, GetDynamicPropertyByUEProperty(ArrayProperty->Inner));
 	DynamicProperty->InitProperty(ArrayProperty);
-	GTempalteDynamicPropertyMap[InPropertyType] = DynamicProperty;
+    GTArrayDynamicPropertyMap[InPropertyType] = DynamicProperty;
 	return DynamicProperty;
 }
 
@@ -430,8 +431,8 @@ FMapProperty* CreateTMapProperty(const char *KeyType, const char *ValueType)
 FCDynamicProperty *GetTMapDynamicProperty(const char* KeyTypeName, const char* ValueTypeName)
 {
 	FCDoubleKey  MapKey(KeyTypeName, ValueTypeName);
-	CMapTempalteDynamicPropertyMap::iterator itProperty = GMapTemplateDynamicPropertyMap.find(MapKey);
-	if(itProperty != GMapTemplateDynamicPropertyMap.end())
+	CMapTempalteDynamicPropertyMap::iterator itProperty = GTMapDynamicPropertyMap.find(MapKey);
+	if(itProperty != GTMapDynamicPropertyMap.end())
 	{
 		return itProperty->second;
 	}
@@ -442,12 +443,12 @@ FCDynamicProperty *GetTMapDynamicProperty(const char* KeyTypeName, const char* V
 	FMapProperty  *MapProperty = CreateTMapProperty(KeyTypeName, ValueTypeName);
 	if(!MapProperty)
 	{
-		GMapTemplateDynamicPropertyMap[MapKey] = nullptr;
+        GTMapDynamicPropertyMap[MapKey] = nullptr;
 		return nullptr;
 	}
 	FCTMapDynamicProperty  *DynamicProperty = new FCTMapDynamicProperty(MapProperty);
 	DynamicProperty->InitProperty(MapProperty);
-	GMapTemplateDynamicPropertyMap[MapKey] = DynamicProperty;
+    GTMapDynamicPropertyMap[MapKey] = DynamicProperty;
 
 	return DynamicProperty;
 }
@@ -474,8 +475,8 @@ FSetProperty* CreateTSetProperty(const char* ClassName)
 FCDynamicProperty* GetTSetDynamicProperty(const char* KeyTypeName)
 {
     // 说明，由于TMap与TArray的参数不一样，所以不会存在相同的TemplateID, 这里共用一个模板列表吧
-    CTempalteDynamicPropertyMap::iterator itProperty = GTempalteDynamicPropertyMap.find(KeyTypeName);
-    if (itProperty != GTempalteDynamicPropertyMap.end())
+    CTempalteDynamicPropertyMap::iterator itProperty = GTSetDynamicPropertyMap.find(KeyTypeName);
+    if (itProperty != GTSetDynamicPropertyMap.end())
     {
         return itProperty->second;
     }
@@ -483,12 +484,12 @@ FCDynamicProperty* GetTSetDynamicProperty(const char* KeyTypeName)
     FSetProperty* SetProperty = CreateTSetProperty(KeyTypeName);
     if (!SetProperty)
     {
-        GTempalteDynamicPropertyMap[KeyTypeName] = nullptr;
+        GTSetDynamicPropertyMap[KeyTypeName] = nullptr;
         return nullptr;
     }
     FCTSetDynamicProperty* DynamicProperty = new FCTSetDynamicProperty(SetProperty);
     DynamicProperty->InitProperty(SetProperty);
-    GTempalteDynamicPropertyMap[KeyTypeName] = DynamicProperty;
+    GTSetDynamicPropertyMap[KeyTypeName] = DynamicProperty;
 
     return DynamicProperty;
 }
@@ -499,15 +500,14 @@ void ReleaseTempalteProperty()
 	//ReleasePtrMap(GClassPropertyNameMap);
 	GClassPropertyNameMap.clear(); // UE会自动释放，所以不能留
 
-	ReleasePtrMap(GTempalteDynamicPropertyMap);
+	ReleasePtrMap(GTArrayDynamicPropertyMap);
+    ReleasePtrMap(GTSetDynamicPropertyMap);
+    ReleasePtrMap(GTMapDynamicPropertyMap);
 	ReleasePtrMap(GStructDynamicPropertyMap);
 	ReleasePtrMap(GPropertyDynamicPropertyMap);
 	ReleasePtrMap(GCppDynamicPropertyMap);
 
     GPropertyBaseCopyTypeMap.clear();
-
-    GTempalteDynamicPropertyMap.clear();
-    GMapTemplateDynamicPropertyMap.clear();
 
 	GScriptStruct = nullptr;
 }

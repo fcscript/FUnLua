@@ -7,6 +7,7 @@
 #include "FCRunTimeRegister.h"
 #include "FTMapKeyValueBuffer.h"
 #include "../LuaCore/LuaContext.h"
+#include "FCTSetHelper.h"
 
 void FCTSetWrap::Register(lua_State* L)
 {
@@ -37,11 +38,80 @@ int FCTSetWrap::LibOpen_wrap(lua_State* L)
         { "__gc", FCExportedClass::obj_Delete },
         { "__call", obj_new },
         { "__eq", FCExportedClass::obj_equal },
+        { "__pairs", obj_pairs },
         { "__len", GetNumb_wrap },
         { nullptr, nullptr }
     };
     FCExportedClass::RegisterLibClass(L, "TSet", LibFuncs);
     return 1;
+}
+
+// pair 的生命周期要短于Map对象，所以可以这里面直接保存TMap吧
+struct FCTSet_Pairs : public FCTSetHelper
+{
+    FCObjRef* ObjRef;
+    int    PairIndex; // TMap第一个有效的是0
+    int    PairCount;
+
+    FCDynamicProperty  ValueProperty;
+    FCTSet_Pairs(FCObjRef* InObjRef) :ObjRef(InObjRef), PairIndex(-1), PairCount(0)
+    {
+    }
+    void InitProperty()
+    {
+        Init(ObjRef);
+        if (IsValid())
+        {
+            ValueProperty.InitProperty(SetProperty->ElementProp);
+        }
+    }
+};
+
+int FCTSetWrap::pair_gc(lua_State* L)
+{
+    FCTSet_Pairs* Pairs = (FCTSet_Pairs*)lua_touserdata(L, 1);
+    if (Pairs)
+    {
+        Pairs->~FCTSet_Pairs(); // 只需要执行析构就行了
+    }
+    return 0;
+}
+
+int FCTSetWrap::obj_NextPairs(lua_State* L)
+{
+    FCTSet_Pairs* Pairs = (FCTSet_Pairs*)lua_touserdata(L, 1);
+    if (Pairs->IsValid())
+    {
+        int NextIndex = Pairs->GetNextValidIndex(Pairs->PairIndex + 1);
+        Pairs->PairIndex = NextIndex;
+        if (Pairs->IsValidIndex(NextIndex))
+        {
+            Pairs->PairCount++;
+            lua_pushinteger(L, NextIndex);
+            const FScriptSetLayout& SetLayout = Pairs->SetProperty->SetLayout;
+            uint8* Result = (uint8*)Pairs->ScriptSet->GetData(NextIndex, SetLayout);
+            Pairs->ValueProperty.m_WriteScriptFunc(L, &Pairs->ValueProperty, Result, nullptr, nullptr);
+            return 2;
+        }
+    }
+    return 0;
+}
+
+int FCTSetWrap::obj_pairs(lua_State* L)
+{
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
+    lua_pushcfunction(L, obj_NextPairs);
+    FCTSet_Pairs* Pairs = (FCTSet_Pairs*)lua_newuserdata(L, sizeof(FCTSet_Pairs));
+    Pairs = new(Pairs) FCTSet_Pairs(ObjRef);
+    Pairs->InitProperty();
+
+    lua_newtable(L);
+    lua_pushcfunction(L, pair_gc);
+    lua_setfield(L, -2, "__gc");
+    lua_setmetatable(L, -2);
+    lua_pushnil(L);
+
+    return 3;    
 }
 
 int FCTSetWrap::obj_new(lua_State* L)
@@ -284,22 +354,12 @@ int FCTSetWrap::GetMaxIndex_wrap(lua_State* L)
 int FCTSetWrap::ToNextValidIndex_wrap(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
+    FCTSetHelper Helper(ObjRef);
     int ValidIndex = 0;
-    if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
+    if(Helper.IsValid())
     {
-        FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
-        FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
         int32 PairIndex = lua_tointeger(L, 2);
-        int32 MaxIndex = ScriptMap->GetMaxIndex();
-        ValidIndex = MaxIndex;
-        for(; PairIndex <= MaxIndex; ++PairIndex)
-        {
-           if(ScriptMap->IsValidIndex(PairIndex))
-           {
-               ValidIndex = PairIndex;
-               break;
-           }
-        }
+        ValidIndex = Helper.GetNextValidIndex(PairIndex);
     }
     lua_pushinteger(L, ValidIndex);
     return 1;
