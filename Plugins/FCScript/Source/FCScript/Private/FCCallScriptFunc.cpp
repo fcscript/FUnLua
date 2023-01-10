@@ -635,81 +635,78 @@ void ReadScriptTSet(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
     }
 }
 
-void  InitDynamicPropertyReadFunc(FCDynamicProperty *DynamicProperty, FCPropertyType Flag)
+LPOuterScriptValueFunc  InitDynamicPropertyReadFunc(FCPropertyType Flag)
 {
-	if(DynamicProperty->m_ReadScriptFunc)
-	{
-		return ;
-	}
-	DynamicProperty->m_ReadScriptFunc = ReadScriptDefault;
+    LPOuterScriptValueFunc  ReadScriptFunc = ReadScriptDefault;
 	switch(Flag)
 	{
 		case FCPROPERTY_BoolProperty:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptBool;
+            ReadScriptFunc = ReadScriptBool;
 			break;
 		case FCPROPERTY_Int8Property:
 		case FCPROPERTY_ByteProperty:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptInt8;
+            ReadScriptFunc = ReadScriptInt8;
 			break;
 		case FCPROPERTY_Int16Property:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptInt16;
+            ReadScriptFunc = ReadScriptInt16;
 			break;
 		case FCPROPERTY_IntProperty:
 		case FCPROPERTY_UInt32Property:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptInt32;
+            ReadScriptFunc = ReadScriptInt32;
 			break;
 		case FCPROPERTY_FloatProperty:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptFloat;
+            ReadScriptFunc = ReadScriptFloat;
 			break;
 		case FCPROPERTY_DoubleProperty:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptDouble;
+            ReadScriptFunc = ReadScriptDouble;
 			break;
 		case FCPROPERTY_Int64Property:
 		case FCPROPERTY_UInt64Property:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptInt64;
+            ReadScriptFunc = ReadScriptInt64;
 			break;
 		case FCPROPERTY_NameProperty:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptFName;
+            ReadScriptFunc = ReadScriptFName;
 			break;
 		case FCPROPERTY_StrProperty:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptFString;
+            ReadScriptFunc = ReadScriptFString;
 			break;
 		case FCPROPERTY_TextProperty:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptFText;
+            ReadScriptFunc = ReadScriptFText;
 			break;
 		case FCPROPERTY_ObjectProperty:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptUObject;
+            ReadScriptFunc = ReadScriptUObject;
 			break;
 		case FCPROPERTY_WeakObjectPtr:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptWeakObject;
+            ReadScriptFunc = ReadScriptWeakObject;
 			break;
 		case FCPROPERTY_LazyObjectPtr:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptLazyObject;
+            ReadScriptFunc = ReadScriptLazyObject;
 			break;
 		case FCPROPERTY_StructProperty:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptStruct;
+            ReadScriptFunc = ReadScriptStruct;
 			break;
         case FCPROPERTY_Vector2:
-            DynamicProperty->m_ReadScriptFunc = ReadScriptFVector2D;
+            ReadScriptFunc = ReadScriptFVector2D;
             break;
         case FCPROPERTY_Vector3:
-            DynamicProperty->m_ReadScriptFunc = ReadScriptFVector;
+            ReadScriptFunc = ReadScriptFVector;
             break;
         case FCPROPERTY_Vector4:
-            DynamicProperty->m_ReadScriptFunc = ReadScriptFVector4D;
+            ReadScriptFunc = ReadScriptFVector4D;
             break;
 		case FCPROPERTY_Array:
-			DynamicProperty->m_ReadScriptFunc = ReadScriptTArray;
+            ReadScriptFunc = ReadScriptTArray;
 			break;
         case FCPROPERTY_Map:
-            DynamicProperty->m_ReadScriptFunc = ReadScriptTMap;
+            ReadScriptFunc = ReadScriptTMap;
             break;
         case FCPROPERTY_Set:
-            DynamicProperty->m_ReadScriptFunc = ReadScriptTSet;
+            ReadScriptFunc = ReadScriptTSet;
             break;
 		default:
 			break;
 	}
+    return ReadScriptFunc;
 }
 
 //---------------------------------------------------------------------------------
@@ -882,39 +879,36 @@ bool CopyScriptTSet(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
     return false;
 }
 
-void InitDynamicPropertyCopyFunc(FCDynamicProperty* DynamicProperty, FCPropertyType Flag)
+LPCopyScriptValueFunc InitDynamicPropertyCopyFunc(FCPropertyType Flag)
 {
-    if (DynamicProperty->m_CopyScriptValue)
-    {
-        return;
-    }
-    DynamicProperty->m_CopyScriptValue = CopyScriptDefault;
+    LPCopyScriptValueFunc CopyScriptFunc = CopyScriptDefault;
     switch (Flag)
     {
     case FCPROPERTY_StructProperty:
-        DynamicProperty->m_CopyScriptValue = CopyScriptStruct;
+        CopyScriptFunc = CopyScriptStruct;
         break;
     case FCPROPERTY_Vector2:
-        DynamicProperty->m_CopyScriptValue = CopyScriptFVector2D;
+        CopyScriptFunc = CopyScriptFVector2D;
         break;
     case FCPROPERTY_Vector3:
-        DynamicProperty->m_CopyScriptValue = CopyScriptFVector;
+        CopyScriptFunc = CopyScriptFVector;
         break;
     case FCPROPERTY_Vector4:
-        DynamicProperty->m_CopyScriptValue = CopyScriptFVector4D;
+        CopyScriptFunc = CopyScriptFVector4D;
         break;
     case FCPROPERTY_Array:
-        DynamicProperty->m_CopyScriptValue = CopyScriptTArray;
+        CopyScriptFunc = CopyScriptTArray;
         break;
     case FCPROPERTY_Map:
-        DynamicProperty->m_CopyScriptValue = CopyScriptTMap;
+        CopyScriptFunc = CopyScriptTMap;
         break;
     case FCPROPERTY_Set:
-        DynamicProperty->m_CopyScriptValue = CopyScriptTSet;
+        CopyScriptFunc = CopyScriptTSet;
         break;
     default:
         break;
     }
+    return CopyScriptFunc;
 }
 
 //---------------------------------------------------------------------------------

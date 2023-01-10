@@ -705,9 +705,9 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     int  StackSize = DynamicFunc->ParmsSize;
     UFunction* Function = DynamicFunc->Function;
     int nParamCount = DynamicFunc->ParamCount;
-    FCDynamicProperty* BeginProperty = DynamicFunc->m_Property.data();
-    FCDynamicProperty* EndProperty = BeginProperty + nParamCount;
-    FCDynamicProperty* DynamicProperty = (FCDynamicProperty *)BeginProperty;
+    FCDynamicFunctionParam* BeginProperty = DynamicFunc->m_Property.data();
+    FCDynamicFunctionParam* EndProperty = BeginProperty + nParamCount;
+    FCDynamicFunctionParam* DynamicProperty = BeginProperty;
     uint8* Frame = Buffer;
     int nAllBuffSize = Function->PropertiesSize + Function->ParmsSize;
     //int OuterAddrOffset = nAllBuffSize;
@@ -729,6 +729,8 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     }
     FMemory::Memzero(Frame, nAllBuffSize);
 
+    int NumParams = lua_gettop(L) + 1;
+
     int Index = ParamIndex;
     uint8  *Locals = Frame;
     uint8  *ValueAddr = Locals;
@@ -748,10 +750,19 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
             FLatentActionInfo LatentActionInfo(ThreadRef, GetTypeHash(FGuid::NewGuid()), TEXT("OnLatentActionCompleted"), GetScriptContext()->m_Ticker);
             DynamicProperty->Property->CopySingleValue(ValueAddr, &LatentActionInfo);
         }
-        DynamicProperty->bTempNeedRef = true;
         DynamicProperty->bTempRealRef = false;
-        DynamicProperty->m_ReadScriptFunc(L, Index, DynamicProperty, ValueAddr, nullptr, nullptr);
-        DynamicProperty->bTempNeedRef = false;
+        if(Index < NumParams)
+        {
+            DynamicProperty->bTempNeedRef = true;
+            DynamicProperty->m_ReadScriptFunc(L, Index, DynamicProperty, ValueAddr, nullptr, nullptr);
+            DynamicProperty->bTempNeedRef = false;
+        }
+        else
+        {
+            // 如果有默认参数，就使用默认参数
+            if(DynamicProperty->DefaultParam)
+                DynamicProperty->DefaultParam->WriteDefaultValue(DynamicProperty, ValueAddr);
+        }
 
         if(DynamicProperty->bOuter)
         {
@@ -849,6 +860,7 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
         ValueAddr = Locals + DynamicProperty->Offset_Internal;
         if(!DynamicProperty->bTempRealRef)
             DynamicProperty->Property->DestroyValue(ValueAddr);
+        DynamicProperty->bTempRealRef = false;
     }
 
     // 释放临时内存

@@ -7,6 +7,7 @@
 #include "CoreUObject.h"
 #include "FCPropertyType.h"
 #include "FCStringCore.h"
+#include "FCStringBuffer.h"
 #include "../LuaCore/LuaHeader.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFCScript, Log, All);
@@ -96,6 +97,22 @@ struct FCDynamicProperty : public FCDynamicPropertyBase
     virtual int GetMemSize() const { return sizeof(FCDynamicProperty); }
 };
 
+struct FCDefaultParamBase
+{
+    virtual ~FCDefaultParamBase() {}
+
+    virtual void InitDefaultValue(FCDynamicProperty* DynamicProperty, const FString& DefaltParam1, const char *DefaultParam2) = 0;
+    virtual void WriteDefaultValue(FCDynamicProperty* DynamicProperty, uint8* ValueAddr) = 0;
+};
+
+struct FCDynamicFunctionParam : public FCDynamicProperty
+{
+    FCDynamicFunctionParam():DefaultParam(nullptr)
+    {
+    }
+    FCDefaultParamBase *DefaultParam;
+};
+
 struct  FCDynamicFunction : public FCDynamicField
 {
 	UFunction  *Function;
@@ -110,7 +127,7 @@ struct  FCDynamicFunction : public FCDynamicField
 	bool    bRegister;        // 是不是在类中注册了
 	bool    bDelegate;
 	const char* Name;        // 函数名
-	std::vector<FCDynamicProperty>   m_Property;
+	std::vector<FCDynamicFunctionParam>   m_Property;
 	FCDynamicFunction():Function(nullptr), LatentPropertyIndex(-1), ReturnPropertyIndex(-1), ParmsSize(0), ParamCount(0), OuterParamCount(0), OuterParamSize(0), bOverride(false), bOuter(false), bRegister(false), bDelegate(false), Name(nullptr)
 	{
 	}

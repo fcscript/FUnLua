@@ -13,6 +13,7 @@
 #include "FCCallScriptFunc.h"
 #include "FCTemplateType.h"
 #include "FCScriptDelegates.h"
+#include "FCDefaultParam.h"
 
 #include "Interfaces/IPluginManager.h"
 
@@ -248,6 +249,7 @@ void FFCDelegateModule::Shutdown()
 	FCGetObj::GetIns()->Clear();
 	FCRefObjCache::GetIns()->Clear();
 	ReleaseTempalteProperty();
+    ClearAllDefaultValue();
 	FFCObjectdManager::GetSingleIns()->Clear();
     lua_gc(L, LUA_GCCOLLECT, 0);
     lua_gc(L, LUA_GCCOLLECT, 0);

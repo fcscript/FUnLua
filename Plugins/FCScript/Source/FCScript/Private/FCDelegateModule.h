@@ -5,6 +5,7 @@
 #include "Engine/World.h"
 #include "CoreUObject.h"
 #include "FCTicker.h"
+#include "FCPropertyType.h"
 
 // -- 这个类用于UE的全局委托的交互模块，负责UE的全局委托与脚本的沟通
 // -- 需要注册一些全局的UE事件

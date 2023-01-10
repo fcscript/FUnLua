@@ -3,6 +3,7 @@
 #include "UObject/Class.h"
 #include "FCCallScriptFunc.h"
 #include "FCDynamicOverrideFunc.h"
+#include "FCDefaultParam.h"
 
 void  FCDynamicProperty::InitProperty(const FProperty *InProperty)
 {
@@ -17,8 +18,8 @@ void  FCDynamicProperty::InitProperty(const FProperty *InProperty)
     ClassName = GetScriptPropertyClassName(Type, InProperty);
 
     m_WriteScriptFunc = InitDynamicPropertyWriteFunc(Type);
-	InitDynamicPropertyReadFunc(this, Type);
-    InitDynamicPropertyCopyFunc(this, Type);
+    m_ReadScriptFunc = InitDynamicPropertyReadFunc(Type);
+    m_CopyScriptValue = InitDynamicPropertyCopyFunc(Type);
 }
 
 void  FCDynamicFunction::InitParam(UFunction *InFunction)
@@ -35,11 +36,15 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
 	ParamCount = 0;
     OuterParamCount = 0;
     OuterParamSize = 0;
+
+    TMap<FName, FString>* MetaMap = UMetaData::GetMapForObject(Function);
+
+    FCStringBuffer128 DefaultName;
 	for (TFieldIterator<FProperty> It(InFunction); It && (It->PropertyFlags & CPF_Parm); ++It, ++Index)
 	{
 		FProperty *Property = *It;
 
-		FCDynamicProperty* FCProperty = &(m_Property[Index]);
+        FCDynamicFunctionParam* FCProperty = &(m_Property[Index]);
 		FCProperty->InitProperty(Property);
 		FCProperty->PropertyIndex = Index;
 
@@ -64,6 +69,19 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
 		{
 			++ParamCount;
 		}
+
+        // 初始化默认值
+        if(MetaMap)
+        {
+            DefaultName.Empty();
+            DefaultName << "CPP_Default_" << FCProperty->Name;
+            FName  Key(DefaultName.GetString());
+            const FString *Result = MetaMap->Find(Key);
+            if(Result)
+            {
+                FCProperty->DefaultParam = GetDefaultValue(FCProperty, *Result);
+            }
+        }
 	}
 	if(ReturnPropertyIndex != -1)
 	{
@@ -246,11 +264,15 @@ int   FCDynamicClassDesc::GetMemSize() const
     int MemSize = sizeof(FCDynamicClassDesc);
     for(CDynamicPropertyPtrArray::const_iterator itProperty = m_Property.begin(); itProperty != m_Property.end(); ++itProperty)
     {
-        MemSize += (*itProperty)->GetMemSize();
+        const FCDynamicProperty *Property = (*itProperty);
+        if(Property)
+            MemSize += Property->GetMemSize();
     }
     for(CDynamicFunctionNameMap::const_iterator itFunc = m_Functions.begin(); itFunc != m_Functions.end(); ++itFunc)
     {
-        MemSize += itFunc->second->GetMemSize();
+        const FCDynamicFunction *DynamicFunction = itFunc->second;
+        if(DynamicFunction)
+            MemSize += DynamicFunction->GetMemSize();
     }
     for(CDynamicFieldNameMap::const_iterator itExtion = m_LibFields.begin(); itExtion != m_LibFields.end(); ++itExtion)
     {

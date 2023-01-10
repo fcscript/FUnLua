@@ -83,6 +83,13 @@ int UFCTest::NotifyAll(int nType, const FVector &Pos)
 	return 100 + nType;
 }
 
+void UFCTest::TestCall_DefaultParam(int InID, const FString InName, EFCTestEnum TestType, FVector InPos)
+{
+    ID = InID;
+    NameValue = InName;
+    EnumAsByteVar = TestType;
+}
+
 void UFCTest::HttpNotify(const FString &MessageContent, bool bWasSuccessful)
 {
 	OnResponseMessage.ExecuteIfBound(MessageContent, bWasSuccessful);

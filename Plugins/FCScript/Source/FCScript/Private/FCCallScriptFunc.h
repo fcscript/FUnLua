@@ -42,9 +42,12 @@ void  ReadScriptUObject(lua_State* L, int ValueIdx, const FCDynamicPropertyBase 
 void  ReadScriptCppPtr(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr);
 void  ReadScriptMapIterator(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr);
 
-void  InitDynamicPropertyReadFunc(FCDynamicProperty *DynamicProperty, FCPropertyType Flag);
+LPOuterScriptValueFunc  InitDynamicPropertyReadFunc(FCPropertyType Flag);
 
 //---------------------------------------------------------------------------------
+
+LPCopyScriptValueFunc InitDynamicPropertyCopyFunc(FCPropertyType Flag);
+
 //---------------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------------

@@ -49,7 +49,8 @@ enum EFCTestEnum
 {
     One,
     Two,
-    Three
+    Three,
+    Wan = 10000,  // 测试发现，UE不支持255以上的默认参数
 };
 
 UCLASS()
@@ -110,7 +111,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "NotifyAll"))
 	static int NotifyAll(int nType, const FVector &Pos);
-	
+
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "TestCall_DefaultParam"))
+    void TestCall_DefaultParam(int InID = 10, const FString InName = TEXT("ABC"), EFCTestEnum TestType = EFCTestEnum::Wan, FVector InPos = FVector(3, 5, 6));
+
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "HttpNotify"))
 	void HttpNotify(const FString &MessageContent, bool bWasSuccessful);
 	
