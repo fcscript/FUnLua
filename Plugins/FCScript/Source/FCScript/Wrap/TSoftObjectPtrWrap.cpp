@@ -7,6 +7,7 @@
 void TSoftObjectPtrWrap::Register(lua_State* L)
 {
     luaL_requiref(L, "TSoftObjectPtr", LibOpen_wrap, 1);
+    luaL_requiref(L, "SoftPtr", LibOpen_wrap, 1);
 }
 
 int TSoftObjectPtrWrap::LibOpen_wrap(lua_State* L)
@@ -21,7 +22,8 @@ int TSoftObjectPtrWrap::LibOpen_wrap(lua_State* L)
         { "__eq", FCExportedClass::obj_equal },
         { nullptr, nullptr }
     };
-    FCExportedClass::RegisterLibClass(L, "TSoftObjectPtr", LibFuncs);
+    const char* ClassName = lua_tostring(L, 1);
+    FCExportedClass::RegisterLibClass(L, ClassName, LibFuncs);
     return 1;
 }
 

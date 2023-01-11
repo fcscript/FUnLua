@@ -7,6 +7,7 @@
 void TWeakObjectPtrWrap::Register(lua_State* L)
 {
     luaL_requiref(L, "TWeakObjectPtr", LibOpen_wrap, 1);
+    luaL_requiref(L, "WeakPtr", LibOpen_wrap, 1);
 }
 
 int TWeakObjectPtrWrap::LibOpen_wrap(lua_State* L)
@@ -23,7 +24,8 @@ int TWeakObjectPtrWrap::LibOpen_wrap(lua_State* L)
         { "__eq", FCExportedClass::obj_equal },
         { nullptr, nullptr }
     };
-    FCExportedClass::RegisterLibClass(L, "TWeakObjectPtr", LibFuncs);
+    const char* ClassName = lua_tostring(L, 1);
+    FCExportedClass::RegisterLibClass(L, ClassName, LibFuncs);
     return 1;
 }
 
@@ -32,9 +34,9 @@ int TWeakObjectPtrWrap::obj_New(lua_State* L)
     // TLazyObjectPtr(UObject)
     UObject* Object = FCScript::GetUObject(L, 2);
     FWeakObjectPtr* ScriptPt = new FWeakObjectPtr(Object);
-    FCDynamicProperty* DynamicProperty = GetDynamicPropertyByCppType(FCPROPERTY_WeakObjectPtr, "FWeakObjectPtr", sizeof(FWeakObjectPtr));
+    FCDynamicProperty* DynamicProperty = GetDynamicPropertyByCppType(FCPROPERTY_WeakObjectPtr, "TWeakObjectPtr", sizeof(FWeakObjectPtr));
     int64 ObjID = FCGetObj::GetIns()->PushTemplate((const FCDynamicProperty*)DynamicProperty, ScriptPt, EFCObjRefType::NewTWeakPtr);
-    FCScript::PushBindObjRef(L, ObjID, "FWeakObjectPtr");
+    FCScript::PushBindObjRef(L, ObjID, "TWeakObjectPtr");
     return 1;
 }
 

@@ -313,6 +313,10 @@ function TestCrash:Crash17()
     local WeakPtr = UE4.TWeakObjectPtr(obj)
     obj.WeakPtr = WeakPtr
     obj:CallClicked()
+    obj.ResPtr = "/Game/TestDataTable.TestDataTable"
+    local asetName0 = obj.ResPtr:GetAssetName()
+    UEPrint("[Crash17]asetName0:", asetName0)
+
     local ResPtr = UE4.TSoftObjectPtr("/Game/TestDataTable.TestDataTable")
     obj.ResPtr = ResPtr
     local ClassPtr = UE4.TSoftClassPtr(AvatarClass)

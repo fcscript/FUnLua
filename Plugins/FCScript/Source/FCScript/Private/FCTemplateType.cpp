@@ -266,22 +266,22 @@ FProperty  *CreateClassProperty(const char *InClassName)
 	{
 		return itProperty->second;
 	}
+    FCInnerBaseType InnerType = GetInnerType(InClassName);
+    if (InnerType != FC_INNER_TYPE_Unknow)
+    {
+        InClassName = GetInnerTypeName(InnerType);
+        itProperty = GClassPropertyNameMap.find(InClassName);
+        if (itProperty != GClassPropertyNameMap.end())
+        {
+            return itProperty->second;
+        }
+        FProperty* Property = CreateBaseProperty(InnerType);
+        GClassPropertyNameMap[InClassName] = Property;
+        return Property;
+    }
 	const FCDynamicClassDesc *DynamicClass = GetScriptContext()->RegisterUClass(InClassName);
 	if(!DynamicClass)
 	{
-        FCInnerBaseType InnerType = GetInnerType(InClassName);
-        if(InnerType != FC_INNER_TYPE_Unknow)
-        {
-            InClassName = GetInnerTypeName(InnerType);
-            itProperty = GClassPropertyNameMap.find(InClassName);
-            if (itProperty != GClassPropertyNameMap.end())
-            {
-                return itProperty->second;
-            }
-            FProperty* Property = CreateBaseProperty(InnerType);
-            GClassPropertyNameMap[InClassName] = Property;
-            return Property;
-        }
         // not surport type
 		return nullptr;
 	}
