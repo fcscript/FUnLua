@@ -30,6 +30,20 @@ void  FCDynamicProperty::InitProperty(const FProperty *InProperty, const char* I
     m_CopyScriptValue = InitDynamicPropertyCopyFunc(Type);
 }
 
+void  FCDynamicProperty::InitCppType(FCPropertyType InType, const char* InClassName, int InElementSize)
+{
+    Name = "";
+    ElementSize = InElementSize;
+    Offset_Internal = 0;
+    Property = nullptr;
+    Type = InType;
+    ClassName = GetConstName(InClassName);
+
+    m_WriteScriptFunc = InitDynamicPropertyWriteFunc(Type);
+    m_ReadScriptFunc = InitDynamicPropertyReadFunc(Type);
+    m_CopyScriptValue = InitDynamicPropertyCopyFunc(Type);
+}
+
 void  FCDynamicFunction::InitParam(UFunction *InFunction)
 {
     Name = TCHAR_TO_UTF8(*(InFunction->GetName()));

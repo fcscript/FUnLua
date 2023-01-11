@@ -39,6 +39,7 @@ enum FCPropertyType
 	FCPROPERTY_LazyObjectPtr,   // FLazyObjectProperty, TLazyObjectPtr<_Ty>, FLazyObjectPtr
 	FCPROPERTY_Interface,       // FInterfaceProperty
 	FCPROPERTY_SoftObjectReference, // CPT_SoftObjectReference
+    FCPROPERTY_SoftClassReference, // TSoftClassPtr
 	FCPROPERTY_Function,        // Fucntion
 	FCPROPERTY_StructProperty,  // Struct, FVector 也是这个类型噢
 	FCPROPERTY_Array,           // TArray

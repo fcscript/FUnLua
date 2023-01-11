@@ -538,6 +538,18 @@ void  FCGetObj::DestroyObjRef(FCObjRef *ObjRef)
                 delete ScriptMap;
             }
             break;
+            case EFCObjRefType::NewTSoftObjectPtr:
+            {
+                FSoftObjectPtr *SoftPtr = (FSoftObjectPtr *)ObjRef->GetThisAddr();
+                delete SoftPtr;
+            }
+            break;
+            case EFCObjRefType::NewTSoftClassPtr:
+            {
+                FSoftObjectPtr* SoftPtr = (FSoftObjectPtr*)ObjRef->GetThisAddr();
+                delete SoftPtr;
+            }
+            break;
 			case EFCObjRefType::MapIterator:
 			{
 				TMapIterator*pIteratorBuffer = (TMapIterator*)ObjRef->GetThisAddr();

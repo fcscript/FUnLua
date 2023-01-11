@@ -16,6 +16,8 @@ enum EFCObjRefType
 	NewTSet,        // new TSet
 	NewTLazyPtr,    // 
 	NewTWeakPtr,    // 
+    NewTSoftObjectPtr, // 
+    NewTSoftClassPtr, // 
 	CppPtr,         // 全局的Cpp对象指针
 	MapIterator,    // map_iterator
 };

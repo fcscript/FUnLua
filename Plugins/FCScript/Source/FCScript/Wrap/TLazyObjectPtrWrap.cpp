@@ -1,6 +1,7 @@
 #include "TLazyObjectPtrWrap.h"
 #include "FCObjectManager.h"
 #include "FCGetObj.h"
+#include "FCTemplateType.h"
 
 void TLazyObjectPtrWrap::Register(lua_State* L)
 {
@@ -18,11 +19,23 @@ int TLazyObjectPtrWrap::LibOpen_wrap(lua_State* L)
         { "Get", Get_wrap },
         { "Set", Set_wrap },
 
+        { "__call", obj_New },
         { "__gc", FCExportedClass::obj_Delete },
         { "__eq", FCExportedClass::obj_equal },
         { nullptr, nullptr }
     };
     FCExportedClass::RegisterLibClass(L, "TLazyObjectPtr", LibFuncs);
+    return 1;
+}
+
+int TLazyObjectPtrWrap::obj_New(lua_State* L)
+{
+    // TLazyObjectPtr(UObject)
+    UObject *Object = FCScript::GetUObject(L, 2);
+    FLazyObjectPtr* ScriptPt = new FLazyObjectPtr(Object);
+    FCDynamicProperty* DynamicProperty = GetDynamicPropertyByCppType(FCPROPERTY_LazyObjectPtr, "TLazyObjectPtr", sizeof(FLazyObjectPtr));
+    int64 ObjID = FCGetObj::GetIns()->PushTemplate((const FCDynamicProperty*)DynamicProperty, ScriptPt, EFCObjRefType::NewTLazyPtr);
+    FCScript::PushBindObjRef(L, ObjID, "TLazyObjectPtr");
     return 1;
 }
 

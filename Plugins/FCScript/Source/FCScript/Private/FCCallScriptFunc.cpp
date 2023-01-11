@@ -9,6 +9,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "FCBrigeBase.h"
 #include "../LuaCore/LuaContext.h"
+#include "FCTemplateType.h"
 
 #include "FCGetObj.h"
 
@@ -156,6 +157,14 @@ void  PushScriptStruct(lua_State* L, const FCDynamicPropertyBase *DynamicPropert
 	}
 }
 
+// 将UE对象写入脚本对象
+void  PushClassProperty(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FClassProperty* StructProperty = (FClassProperty*)DynamicProperty->Property;
+    UObject* Object = *((UObject**)ValueAddr);
+    FCScript::PushUObject(L, Object);
+}
+
 void  PushScriptUObject(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
 	UObject* value = *((UObject**)ValueAddr);
@@ -184,7 +193,14 @@ void  PushScriptWeakObject(lua_State* L, const FCDynamicPropertyBase *DynamicPro
 	}
 	else
 	{
-		ObjID = FCGetObj::GetIns()->PushTemplate((const FCDynamicProperty*)DynamicProperty, ValueAddr, EFCObjRefType::NewTWeakPtr);
+        if(WeakPtr)
+        {
+            FWeakObjectPtr* ScriptPt = new FWeakObjectPtr(*WeakPtr);
+            FCDynamicProperty* InDynamicProperty = GetDynamicPropertyByCppType(FCPROPERTY_WeakObjectPtr, "FWeakObjectPtr", sizeof(FWeakObjectPtr));
+            ObjID = FCGetObj::GetIns()->PushTemplate((const FCDynamicProperty*)InDynamicProperty, ScriptPt, EFCObjRefType::NewTWeakPtr);
+            FCScript::PushBindObjRef(L, ObjID, "FWeakObjectPtr");
+            return ;
+        }
 	}
 	FCScript::PushBindObjRef(L, ObjID, DynamicProperty->GetClassName());
 }
@@ -199,9 +215,60 @@ void  PushScriptLazyObject(lua_State* L, const FCDynamicPropertyBase *DynamicPro
 	}
 	else
 	{
-		ObjID = FCGetObj::GetIns()->PushTemplate((const FCDynamicProperty*)DynamicProperty, ValueAddr, EFCObjRefType::NewTLazyPtr);
+        if (LazyPtr)
+        {
+            FLazyObjectPtr* ScriptPt = new FLazyObjectPtr(*LazyPtr);
+            FCDynamicProperty* InDynamicProperty = GetDynamicPropertyByCppType(FCPROPERTY_LazyObjectPtr, "TLazyObjectPtr", sizeof(FLazyObjectPtr));
+            ObjID = FCGetObj::GetIns()->PushTemplate((const FCDynamicProperty*)InDynamicProperty, ScriptPt, EFCObjRefType::NewTLazyPtr);
+            FCScript::PushBindObjRef(L, ObjID, "TLazyObjectPtr");
+            return ;
+        }
 	}
 	FCScript::PushBindObjRef(L, ObjID, DynamicProperty->GetClassName());
+}
+
+void  PushSoftObjectPtr(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FSoftObjectPtr* InSoftPtr = (FSoftObjectPtr*)ValueAddr;
+    int64 ObjID = 0;
+    if (ThisObj)
+    {
+        ObjID = FCGetObj::GetIns()->PushProperty(ThisObj, (const FCDynamicProperty*)DynamicProperty, ValueAddr);
+    }
+    else
+    {
+        if(InSoftPtr)
+        {
+            FCDynamicProperty* InDynamicProperty = GetDynamicPropertyByCppType(FCPROPERTY_SoftObjectReference, "TSoftObjectPtr", sizeof(FSoftObjectPtr));
+            FSoftObjectPtr* SoftObjectPtr = new FSoftObjectPtr(*InSoftPtr);
+            ObjID = FCGetObj::GetIns()->PushTemplate((const FCDynamicProperty*)InDynamicProperty, SoftObjectPtr, EFCObjRefType::NewTSoftObjectPtr);
+            FCScript::PushBindObjRef(L, ObjID, InDynamicProperty->GetClassName());
+            return;
+        }
+    }
+    FCScript::PushBindObjRef(L, ObjID, DynamicProperty->GetClassName());
+}
+
+void  PushSoftClassPtr(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FSoftObjectPtr* InSoftPtr = (FSoftObjectPtr*)ValueAddr;
+    int64 ObjID = 0;
+    if (ThisObj)
+    {
+        ObjID = FCGetObj::GetIns()->PushProperty(ThisObj, (const FCDynamicProperty*)DynamicProperty, ValueAddr);
+    }
+    else
+    {
+        if(InSoftPtr)
+        {
+            FCDynamicProperty* InDynamicProperty = GetDynamicPropertyByCppType(FCPROPERTY_SoftClassReference, "TSoftClassPtr", sizeof(FSoftObjectPtr));
+            FSoftObjectPtr* SoftObjectPtr = new FSoftObjectPtr(*InSoftPtr);
+            ObjID = FCGetObj::GetIns()->PushTemplate((const FCDynamicProperty*)InDynamicProperty, SoftObjectPtr, EFCObjRefType::NewTSoftClassPtr);
+            FCScript::PushBindObjRef(L, ObjID, InDynamicProperty->GetClassName());
+            return;
+        }
+    }
+    FCScript::PushBindObjRef(L, ObjID, DynamicProperty->GetClassName());
 }
 
 void  PushScriptDelegate(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
@@ -337,6 +404,12 @@ LPPushScriptValueFunc  InitDynamicPropertyWriteFunc(FCPropertyType Flag)
 		case FCPROPERTY_LazyObjectPtr:
             WriteFunc = PushScriptLazyObject;
 			break;
+        case FCPROPERTY_SoftObjectReference:
+            WriteFunc = PushSoftObjectPtr;
+            break;
+        case FCPROPERTY_SoftClassReference:
+            WriteFunc = PushSoftClassPtr;
+            break;
 		case FCPROPERTY_StructProperty:
             WriteFunc = PushScriptStruct;
 			break;
@@ -349,6 +422,9 @@ LPPushScriptValueFunc  InitDynamicPropertyWriteFunc(FCPropertyType Flag)
 		case FCPROPERTY_Vector4:
             WriteFunc = PushScriptStruct;
 			break;
+        case FCPROPERTY_ClassProperty:
+            WriteFunc = PushClassProperty;
+            break;
 		case FCPROPERTY_Array:
             WriteFunc = PushScriptTArray;
 			break;
@@ -473,6 +549,30 @@ void  ReadScriptStruct(lua_State* L, int ValueIdx, const FCDynamicPropertyBase *
         ReportLuaError(L, "invalid struct param, none copy");
     }
 }
+
+void  ReadClassProperty(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FClassProperty* StructProperty = (FClassProperty*)DynamicProperty->Property;
+    UClass *MetaClass = StructProperty->MetaClass;
+    UObject *Object = FCScript::GetUStructOrUObject(L, ValueIdx);
+    UClass* InClass = Object ? Object->GetClass() : nullptr;
+    if(InClass)
+    {
+        if(MetaClass == InClass || InClass->IsChildOf(InClass))
+        {
+            *((UObject**)ValueAddr) = Object;
+        }
+        else
+        {
+            *((UObject**)ValueAddr) = nullptr;
+        }
+    }
+    else
+    {
+        *((UObject**)ValueAddr) = nullptr;
+    }
+}
+
 void  ReadScriptUObject(lua_State* L, int ValueIdx, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
     FObjectProperty* ObjectProperty = (FObjectProperty*)DynamicProperty->Property;
@@ -516,15 +616,23 @@ void  ReadScriptWeakObject(lua_State* L, int ValueIdx, const FCDynamicPropertyBa
 	FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
 	if(ObjRef)
 	{
-		if (FCPropertyType::FCPROPERTY_WeakObjectPtr == ObjRef->DynamicProperty->Type)
-		{
-			FWeakObjectPtr* ScriptPtr = (FWeakObjectPtr*)ObjRef->GetPropertyAddr();
-			*WeakPtr = ScriptPtr->Get();
-		}
-		else if (FCPROPERTY_ObjectProperty == ObjRef->DynamicProperty->Type)
-		{
-			*WeakPtr = ObjRef->GetUObject();
-		}
+        if(ObjRef->RefType == RefObject
+         || ObjRef->RefType == NewUObject)
+        {
+            *WeakPtr = ObjRef->GetUObject();
+        }
+        else if(ObjRef->DynamicProperty)
+        {
+		    if (FCPropertyType::FCPROPERTY_WeakObjectPtr == ObjRef->DynamicProperty->Type)
+		    {
+			    FWeakObjectPtr* ScriptPtr = (FWeakObjectPtr*)ObjRef->GetPropertyAddr();
+			    *WeakPtr = ScriptPtr->Get();
+		    }
+		    else if (FCPROPERTY_ObjectProperty == ObjRef->DynamicProperty->Type)
+		    {
+			    *WeakPtr = ObjRef->GetUObject();
+		    }
+        }
 	}
 }
 void  ReadScriptLazyObject(lua_State* L, int ValueIdx, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
@@ -533,17 +641,105 @@ void  ReadScriptLazyObject(lua_State* L, int ValueIdx, const FCDynamicPropertyBa
 	FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
 	if (ObjRef)
 	{
-		if (FCPropertyType::FCPROPERTY_LazyObjectPtr == ObjRef->DynamicProperty->Type)
-		{
-			FLazyObjectPtr* ScriptPtr = (FLazyObjectPtr*)ObjRef->GetPropertyAddr();
-			*LazyPtr = ScriptPtr->Get();
-		}
-		else if (FCPROPERTY_ObjectProperty == ObjRef->DynamicProperty->Type)
-		{
-			*LazyPtr = ObjRef->GetUObject();
-		}
+        if (ObjRef->RefType == RefObject
+            || ObjRef->RefType == NewUObject)
+        {
+            *LazyPtr = ObjRef->GetUObject();
+        }
+        else if (ObjRef->DynamicProperty)
+        {
+		    if (FCPropertyType::FCPROPERTY_LazyObjectPtr == ObjRef->DynamicProperty->Type)
+		    {
+			    FLazyObjectPtr* ScriptPtr = (FLazyObjectPtr*)ObjRef->GetPropertyAddr();
+			    *LazyPtr = ScriptPtr->Get();
+		    }
+		    else if (FCPROPERTY_ObjectProperty == ObjRef->DynamicProperty->Type)
+		    {
+			    *LazyPtr = ObjRef->GetUObject();
+		    }
+        }
 	}
 }
+void  ReadScriptSoftObjectPtr(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FSoftObjectPtr* SoftPtr = (FSoftObjectPtr*)ValueAddr;
+    int Type = lua_type(L, ValueIdx);
+    if (LUA_TSTRING == Type)
+    {
+        // 如果是字符串，就表示是路径
+        const char *ArgPath = lua_tostring(L, ValueIdx);
+        FString  AssetPath(UTF8_TO_TCHAR(ArgPath));
+        FSoftObjectPath  ObjPath(AssetPath);
+        *SoftPtr = FSoftObjectPtr(ObjPath);
+    }
+    else
+    {
+        FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+        if (ObjRef)
+        {
+            if (FCPropertyType::FCPROPERTY_SoftObjectReference == ObjRef->DynamicProperty->Type)
+            {
+                FSoftObjectPtr* ScriptPtr = (FSoftObjectPtr*)ObjRef->GetPropertyAddr();
+                *SoftPtr = *ScriptPtr;
+            }
+            else if (FCPROPERTY_ObjectProperty == ObjRef->DynamicProperty->Type)
+            {
+                *SoftPtr = ObjRef->GetUObject();
+            }
+        }        
+    }
+}
+
+void ReadScriptSoftClassPtr(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FSoftObjectPtr* SoftPtr = (FSoftObjectPtr*)ValueAddr;
+    int Type = lua_type(L, ValueIdx);
+    if (LUA_TSTRING == Type)
+    {
+        // 如果是字符串，就表示是路径
+        const char* ArgPath = lua_tostring(L, ValueIdx);
+        FString  AssetPath(UTF8_TO_TCHAR(ArgPath));
+        FSoftObjectPath  ObjPath(AssetPath);
+        *SoftPtr = FSoftObjectPtr(ObjPath);
+    }
+    else
+    {
+        if (LUA_TTABLE == Type)
+        {
+            UStruct *Struct = FCScript::GetUStruct(L, ValueIdx);
+            UClass* InClass = Cast<UClass>(Struct);
+            if(InClass)
+            {
+                *SoftPtr = InClass;
+                return ;
+            }
+        }
+        FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+        if (ObjRef)
+        {
+            if (FCPropertyType::FCPROPERTY_SoftClassReference == ObjRef->DynamicProperty->Type)
+            {
+                FSoftObjectPtr* ScriptPtr = (FSoftObjectPtr*)ObjRef->GetPropertyAddr();
+                *SoftPtr = *ScriptPtr;
+                return ;
+            }
+            else if (FCPROPERTY_ObjectProperty == ObjRef->DynamicProperty->Type)
+            {
+                UClass* InClass = Cast<UClass>(ObjRef->GetUObject());
+                *SoftPtr = InClass;
+                return;
+            }
+            else if(FCPROPERTY_ClassProperty == ObjRef->DynamicProperty->Type)
+            {
+                UClass  *InClass = *((UClass **)ObjRef->GetPropertyAddr());
+                *SoftPtr = InClass;
+                return;
+            }
+        }
+        *SoftPtr = nullptr;
+    }
+}
+
 void  ReadScriptTArray(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
 	FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
@@ -682,6 +878,12 @@ LPOuterScriptValueFunc  InitDynamicPropertyReadFunc(FCPropertyType Flag)
 		case FCPROPERTY_LazyObjectPtr:
             ReadScriptFunc = ReadScriptLazyObject;
 			break;
+        case FCPROPERTY_SoftObjectReference:
+            ReadScriptFunc = ReadScriptSoftObjectPtr;
+            break;
+        case FCPROPERTY_SoftClassReference:
+            ReadScriptFunc = ReadScriptSoftClassPtr;
+            break;
 		case FCPROPERTY_StructProperty:
             ReadScriptFunc = ReadScriptStruct;
 			break;
@@ -693,6 +895,9 @@ LPOuterScriptValueFunc  InitDynamicPropertyReadFunc(FCPropertyType Flag)
             break;
         case FCPROPERTY_Vector4:
             ReadScriptFunc = ReadScriptFVector4D;
+            break;
+        case FCPROPERTY_ClassProperty:
+            ReadScriptFunc = ReadClassProperty;
             break;
 		case FCPROPERTY_Array:
             ReadScriptFunc = ReadScriptTArray;
@@ -773,6 +978,31 @@ bool  CopyScriptFVector4D(lua_State* L, int ValueIdx, const FCDynamicPropertyBas
     if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_Vector4)
     {
         *((FVector4*)ObjRef->GetPropertyAddr()) = *((const FVector4*)ValueAddr);
+        PushLuaExitValue(L, ValueIdx, ObjRef);
+        return true;
+    }
+    return false;
+}
+bool  CopyScriptSoftObjectPtr(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FSoftObjectPtr* SoftPtr = (FSoftObjectPtr*)ValueAddr;
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_SoftObjectReference)
+    {
+        *SoftPtr = *((const FSoftObjectPtr*)ValueAddr);
+        PushLuaExitValue(L, ValueIdx, ObjRef);
+        return true;
+    }
+    return false;
+}
+
+bool  CopyScriptSoftClassPtr(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FSoftObjectPtr* SoftPtr = (FSoftObjectPtr*)ValueAddr;
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_SoftClassReference)
+    {
+        *SoftPtr = *((const FSoftObjectPtr*)ValueAddr);
         PushLuaExitValue(L, ValueIdx, ObjRef);
         return true;
     }
@@ -895,6 +1125,12 @@ LPCopyScriptValueFunc InitDynamicPropertyCopyFunc(FCPropertyType Flag)
         break;
     case FCPROPERTY_Vector4:
         CopyScriptFunc = CopyScriptFVector4D;
+        break;
+    case FCPROPERTY_SoftObjectReference:
+        CopyScriptFunc = CopyScriptSoftObjectPtr;
+        break;
+    case FCPROPERTY_SoftClassReference:
+        CopyScriptFunc = CopyScriptSoftClassPtr;
         break;
     case FCPROPERTY_Array:
         CopyScriptFunc = CopyScriptTArray;

@@ -361,6 +361,19 @@ FCDynamicProperty* GetDynamicPropertyByUEProperty(FProperty* InProperty)
 	return DynamicPropery;
 }
 
+FCDynamicProperty* GetDynamicPropertyByCppType(FCPropertyType InType, const char* InClassName, int InElementSize)
+{
+    CCppDynamicPropertyMap::iterator itProperty = GCppDynamicPropertyMap.find(InClassName);
+    if (itProperty != GCppDynamicPropertyMap.end())
+    {
+        return itProperty->second;
+    }
+    FCDynamicProperty* DynamicPropery = new FCDynamicProperty();
+    DynamicPropery->InitCppType(InType, InClassName, InElementSize);
+    GCppDynamicPropertyMap[InClassName] = DynamicPropery;
+    return DynamicPropery;
+}
+
 FProperty *QueryTempalteProperty(const char* InClassName)
 {
 	FProperty *Property = CreateClassProperty(InClassName);

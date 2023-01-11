@@ -1,6 +1,7 @@
 #include "TWeakObjectPtrWrap.h"
 #include "FCObjectManager.h"
 #include "FCGetObj.h"
+#include "FCTemplateType.h"
 
 
 void TWeakObjectPtrWrap::Register(lua_State* L)
@@ -22,6 +23,17 @@ int TWeakObjectPtrWrap::LibOpen_wrap(lua_State* L)
         { nullptr, nullptr }
     };
     FCExportedClass::RegisterLibClass(L, "TWeakObjectPtr", LibFuncs);
+    return 1;
+}
+
+int TWeakObjectPtrWrap::obj_New(lua_State* L)
+{
+    // TLazyObjectPtr(UObject)
+    UObject* Object = FCScript::GetUObject(L, 2);
+    FWeakObjectPtr* ScriptPt = new FWeakObjectPtr(Object);
+    FCDynamicProperty* DynamicProperty = GetDynamicPropertyByCppType(FCPROPERTY_WeakObjectPtr, "FWeakObjectPtr", sizeof(FWeakObjectPtr));
+    int64 ObjID = FCGetObj::GetIns()->PushTemplate((const FCDynamicProperty*)DynamicProperty, ScriptPt, EFCObjRefType::NewTWeakPtr);
+    FCScript::PushBindObjRef(L, ObjID, "FWeakObjectPtr");
     return 1;
 }
 

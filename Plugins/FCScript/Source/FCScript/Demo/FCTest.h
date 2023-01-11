@@ -126,6 +126,10 @@ public:
 
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "SetAvatarParam"))
     void SetAvatarParam(const FTestAvatarSystemInitParams &Param);	
+
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "SetSoftPtr"))
+    void SetSoftPtr(TSoftObjectPtr<UObject> Arg1, TSoftClassPtr<UClass> Arg2);
+
 	
 	//UPROPERTY()
 	//TSharedPtr<UFCTest> SharedPtr;  // 这个是不支持的
@@ -146,6 +150,9 @@ public:
     //TScriptInterface<IFCTestInterface> TScriptInterfaceVar;
     UPROPERTY(BlueprintReadWrite)
     TSubclassOf<UObject> TSubclassOfVar;
+
+    UPROPERTY(BlueprintReadWrite)
+    TSubclassOf<UFCTest> TSubclassOfTest;
 
     UPROPERTY(BlueprintReadWrite)
     TEnumAsByte<enum EFCTestEnum> EnumAsByteVar;

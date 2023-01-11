@@ -91,6 +91,7 @@ struct FCDynamicProperty : public FCDynamicPropertyBase
 	}
 
 	void  InitProperty(const FProperty *InProperty, const char *InName = nullptr);
+    void  InitCppType(FCPropertyType InType, const char *InClassName, int InElementSize);
 	virtual FCDynamicField* Clone() const { return new FCDynamicProperty(*this); }
 	virtual int DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
 	virtual int DoSet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);

@@ -113,3 +113,9 @@ void UFCTest::SetAvatarParam(const FTestAvatarSystemInitParams& Param)
 {
     AvatarParams = Param;
 }
+
+void UFCTest::SetSoftPtr(TSoftObjectPtr<UObject> Arg1, TSoftClassPtr<UClass> Arg2)
+{
+    ResPtr = Arg1;
+    TSoftClassPtrVar = Arg2;
+}

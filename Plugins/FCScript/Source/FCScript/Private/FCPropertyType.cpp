@@ -42,6 +42,7 @@ void  InitPropertyTable()
 	gPropertyTypeMap[FInterfaceProperty::StaticClass()] = FCPROPERTY_Interface;
 
 	gPropertyTypeMap[FSoftObjectProperty::StaticClass()]  = FCPROPERTY_SoftObjectReference;
+    gPropertyTypeMap[FSoftClassProperty::StaticClass()] = FCPROPERTY_SoftClassReference;
 
 	gPropertyTypeMap[FNameProperty::StaticClass()]   = FCPROPERTY_NameProperty;
 	gPropertyTypeMap[FStrProperty::StaticClass()]    = FCPROPERTY_StrProperty;
@@ -97,6 +98,7 @@ void  InitProperyNameTable()
 	gPropertyClassNameMap[FCPROPERTY_LazyObjectPtr] = "TLazyObjectPtr";
 	gPropertyClassNameMap[FCPROPERTY_Interface] = "Interface";
 	gPropertyClassNameMap[FCPROPERTY_SoftObjectReference] = "TSoftObjectPtr";
+    gPropertyClassNameMap[FCPROPERTY_SoftClassReference] = "TSoftClassPtr";
 	gPropertyClassNameMap[FCPROPERTY_NameProperty] = "FName";
 	gPropertyClassNameMap[FCPROPERTY_StrProperty] = "FString";
 	gPropertyClassNameMap[FCPROPERTY_TextProperty] = "FText";

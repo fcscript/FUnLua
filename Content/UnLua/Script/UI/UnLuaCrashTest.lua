@@ -299,6 +299,30 @@ function TestCrash:Crash16()
     UEPrint("[Crash16]dataTable,row=", row, ",row ID=", row.ID, ",Name=", row.Name)
 end
 
+-- 只是测试GetSubSystem()
+function TestCrash:Crash17()
+    local subSystem = UE4.USubsystemBlueprintLibrary.GetEngineSubsystem(UE4.UAssetTagsSubsystem)
+    UEPrint("[Crash17]subSystem:", subSystem)
+
+    local AvatarClass = UE4.UFCTest
+    local obj = NewObject(AvatarClass)
+    obj.TSubclassOfVar = subSystem
+    obj.TSubclassOfTest = obj
+    obj.WeakPtr = obj
+    obj.LazyPtr = obj
+    obj:CallClicked()
+    local ResPtr = UE4.TSoftObjectPtr("/Game/TestDataTable.TestDataTable")
+    obj.ResPtr = ResPtr
+    local ClassPtr = UE4.TSoftClassPtr(AvatarClass)
+    obj.TSoftClassPtrVar = ClassPtr
+    ResPtr:LoadSynchronous()
+    ClassPtr:LoadSynchronous()
+    obj:SetSoftPtr(ResPtr, ClassPtr)
+    local assetName1 = ResPtr:GetAssetName()
+    local assetName2 = ClassPtr:GetAssetName()
+    UEPrint("[Crash17]assetName1:", assetName1, "assetName2:", assetName2)
+end
+
 function  TestCrash:DoCrash(worldContextObject)
     local nextFuncIndex = self.NextFuncIndex or 0
     nextFuncIndex = nextFuncIndex + 1
@@ -324,7 +348,8 @@ function  TestCrash:DoCrash(worldContextObject)
     -- self:Crash13(worldContextObject) -- 正常
     -- self:Crash14(worldContextObject) --会Crash, 功能不正确
     -- self:Crash15(worldContextObject) --
-    self:Crash16(worldContextObject) --
+    -- self:Crash16(worldContextObject) --
+    self:Crash17(worldContextObject) --
 
     ----- 下面是FUnLua的测试结果
     -- self:Crash1(worldContextObject) -- 正常

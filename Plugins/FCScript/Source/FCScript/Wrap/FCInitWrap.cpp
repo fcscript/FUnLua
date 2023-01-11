@@ -36,6 +36,7 @@ void FCInitWrap::Register(lua_State* L)
 	TWeakObjectPtrWrap::Register(L);
 	TLazyObjectPtrWrap::Register(L);
 	TSoftObjectPtrWrap::Register(L);
+    TSoftClassPtrWrap::Register(L);
 	FCTMapIteratorWrap::Register(L);
 	FCTSetWrap::Register(L);
 	FCVector2Wrap::Register(L);

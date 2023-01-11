@@ -11,6 +11,7 @@ FCSCRIPT_API void* FC_GetCppObjectPtr(lua_State* L, int Index);
 FCSCRIPT_API void  FC_GetArgValue_ByName(lua_State* L, int Index, void* ValueAddr, const char* ClassName);
 FCSCRIPT_API UObject* FC_GetArgValue_Object(lua_State* L, int Index);
 FCSCRIPT_API UStruct* FC_GetArgValue_UStruct(lua_State* L, int Index);
+FCSCRIPT_API UObject* FC_GetArgValue_UStructOrUObject(lua_State* L, int Index);
 FCSCRIPT_API void *FC_GetArgRefObjPtr(lua_State* L, int Index);
 FCSCRIPT_API int64 FC_GetArgObjID(lua_State* L, int Index);
 
@@ -145,6 +146,10 @@ namespace FCScript
     FORCEINLINE UStruct* GetUStruct(lua_State* L, int Index)
     {
         return FC_GetArgValue_UStruct(L, Index);
+    }
+    FORCEINLINE UObject* GetUStructOrUObject(lua_State* L, int Index)
+    {
+        return FC_GetArgValue_UStructOrUObject(L, Index);
     }
     FORCEINLINE void* GetObjRefPtr(lua_State* L, int Index)
     {

@@ -86,6 +86,7 @@ FProperty  *CreateClassProperty(const char *InClassName);
 FCDynamicProperty *GetCppDynamicProperty(const char *InClassName);
 FCDynamicProperty* GetStructDynamicProperty(UStruct* Struct);
 FCDynamicProperty* GetDynamicPropertyByUEProperty(FProperty* InProperty);
+FCDynamicProperty* GetDynamicPropertyByCppType(FCPropertyType InType, const char* InClassName, int InElementSize);
 
 FArrayProperty* CreateTArrayProperty(const char *InPropertyType);
 
