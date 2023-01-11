@@ -18,6 +18,7 @@ int TWeakObjectPtrWrap::LibOpen_wrap(lua_State* L)
         { "Get", Get_wrap },
         { "Set", Set_wrap },
 
+        { "__call", obj_New },
         { "__gc", FCExportedClass::obj_release },
         { "__eq", FCExportedClass::obj_equal },
         { nullptr, nullptr }

@@ -616,10 +616,10 @@ void  ReadScriptWeakObject(lua_State* L, int ValueIdx, const FCDynamicPropertyBa
 	FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
 	if(ObjRef)
 	{
-        if(ObjRef->RefType == RefObject
-         || ObjRef->RefType == NewUObject)
+        UObject *InObject = ObjRef->GetUObject(); 
+        if(InObject)
         {
-            *WeakPtr = ObjRef->GetUObject();
+            *WeakPtr = InObject;
         }
         else if(ObjRef->DynamicProperty)
         {
@@ -641,10 +641,10 @@ void  ReadScriptLazyObject(lua_State* L, int ValueIdx, const FCDynamicPropertyBa
 	FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
 	if (ObjRef)
 	{
-        if (ObjRef->RefType == RefObject
-            || ObjRef->RefType == NewUObject)
+        UObject* InObject = ObjRef->GetUObject();
+        if (InObject)
         {
-            *LazyPtr = ObjRef->GetUObject();
+            *LazyPtr = InObject;
         }
         else if (ObjRef->DynamicProperty)
         {
@@ -677,14 +677,22 @@ void  ReadScriptSoftObjectPtr(lua_State* L, int ValueIdx, const FCDynamicPropert
         FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
         if (ObjRef)
         {
-            if (FCPropertyType::FCPROPERTY_SoftObjectReference == ObjRef->DynamicProperty->Type)
+            UObject* InObject = ObjRef->GetUObject();
+            if (InObject)
             {
-                FSoftObjectPtr* ScriptPtr = (FSoftObjectPtr*)ObjRef->GetPropertyAddr();
-                *SoftPtr = *ScriptPtr;
+                *SoftPtr = InObject;
             }
-            else if (FCPROPERTY_ObjectProperty == ObjRef->DynamicProperty->Type)
+            else if(ObjRef->DynamicProperty)
             {
-                *SoftPtr = ObjRef->GetUObject();
+                if (FCPropertyType::FCPROPERTY_SoftObjectReference == ObjRef->DynamicProperty->Type)
+                {
+                    FSoftObjectPtr* ScriptPtr = (FSoftObjectPtr*)ObjRef->GetPropertyAddr();
+                    *SoftPtr = *ScriptPtr;
+                }
+                else if (FCPROPERTY_ObjectProperty == ObjRef->DynamicProperty->Type)
+                {
+                    *SoftPtr = ObjRef->GetUObject();
+                }
             }
         }        
     }
@@ -717,23 +725,32 @@ void ReadScriptSoftClassPtr(lua_State* L, int ValueIdx, const FCDynamicPropertyB
         FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
         if (ObjRef)
         {
-            if (FCPropertyType::FCPROPERTY_SoftClassReference == ObjRef->DynamicProperty->Type)
+            UObject* InObject = ObjRef->GetUObject();
+            if (InObject)
             {
-                FSoftObjectPtr* ScriptPtr = (FSoftObjectPtr*)ObjRef->GetPropertyAddr();
-                *SoftPtr = *ScriptPtr;
-                return ;
-            }
-            else if (FCPROPERTY_ObjectProperty == ObjRef->DynamicProperty->Type)
-            {
-                UClass* InClass = Cast<UClass>(ObjRef->GetUObject());
+                UClass* InClass = Cast<UClass>(InObject);
                 *SoftPtr = InClass;
-                return;
             }
-            else if(FCPROPERTY_ClassProperty == ObjRef->DynamicProperty->Type)
+            else if(ObjRef->DynamicProperty)
             {
-                UClass  *InClass = *((UClass **)ObjRef->GetPropertyAddr());
-                *SoftPtr = InClass;
-                return;
+                if (FCPropertyType::FCPROPERTY_SoftClassReference == ObjRef->DynamicProperty->Type)
+                {
+                    FSoftObjectPtr* ScriptPtr = (FSoftObjectPtr*)ObjRef->GetPropertyAddr();
+                    *SoftPtr = *ScriptPtr;
+                    return;
+                }
+                else if (FCPROPERTY_ObjectProperty == ObjRef->DynamicProperty->Type)
+                {
+                    UClass* InClass = Cast<UClass>(ObjRef->GetUObject());
+                    *SoftPtr = InClass;
+                    return;
+                }
+                else if (FCPROPERTY_ClassProperty == ObjRef->DynamicProperty->Type)
+                {
+                    UClass* InClass = *((UClass**)ObjRef->GetPropertyAddr());
+                    *SoftPtr = InClass;
+                    return;
+                }
             }
         }
         *SoftPtr = nullptr;

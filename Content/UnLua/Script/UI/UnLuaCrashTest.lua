@@ -308,8 +308,10 @@ function TestCrash:Crash17()
     local obj = NewObject(AvatarClass)
     obj.TSubclassOfVar = subSystem
     obj.TSubclassOfTest = obj
-    obj.WeakPtr = obj
+    -- obj.WeakPtr = obj
     obj.LazyPtr = obj
+    local WeakPtr = UE4.TWeakObjectPtr(obj)
+    obj.WeakPtr = WeakPtr
     obj:CallClicked()
     local ResPtr = UE4.TSoftObjectPtr("/Game/TestDataTable.TestDataTable")
     obj.ResPtr = ResPtr
