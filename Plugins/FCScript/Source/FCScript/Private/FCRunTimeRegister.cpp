@@ -513,9 +513,9 @@ int Global_RegisterClass(lua_State* L)
 int Global_GetUProperty(lua_State* L)
 {
     FCObjRef* ObjRef = (FCObjRef *)FCScript::GetObjRefPtr(L, 1);
+    const char* FieldName = lua_tostring(L, 2); // value
     if (ObjRef && ObjRef->IsValid())
     {
-        const char* FieldName = lua_tostring(L, 2); // value
         FCDynamicClassDesc* ClassDesc = ObjRef->ClassDesc;
         FCDynamicField* Field = ClassDesc->FindFieldByName(FieldName);
         if (Field)
@@ -527,13 +527,13 @@ int Global_GetUProperty(lua_State* L)
     FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUClass(ClassName);
     if (ClassDesc)
     {
-        const char* FieldName = lua_tostring(L, 2); // value
         FCDynamicField* Field = ClassDesc->FindFieldByName(FieldName);
         if (Field)
         {
             return Field->DoGet(L, ObjRef, ClassDesc);
         }
     }
+
     ReportLuaError(L, "invalid property, failed to call GetUProperty");
     // 查找函数
     lua_pushnil(L);

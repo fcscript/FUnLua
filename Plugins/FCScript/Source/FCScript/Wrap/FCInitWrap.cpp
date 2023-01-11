@@ -21,6 +21,7 @@
 #include "FCRotatorWrap.h"
 #include "FCTransformWrap.h"
 #include "FCClassWrap.h"
+#include "FCDataTableWrap.h"
 
 
 void FCInitWrap::Register(lua_State* L)
@@ -47,5 +48,6 @@ void FCInitWrap::Register(lua_State* L)
 	FCQuatWrap::Register(L);
 	FCRotatorWrap::Register(L);
 	FCTransformWrap::Register(L);
+    FCDataTableWrap::Register(L);
 }
 

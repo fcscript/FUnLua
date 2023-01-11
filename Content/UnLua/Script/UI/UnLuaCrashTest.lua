@@ -255,6 +255,7 @@ end
 
 -- 测试C++调用lua overiden函数，参数是引用类型, 引用是不是能生效
 function TestCrash:Crash14(worldContextObject)
+    -- local AvatarClass = UE4.UClass.Load("UFCTest_C")
     local AvatarClass = UE4.UFCTest
     local obj = NewObject(AvatarClass, worldContextObject, "FCTestIns", "UnLua.UI.ActorCallback")
     obj:TestCall_NotifyIDList()
@@ -262,6 +263,40 @@ function TestCrash:Crash14(worldContextObject)
     obj:TestCall_NotifyIDSet()
     obj:TestCall_NotifyIDMap()
     UEPrint("[TestCrash]run Crash14")
+end
+
+-- 测试默认参数
+function TestCrash:Crash15(worldContextObject)
+    local AvatarClass = UE4.UFCTest
+    local obj = NewObject(AvatarClass, worldContextObject, "FCTestIns", "UnLua.UI.ActorCallback")
+    obj:TestCall_DefaultParam(80)
+
+    local Set = UE4.TSet(UE4.int32)
+    Set:Add(100)
+    Set:Add(102)
+    Set:Add(302)
+    for k, v in pairs(Set) do
+        UEPrint("[TestCrash]k =", k, ",v=", v)
+    end
+end
+
+-- 只是测试DataTable的功能
+function TestCrash:Crash16()
+    local classType = UE4.UDataTable
+    local dataTable = LoadObject("/Game/TestDataTable.TestDataTable")
+    UEPrint("[Crash16]dataTable=", dataTable, ",classType=", classType)
+    local OutRowNames = UE4.TArray(UE4.FName)
+    UE4.UDataTableFunctionLibrary.GetDataTableRowNames(dataTable, OutRowNames)
+    -- for i = 1, #OutRowNames do
+    --     local rowName = OutRowNames[i]
+    --     local rowData = dataTable:GetRow(rowName)        
+    --     UEPrint("[Crash16]dataTable,[]", rowName, ",rowData=", rowData, ",row ID=", rowData.ID, ",Name=", rowData.Name)
+    -- end
+    for k, v in pairs(dataTable) do
+        UEPrint("[Crash16]dataTable,[]key", k, ",rowData=", v, ",row ID=", v.ID, ",Name=", v.Name)
+    end
+    local row = dataTable["Row1"]
+    UEPrint("[Crash16]dataTable,row=", row, ",row ID=", row.ID, ",Name=", row.Name)
 end
 
 function  TestCrash:DoCrash(worldContextObject)
@@ -287,7 +322,9 @@ function  TestCrash:DoCrash(worldContextObject)
     -- self:Crash11(worldContextObject) -- 正常
     -- self:Crash12(worldContextObject) -- 多次执行+反复GC后 Crash
     -- self:Crash13(worldContextObject) -- 正常
-    self:Crash14(worldContextObject) --会Crash, 功能不正确
+    -- self:Crash14(worldContextObject) --会Crash, 功能不正确
+    -- self:Crash15(worldContextObject) --
+    self:Crash16(worldContextObject) --
 
     ----- 下面是FUnLua的测试结果
     -- self:Crash1(worldContextObject) -- 正常

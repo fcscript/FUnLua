@@ -90,7 +90,7 @@ struct FCDynamicProperty : public FCDynamicPropertyBase
 	{
 	}
 
-	void  InitProperty(const FProperty *InProperty);
+	void  InitProperty(const FProperty *InProperty, const char *InName = nullptr);
 	virtual FCDynamicField* Clone() const { return new FCDynamicProperty(*this); }
 	virtual int DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
 	virtual int DoSet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
@@ -188,6 +188,14 @@ struct FCDynamicWrapLibFunction : public FCDynamicFunction
     virtual int GetMemSize() const { return sizeof(FCDynamicWrapLibFunction); }
 };
 
+struct FCDynamicWrapSystemFunction
+{
+    const char *FuncName;
+    LPLuaLibOpenCallback  m_FunctionPtr;
+    FCDynamicWrapSystemFunction() :FuncName(nullptr), m_FunctionPtr(nullptr){}
+    FCDynamicWrapSystemFunction(const char *InFuncName, LPLuaLibOpenCallback InFunctionPtr) :FuncName(InFuncName), m_FunctionPtr(InFunctionPtr){}
+};
+
 struct FCDynamicWrapLibAttrib : public FCDynamicWrapField
 {
 	FCDynamicWrapLibAttrib(){}
@@ -255,6 +263,7 @@ typedef  std::unordered_map<const char*, FCDynamicFunction*, FCStringHash, FCStr
 typedef  std::unordered_map<const char*, FCDynamicField*, FCStringHash, FCStringEqual>   CDynamicFieldNameMap;  // name ==> function
 
 typedef  std::unordered_map<const char*, int, FCStringHash, FCStringEqual>   CDynamicName2Int; // name ==> int
+typedef  std::vector<FCDynamicWrapSystemFunction>  CDynamicWrapSystemFunctionList;
 
 const char* GetUEClassName(const char* InName);
 
@@ -268,15 +277,17 @@ struct FCDynamicClassDesc
 	EClassCastFlags              m_ClassFlags;  // 用于强制转换的检测
 	const char *                 m_SuperName;
 	const char *                 m_UEClassName; // 类名，wrap的类名
+    int                          m_UserDefinedStructFlag;  // UUserDefinedStruct标记
 	CDynamicPropertyPtrArray     m_Property;  // 属性
 	CDynamicName2Property        m_Name2Property;  // 所有的属性
 
 	CDynamicFunctionNameMap      m_Functions;   // 所有的函数 name ==> function
 	CDynamicFieldNameMap         m_LibFields;   // 扩展属性与方法
     CDynamicFieldNameMap         m_Fileds;      // 属性
+    CDynamicWrapSystemFunctionList  m_SystemFunctions;
 	LPLuaLibOpenCallback         m_LibOpenCallback;
 	
-	FCDynamicClassDesc():m_Struct(nullptr), m_Class(nullptr), m_ScriptStruct(nullptr), m_Super(nullptr), m_ClassFlags(CASTCLASS_None), m_SuperName(nullptr), m_UEClassName(nullptr), m_LibOpenCallback(nullptr)
+	FCDynamicClassDesc():m_Struct(nullptr), m_Class(nullptr), m_ScriptStruct(nullptr), m_Super(nullptr), m_ClassFlags(CASTCLASS_None), m_SuperName(nullptr), m_UEClassName(nullptr), m_UserDefinedStructFlag(0), m_LibOpenCallback(nullptr)
 	{
 	}
 	~FCDynamicClassDesc();
@@ -306,12 +317,12 @@ struct FCDynamicClassDesc
 	// 添加一个自定义的扩展属性
 	FCDynamicField*  RegisterWrapLibAttrib(const char* pcsFuncName, LPWrapLibFunction InGetFunc, LPWrapLibFunction InSetFunc);
 
+    // 添加Lua的系统函数
+    void AddSystemFunction(const char *InFuncName, LPLuaLibOpenCallback InFuncPtr);
+
 	// table注册时的回调
-	void OnLibOpen(lua_State* L)
-	{
-		if (m_LibOpenCallback)
-			m_LibOpenCallback(L);
-	}
+	void OnLibOpen(lua_State* L);
+
 	// 设置一个回调，就是lua表注册时调用
 	void SetLibopenCallback(LPLuaLibOpenCallback callback)
 	{

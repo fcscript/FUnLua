@@ -4,11 +4,19 @@
 #include "FCCallScriptFunc.h"
 #include "FCDynamicOverrideFunc.h"
 #include "FCDefaultParam.h"
+#include "Engine/UserDefinedStruct.h"
 
-void  FCDynamicProperty::InitProperty(const FProperty *InProperty)
+void  FCDynamicProperty::InitProperty(const FProperty *InProperty, const char* InName)
 {
-	Name = TCHAR_TO_UTF8(*(InProperty->GetName()));
-    Name = GetConstName(Name);
+    if(!InName)
+    {
+        Name = TCHAR_TO_UTF8(*(InProperty->GetName()));
+        Name = GetConstName(Name);
+    }
+    else
+    {
+        Name = GetConstName(InName);
+    }
 	ElementSize = InProperty->ElementSize;
 	Offset_Internal = InProperty->GetOffset_ForInternal();
 	Property = InProperty;
@@ -150,6 +158,8 @@ void FCDynamicClassDesc::Clear()
 	ReleasePtrMap(m_Functions);
 	ReleasePtrMap(m_LibFields);
     m_Fileds.clear();
+    m_SystemFunctions.clear();
+    m_UserDefinedStructFlag = 0;
 }
 
 FCDynamicClassDesc &FCDynamicClassDesc::CopyDesc(const FCDynamicClassDesc &other)
@@ -166,6 +176,8 @@ FCDynamicClassDesc &FCDynamicClassDesc::CopyDesc(const FCDynamicClassDesc &other
 	m_ClassFlags = other.m_ClassFlags;
 	m_SuperName = other.m_SuperName;
 	m_UEClassName = other.m_UEClassName;
+    m_UserDefinedStructFlag = other.m_UserDefinedStructFlag;
+    m_SystemFunctions = other.m_SystemFunctions;
 
 	m_Property.resize(other.m_Property.size());
 	m_Name2Property.clear();
@@ -222,22 +234,8 @@ FCDynamicField* FCDynamicClassDesc::RegisterFieldByCString(UStruct* Struct, cons
     {
         return itFiled->second;
     }
+
     FName  PropertyName(InFieldName);
-    const FProperty* Property = Struct->FindPropertyByName(PropertyName);
-    if (Property)
-    {
-        FCDynamicProperty* FCProperty = new FCDynamicProperty();
-        FCProperty->InitProperty(Property);
-        FCProperty->PropertyIndex = m_Property.size();
-        FCProperty->bOuter = false;
-
-        const char* FieldName = FCProperty->Name;
-        m_Property.push_back(FCProperty);
-        m_Name2Property[FieldName] = FCProperty;
-        m_Fileds[FieldName] = FCProperty;
-        return FCProperty;
-    }
-
     // 注册一下原生的函数
     if (m_Class)
     {
@@ -252,6 +250,42 @@ FCDynamicField* FCDynamicClassDesc::RegisterFieldByCString(UStruct* Struct, cons
             return DynamicFunction;
         }
     }
+
+    const FProperty* Property = Struct->FindPropertyByName(PropertyName);
+    if(!Property)
+    {
+        if(!m_UserDefinedStructFlag)
+        {
+            UUserDefinedStruct* UserStruct = Cast<UUserDefinedStruct>(Struct);
+            m_UserDefinedStructFlag = UserStruct ? 1 : -1;
+        }
+        if(m_UserDefinedStructFlag > 0)
+        {
+            FText  DisplayName(FText::FromName(PropertyName));
+            for (FProperty* ItProperty = Struct->PropertyLink; ItProperty != NULL; ItProperty = ItProperty->PropertyLinkNext)
+            {
+                if (ItProperty->GetDisplayNameText().EqualTo(DisplayName))
+                {
+                    Property = ItProperty;
+                    break;
+                }
+            }
+        }
+    }
+    if (Property)
+    {
+        FCDynamicProperty* FCProperty = new FCDynamicProperty();
+        FCProperty->InitProperty(Property, InFieldName);
+        FCProperty->PropertyIndex = m_Property.size();
+        FCProperty->bOuter = false;
+
+        const char* FieldName = FCProperty->Name;
+        m_Property.push_back(FCProperty);
+        m_Name2Property[FieldName] = FCProperty;
+        m_Fileds[FieldName] = FCProperty;
+        return FCProperty;
+    }
+
     if (m_Super)
     {
         return m_Super->RegisterFieldByCString(m_Super->m_Struct, InFieldName);
@@ -385,6 +419,27 @@ FCDynamicField* FCDynamicClassDesc::RegisterWrapLibAttrib(const char* pcsFuncNam
 	m_Fileds[LibField->Name] = LibField;
 	return LibField;
 }
+
+void FCDynamicClassDesc::AddSystemFunction(const char* InFuncName, LPLuaLibOpenCallback InFuncPtr)
+{
+    InFuncName = GetConstName(InFuncName);
+    FCDynamicWrapSystemFunction  Function(InFuncName, InFuncPtr);
+    m_SystemFunctions.push_back(Function);
+}
+
+void FCDynamicClassDesc::OnLibOpen(lua_State* L)
+{
+    if (m_LibOpenCallback)
+        m_LibOpenCallback(L);
+    for(size_t i = 0; i< m_SystemFunctions.size(); ++i)
+    {
+        const FCDynamicWrapSystemFunction &Function = m_SystemFunctions[i];
+        lua_pushstring(L, Function.FuncName);
+        lua_pushcfunction(L, Function.m_FunctionPtr);
+        lua_rawset(L, -3);        
+    }
+}
+
 //---------------------------------------------------------------------------
 
 void FDynamicEnum::OnRegisterEnum(UEnum* InEnum)
