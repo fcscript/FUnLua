@@ -241,6 +241,23 @@ void  FCDynamicClassDesc::OnRegisterStruct(UStruct *Struct, void *Context)
 	}
 }
 
+bool IsSamePropertyName(const char *InPropertyName, const char *InFieldName)
+{
+    // ID_xxxxx
+    for(; *InFieldName; ++InPropertyName, ++InFieldName)
+    {
+        if(*InPropertyName != *InFieldName)
+        {
+            break;
+        }
+    }
+    if(*InPropertyName == 0)
+    {
+        return false;
+    }
+    return InPropertyName[1] == '_' || InPropertyName[1] == 0;
+}
+
 FCDynamicField* FCDynamicClassDesc::RegisterFieldByCString(UStruct* Struct, const char* InFieldName)
 {
     CDynamicFieldNameMap::iterator itFiled = m_Fileds.find(InFieldName);
@@ -278,7 +295,8 @@ FCDynamicField* FCDynamicClassDesc::RegisterFieldByCString(UStruct* Struct, cons
             FText  DisplayName(FText::FromName(PropertyName));
             for (FProperty* ItProperty = Struct->PropertyLink; ItProperty != NULL; ItProperty = ItProperty->PropertyLinkNext)
             {
-                if (ItProperty->GetDisplayNameText().EqualTo(DisplayName))
+                const char *Name = TCHAR_TO_UTF8(*(ItProperty->GetName()));
+                if(IsSamePropertyName(Name, InFieldName))
                 {
                     Property = ItProperty;
                     break;

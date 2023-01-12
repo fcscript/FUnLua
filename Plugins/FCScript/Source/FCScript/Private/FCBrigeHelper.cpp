@@ -1,4 +1,4 @@
-#include "FCBrigeHelper.h"
+ï»¿#include "FCBrigeHelper.h"
 #include "FCGetObj.h"
 #include "../LuaCore/LuaContext.h"
 
@@ -144,13 +144,13 @@ void FCExportedClass::Register(lua_State* L)
     }
     luaL_newmetatable(L, ClassName);             // 1, will be used as meta table later (lua_setmetatable)
 
-    lua_pushlightuserdata(L, this);              // ÕâÀïĞ´ÈëtableµÄCÀàĞÍ
+    lua_pushlightuserdata(L, this);              // è¿™é‡Œå†™å…¥tableçš„Cç±»å‹
 
-    lua_pushstring(L, "__index");                // 2  ¶Ô²»´æÔÚµÄË÷Òı(³ÉÔ±±äÁ¿)·ÃÎÊÊ±´¥·¢
+    lua_pushstring(L, "__index");                // 2  å¯¹ä¸å­˜åœ¨çš„ç´¢å¼•(æˆå‘˜å˜é‡)è®¿é—®æ—¶è§¦å‘
     lua_pushcclosure(L, obj_Index, 1);           // closure
     lua_rawset(L, -3);
 
-    lua_pushstring(L, "__newindex");             // 2  ¶Ô²»´æÔÚµÄË÷Òı(³ÉÔ±±äÁ¿)¸³ÖµÊ±´¥·¢
+    lua_pushstring(L, "__newindex");             // 2  å¯¹ä¸å­˜åœ¨çš„ç´¢å¼•(æˆå‘˜å˜é‡)èµ‹å€¼æ—¶è§¦å‘
     lua_pushcclosure(L, obj_NewIndex, 1);        // closure
     lua_rawset(L, -3);
 
@@ -180,7 +180,7 @@ void FCExportedClass::UnRegister(lua_State* L)
 
 int  FCExportedClass::DoLibIndex(lua_State* L)
 {
-    int64 ObjID = (int64)FCScript::GetObjID(L, 1); // table, ¶ÔÏóµØÖ·
+    int64 ObjID = (int64)FCScript::GetObjID(L, 1); // table, å¯¹è±¡åœ°å€
     const char* FieldName = lua_tostring(L, 2); // value
     const FCExportedItem* ChildItem = GetChildItem(FieldName);
     if (ChildItem->IsFunction())
@@ -192,9 +192,9 @@ int  FCExportedClass::DoLibIndex(lua_State* L)
         }
         else
         {
-            lua_pushlightuserdata(L, this);                  // ÕâÀïĞ´ÈëtableµÄCÀàĞÍ
-            lua_pushlightuserdata(L, (void*)ObjID);                 // ÕâÀïĞ´ÈëtableµÄµØÖ·
-            lua_pushlightuserdata(L, (FCExportedItem*)ChildItem);   // ÕâÀïĞ´Èëº¯ÊıÖ¸Õë
+            lua_pushlightuserdata(L, this);                  // è¿™é‡Œå†™å…¥tableçš„Cç±»å‹
+            lua_pushlightuserdata(L, (void*)ObjID);                 // è¿™é‡Œå†™å…¥tableçš„åœ°å€
+            lua_pushlightuserdata(L, (FCExportedItem*)ChildItem);   // è¿™é‡Œå†™å…¥å‡½æ•°æŒ‡é’ˆ
             lua_pushcclosure(L, Function_wrap, 3);                  // closure
         }
         return 1;
@@ -221,7 +221,7 @@ int  FCExportedClass::DoLibNewIndex(lua_State* L)
     }
     else
     {
-        int64 ObjID = (int64)lua_touserdata(L, 1); // table, ¶ÔÏóµØÖ·
+        int64 ObjID = (int64)lua_touserdata(L, 1); // table, å¯¹è±¡åœ°å€
         char* ObjAddr = GetExportClassIns(ObjID);
         return ChildItem->Write(L, ObjAddr, this);
     }
@@ -272,8 +272,8 @@ int FCExportedClass::obj_NewIndex(lua_State* L)
 // eq
 int FCExportedClass::obj_Identical(lua_State* L)
 {
-    int64 ObjID1 = FCScript::GetObjID(L, 1); // table, ¶ÔÏóµØÖ·
-    int64 ObjID2 = FCScript::GetObjID(L, 2); // table, ¶ÔÏóµØÖ·
+    int64 ObjID1 = FCScript::GetObjID(L, 1); // table, å¯¹è±¡åœ°å€
+    int64 ObjID2 = FCScript::GetObjID(L, 2); // table, å¯¹è±¡åœ°å€
 
     char* A = GetExportClassIns(ObjID1);
     char* B = GetExportClassIns(ObjID2);
@@ -315,7 +315,7 @@ int FCExportedClass::obj_Delete(lua_State* L)
 int FCExportedClass::GetAttrib_wrap(lua_State* L)
 {
     FCExportedClass* ExportClass = (FCExportedClass*)lua_touserdata(L, lua_upvalueindex(1));
-    int64 ObjID = FCScript::GetObjID(L, 1); // table, ¶ÔÏóµØÖ·
+    int64 ObjID = FCScript::GetObjID(L, 1); // table, å¯¹è±¡åœ°å€
     const char* FieldName = lua_tostring(L, 2); // value
     const FCExportedItem* ChildItem = ExportClass->GetChildItem(FieldName);
     if(ChildItem->IsFunction())
@@ -332,9 +332,9 @@ int FCExportedClass::GetAttrib_wrap(lua_State* L)
         }
         else
         {
-            lua_pushlightuserdata(L, ExportClass);                  // ÕâÀïĞ´ÈëtableµÄCÀàĞÍ
-            lua_pushlightuserdata(L, (void*)ObjID);                 // ÕâÀïĞ´ÈëtableµÄµØÖ·
-            lua_pushlightuserdata(L, (FCExportedItem*)ChildItem);   // ÕâÀïĞ´Èëº¯ÊıÖ¸Õë
+            lua_pushlightuserdata(L, ExportClass);                  // è¿™é‡Œå†™å…¥tableçš„Cç±»å‹
+            lua_pushlightuserdata(L, (void*)ObjID);                 // è¿™é‡Œå†™å…¥tableçš„åœ°å€
+            lua_pushlightuserdata(L, (FCExportedItem*)ChildItem);   // è¿™é‡Œå†™å…¥å‡½æ•°æŒ‡é’ˆ
             lua_pushcclosure(L, Function_wrap, 3);                  // closure
         }
         return 1;
@@ -349,7 +349,7 @@ int FCExportedClass::GetAttrib_wrap(lua_State* L)
 int FCExportedClass::SetAttrib_wrap(lua_State* L)
 {
     FCExportedClass* ExportClass = (FCExportedClass*)lua_touserdata(L, lua_upvalueindex(1));
-    int64 ObjID = FCScript::GetObjID(L, 1); // table, ¶ÔÏóµØÖ·
+    int64 ObjID = FCScript::GetObjID(L, 1); // table, å¯¹è±¡åœ°å€
     const char* FieldName = lua_tostring(L, 2); // value
     const FCExportedItem* ChildItem = ExportClass->GetChildItem(FieldName);
     if(ChildItem->IsFunction())
@@ -359,7 +359,7 @@ int FCExportedClass::SetAttrib_wrap(lua_State* L)
             FCExportLibFunction* LibAttrib = (FCExportLibFunction*)ChildItem;
             return LibAttrib->Func(L);
         }
-        return 0;  // Õâ¸öÊÇ·Ç·¨µÄ£¬º¯Êı²»ÔÊĞíĞŞ¸Ä
+        return 0;  // è¿™ä¸ªæ˜¯éæ³•çš„ï¼Œå‡½æ•°ä¸å…è®¸ä¿®æ”¹
     }
     else
     {

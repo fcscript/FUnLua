@@ -22,7 +22,6 @@ int Class_Cast(lua_State* L);
 int BindScript_Overridden(lua_State* L);
 int BindScript_CallOverridenFunction(lua_State* L);
 
-int Class_CallLatentFunction(lua_State* L);
 int Class_CallFunction(lua_State* L);
 int Class_CallGetLibFunction(lua_State* L);
 int Class_CallSetLibFunction(lua_State* L);

@@ -49,13 +49,16 @@ function FCUIEntrypoint:ReceiveBeginPlay()
 	-- obj.IDMap = map
 	obj:SetIDMap(map)
 
-	local b = obj:GetIDList()
+	local idList1 = TArray(UE4.int32)
+	idList1:Add(10)
+	idList1:Add(20)
+	local b, idList = obj:GetIDList(idList1)
 	-- local len = a:Length()
-	print("[FCTestScript]b=", b)
-	if b then
-		local len = #b
+	print("[FCTestScript]b=", b, ",#idList=", #idList, ",idList1=", idList1, "#idList1=", #idList1)
+	if b and idList1 then
+		local len = #idList1
 		for i = 1, len do
-			print("[FCTestScript]b:", b:Get(i))
+			print("[FCTestScript]idList1:", idList1:Get(i))
 		end	
 	end
 

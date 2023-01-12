@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "FCBrigeHelper.h"
 
 struct OperatorAdd {};
@@ -19,8 +19,8 @@ int Vector_SetWrap(lua_State* L)
 template<class _Ty>
 int Vector_CopyWrap(lua_State* L)
 {
-    // A:Copy(B) ÓĞ²ÎÊı£¬¾ÍĞŞ¸ÄB, ²¢·µ»ØB
-    // A:Copy() Ã»ÓĞ²ÎÊı£¬¾Í·µ»ØÒ»¸öĞÂµÄ
+    // A:Copy(B) æœ‰å‚æ•°ï¼Œå°±ä¿®æ”¹B, å¹¶è¿”å›B
+    // A:Copy() æ²¡æœ‰å‚æ•°ï¼Œå°±è¿”å›ä¸€ä¸ªæ–°çš„
     const char* ClassName = FCScript::ExtractTypeName(_Ty());
     _Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
     _Ty* B = (_Ty*)VectorBase_GetAddr(L, 2, ClassName);
@@ -44,8 +44,8 @@ int Vector_CopyWrap(lua_State* L)
 template<class _Ty>
 int Vector_CopyFromWrap(lua_State* L)
 {
-    // Struct.CopyFrom(A, B) ÓĞ²ÎÊı£¬¾ÍĞŞ¸ÄA, ²¢·µ»ØA
-    // Struct.CopyFrom(A)    Ã»ÓĞ²ÎÊı£¬¾ÍÏàµ±ÓÚÖØÖÃA
+    // Struct.CopyFrom(A, B) æœ‰å‚æ•°ï¼Œå°±ä¿®æ”¹A, å¹¶è¿”å›A
+    // Struct.CopyFrom(A)    æ²¡æœ‰å‚æ•°ï¼Œå°±ç›¸å½“äºé‡ç½®A
     const char* ClassName = FCScript::ExtractTypeName(_Ty());
     _Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
     _Ty* B = (_Ty*)VectorBase_GetAddr(L, 2, ClassName);
@@ -106,7 +106,7 @@ int Vector_AddWrap(lua_State* L)
     const char* ClassName = FCScript::ExtractTypeName(_Ty());
 	_Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
 	_Ty* B = (_Ty*)VectorBase_GetAddr(L, 2, ClassName);
-	if (A && B) // ±ØÒªµÄ»°£¬ÕâÀï×öÒ»¸öÀàĞÍ¼ì²é
+	if (A && B) // å¿…è¦çš„è¯ï¼Œè¿™é‡Œåšä¸€ä¸ªç±»å‹æ£€æŸ¥
 	{
 		*A += *B;
 	}
@@ -119,7 +119,7 @@ int Vector_SubWrap(lua_State* L)
     const char* ClassName = FCScript::ExtractTypeName(_Ty());
 	_Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
 	_Ty* B = (_Ty*)VectorBase_GetAddr(L, 2, ClassName);
-	if (A && B) // ±ØÒªµÄ»°£¬ÕâÀï×öÒ»¸öÀàĞÍ¼ì²é
+	if (A && B) // å¿…è¦çš„è¯ï¼Œè¿™é‡Œåšä¸€ä¸ªç±»å‹æ£€æŸ¥
 	{
 		*A -= *B;
 	}
@@ -132,7 +132,7 @@ int Vector_MulWrap(lua_State* L)
     const char* ClassName = FCScript::ExtractTypeName(_Ty());
 	_Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
 	_Ty* B = (_Ty*)VectorBase_GetAddr(L, 2, ClassName);
-	if (A && B) // ±ØÒªµÄ»°£¬ÕâÀï×öÒ»¸öÀàĞÍ¼ì²é
+	if (A && B) // å¿…è¦çš„è¯ï¼Œè¿™é‡Œåšä¸€ä¸ªç±»å‹æ£€æŸ¥
 	{
 		*A *= *B;
 	}
@@ -145,7 +145,7 @@ int Vector_MulFloatWrap(lua_State* L)
     const char* ClassName = FCScript::ExtractTypeName(_Ty());
 	_Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
 	float B = lua_tonumber(L, 2);
-	if (A) // ±ØÒªµÄ»°£¬ÕâÀï×öÒ»¸öÀàĞÍ¼ì²é
+	if (A) // å¿…è¦çš„è¯ï¼Œè¿™é‡Œåšä¸€ä¸ªç±»å‹æ£€æŸ¥
 	{
 		*A *= B;
 	}
@@ -158,7 +158,7 @@ int Vector_DivWrap(lua_State* L)
     const char* ClassName = FCScript::ExtractTypeName(_Ty());
 	_Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
 	_Ty* B = (_Ty*)VectorBase_GetAddr(L, 2, ClassName);
-	if (A && B) // ±ØÒªµÄ»°£¬ÕâÀï×öÒ»¸öÀàĞÍ¼ì²é
+	if (A && B) // å¿…è¦çš„è¯ï¼Œè¿™é‡Œåšä¸€ä¸ªç±»å‹æ£€æŸ¥
 	{
 		*A /= *B;
 	}
@@ -171,7 +171,7 @@ int Vector_DivFloatWrap(lua_State* L)
     const char* ClassName = FCScript::ExtractTypeName(_Ty());
 	_Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
 	float B = lua_tonumber(L, 2);
-	if (A) // ±ØÒªµÄ»°£¬ÕâÀï×öÒ»¸öÀàĞÍ¼ì²é
+	if (A) // å¿…è¦çš„è¯ï¼Œè¿™é‡Œåšä¸€ä¸ªç±»å‹æ£€æŸ¥
 	{
 		*A /= B;
 	}

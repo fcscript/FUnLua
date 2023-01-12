@@ -1,4 +1,4 @@
-#include "FCTSetWrap.h"
+ï»¿#include "FCTSetWrap.h"
 #include "Containers/Map.h"
 #include "FCTemplateType.h"
 
@@ -46,11 +46,11 @@ int FCTSetWrap::LibOpen_wrap(lua_State* L)
     return 1;
 }
 
-// pair µÄÉúÃüÖÜÆÚÒª¶ÌÓÚMap¶ÔÏó£¬ËùÒÔ¿ÉÒÔÕâÀïÃæÖ±½Ó±£´æTMap°É
+// pair çš„ç”Ÿå‘½å‘¨æœŸè¦çŸ­äºMapå¯¹è±¡ï¼Œæ‰€ä»¥å¯ä»¥è¿™é‡Œé¢ç›´æ¥ä¿å­˜TMapå§
 struct FCTSet_Pairs : public FCTSetHelper
 {
     FCObjRef* ObjRef;
-    int    PairIndex; // TMapµÚÒ»¸öÓĞĞ§µÄÊÇ0
+    int    PairIndex; // TMapç¬¬ä¸€ä¸ªæœ‰æ•ˆçš„æ˜¯0
     int    PairCount;
 
     FCDynamicProperty  ValueProperty;
@@ -72,7 +72,7 @@ int FCTSetWrap::pair_gc(lua_State* L)
     FCTSet_Pairs* Pairs = (FCTSet_Pairs*)lua_touserdata(L, 1);
     if (Pairs)
     {
-        Pairs->~FCTSet_Pairs(); // Ö»ĞèÒªÖ´ĞĞÎö¹¹¾ÍĞĞÁË
+        Pairs->~FCTSet_Pairs(); // åªéœ€è¦æ‰§è¡Œææ„å°±è¡Œäº†
     }
     return 0;
 }

@@ -1,4 +1,4 @@
-#include "FCUEUtilWrap.h"
+ï»¿#include "FCUEUtilWrap.h"
 #include "FCObjectManager.h"
 #include "FCGetObj.h"
 #include "FCRunTimeRegister.h"
@@ -47,7 +47,7 @@ void FCUEUtilWrap::Register(lua_State* L)
     lua_register(L, "GetObjRefSize", GetObjRefSize_wrap);
     lua_register(L, "GetClassDescMemSize", GetClassDescMemSize_wrap);
 
-    // ×¢²á»ù´¡Êı¾İÀàĞÍ£¬¼æÈİUnLua
+    // æ³¨å†ŒåŸºç¡€æ•°æ®ç±»å‹ï¼Œå…¼å®¹UnLua
     RegisterBaseType(L);
 }
 
@@ -333,7 +333,7 @@ int FCUEUtilWrap::NewObject_wrap(lua_State* L)
         }
 
 
-        // ºó´´½¨¶ÔÏó
+        // ååˆ›å»ºå¯¹è±¡
         UObject  *Obj = nullptr;
 #if OLD_UE_ENGINE
         Obj = StaticConstructObject_Internal(ClassDesc->m_Class, Outer, Name);
@@ -475,10 +475,10 @@ int FCUEUtilWrap::LoadClass_wrap(lua_State* L)
 
 int FCUEUtilWrap::LoadUserWidget_wrap(lua_State* L)
 {
-    // ¼ÓÔØÒ»¸öÀ¶Í¼¶ÔÏó UClass *LoadUserWiget(UObject* WorldContextObject, const char *ClassName, APlayerController* OwningPlayer);
+    // åŠ è½½ä¸€ä¸ªè“å›¾å¯¹è±¡ UClass *LoadUserWiget(UObject* WorldContextObject, const char *ClassName, APlayerController* OwningPlayer);
     UObject* WorldContextObject = FCScript::GetUObject(L, 1);
     UObject* OwningPlayer = FCScript::GetUObject(L, 3);
-    const char* ClassName = lua_tostring(L, 2);  // ClassName ±ØĞëÊÇ´ø _C ½áÎ²µÄ, Èç "/Game/CMShow/GitCMShow/Test/CMShowDomo/UMG/CMShowDemoUI.CMShowDemoUI_C"
+    const char* ClassName = lua_tostring(L, 2);  // ClassName å¿…é¡»æ˜¯å¸¦ _C ç»“å°¾çš„, å¦‚ "/Game/CMShow/GitCMShow/Test/CMShowDomo/UMG/CMShowDemoUI.CMShowDemoUI_C"
     UStruct* uiAsset = FC_FindUEClass(ClassName);
 
 	UUserWidget  *UserWidget = UWidgetBlueprintLibrary::Create(WorldContextObject, Cast<UWidgetBlueprintGeneratedClass>(uiAsset), Cast< APlayerController>(OwningPlayer));

@@ -17,9 +17,6 @@ UFunction  *FirstNative(UObject* Context, FFrame& TheStack, bool &bUnpackParams)
 		if (Func != TheStack.CurrentNativeFunction)
 		{
 			Func = TheStack.CurrentNativeFunction;
-#if UE_BUILD_SHIPPING || UE_BUILD_TEST
-			FMemory::Memcpy(&FuncDesc, &Stack.CurrentNativeFunction->Script[1], sizeof(FuncDesc));
-#endif
 			bUnpackParams = true;
 		}
 		else

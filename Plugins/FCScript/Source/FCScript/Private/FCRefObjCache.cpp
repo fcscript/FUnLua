@@ -1,4 +1,4 @@
-#include "FCRefObjCache.h"
+ï»¿#include "FCRefObjCache.h"
 #include "FCDynamicClassDesc.h"
 #include "FCGetObj.h"
 #include "FCSetArg.h"
@@ -31,7 +31,7 @@ void  ReleaseCacheList(_TyList &CacheList)
 
 void  FCRefObjCache::Clear()
 {
-	// ÊÍ·ÅÄÚ´æ°É
+	// é‡Šæ”¾å†…å­˜å§
 	m_ID2CacheMap.clear();
 	ReleaseCacheList(m_CacheList);
 	ReleaseCacheList(m_InvalidList);
@@ -39,7 +39,7 @@ void  FCRefObjCache::Clear()
 
 void  FCRefObjCache::CheckGC(float DeltaTime)
 {
-	// °´ÏÈÈëÏÈ³öµÄÊÍ·Å£¬Ã¿ÃëÊÍ·Å1/4, Ã¿Ö¡ÊÍ·Å1/240, ¾Í°´1/100µÄÊÍ·Å°É
+	// æŒ‰å…ˆå…¥å…ˆå‡ºçš„é‡Šæ”¾ï¼Œæ¯ç§’é‡Šæ”¾1/4, æ¯å¸§é‡Šæ”¾1/240, å°±æŒ‰1/100çš„é‡Šæ”¾å§
 	m_fPassTime += DeltaTime;
 	if (m_fPassTime > 1)
 	{
@@ -94,7 +94,7 @@ void  FCRefObjCache::PushBindLuaValue(lua_State* L, int64 ObjID, const char* Cla
 		return;
 	}
 
-    // Èç¹ûÊÇÄÚ²¿µÄÀà£¬±ÈÈçTArrayÕâÖÖ£¬¾Í²»ÒªÔÙ×¢²áÁË
+    // å¦‚æœæ˜¯å†…éƒ¨çš„ç±»ï¼Œæ¯”å¦‚TArrayè¿™ç§ï¼Œå°±ä¸è¦å†æ³¨å†Œäº†
     if(!IsWrapClassName(ClassName))
         GlbRegisterClass(L, ClassName);
 
@@ -120,7 +120,7 @@ void  FCRefObjCache::PushBindLuaValue(lua_State* L, int64 ObjID, const char* Cla
 	lua_setmetatable(L, -2);
 
 	lua_pushvalue(L, -1);
-	CacheInfo->LuaRef = luaL_ref(L, LUA_REGISTRYINDEX);  // ½«Õâ¸ö²ÎÊıÌí¼Óµ½È«¾ÖÒıÓÃ±í
+	CacheInfo->LuaRef = luaL_ref(L, LUA_REGISTRYINDEX);  // å°†è¿™ä¸ªå‚æ•°æ·»åŠ åˆ°å…¨å±€å¼•ç”¨è¡¨
 
 	m_CacheList.push_back(CacheInfo);
 	m_ID2CacheMap[ObjID] = CacheInfo;

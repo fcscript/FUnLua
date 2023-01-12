@@ -30,7 +30,7 @@ enum FCInnerBaseType
 #else
 #define ScriptArray_Add(ScriptArray, Count, ElementSize)  ScriptArray->Add(Count, ElementSize)
 #define ScriptArray_Insert(ScriptArray, Index, Count, ElementSize) ScriptArray->Insert(Index, Count, ElementSize)
-#define ScriptArray_Remove(ScriptArray, Count, Count, ElementSize)  ScriptArray->Remove(Count, Count, ElementSize)
+#define ScriptArray_Remove(ScriptArray, Index, Count, ElementSize)  ScriptArray->Remove(Index, Count, ElementSize)
 #define ScriptArray_Empty(ScriptArray, Size, ElementSize)  ScriptArray->Empty(Size, ElementSize)
 #endif
 

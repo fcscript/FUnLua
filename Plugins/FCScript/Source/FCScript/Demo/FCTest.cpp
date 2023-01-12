@@ -104,8 +104,10 @@ void UFCTest::SetActor(AActor* Actor)
 {
     if(Actor)
     {
+#if WITH_EDITORONLY_DATA
         Actor->bHiddenEdLevel = true;
         Actor->Tags.Add(FName("Test"));
+#endif
     }    
 }
 

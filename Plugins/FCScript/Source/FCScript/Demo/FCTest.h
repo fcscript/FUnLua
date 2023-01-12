@@ -50,7 +50,7 @@ enum EFCTestEnum
     One,
     Two,
     Three,
-    Wan = 10000,  // 测试发现，UE不支持255以上的默认参数
+    Wan = 100,  // 测试发现，UE不支持255以上的默认参数
 };
 
 UCLASS()
