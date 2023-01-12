@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "CoreMinimal.h"
 
@@ -13,9 +13,9 @@ public:
     DECLARE_DELEGATE_RetVal_TwoParams(bool, FLuaFileLoader, const char*, TArray<uint8>&);
     DECLARE_DELEGATE_RetVal_OneParam(int32, FGenericLuaDelegate, lua_State*);
 
-    static FOnLuaContextCreateWrap OnLuaStateCreateWrap;  // LUAĞéÄâ»ú´´½¨ºó£¬¿ÉÒÔÖ´ĞĞÒ»Ğ©×¢²áµÄÊÂ¼şwrap
-    static FOnLuaContextStart   OnLuaStateStart; // Ö´ĞĞÍêwrap×¢²áºó£¬¿ªÊ¼Ö´ĞĞ´úÂëÁË
-    static FOnLuaContextCleanup OnLuaContextCleanup; // ĞéÄâ»úÊÍ·ÅÂß¼­
-    static FLuaFileLoader LoadLuaFile;  // ¼ÓÔØÎÄ¼şµÄÀ¹½Ø½Ó¿Ú
+    static FOnLuaContextCreateWrap OnLuaStateCreateWrap;  // LUAè™šæ‹Ÿæœºåˆ›å»ºåï¼Œå¯ä»¥æ‰§è¡Œä¸€äº›æ³¨å†Œçš„äº‹ä»¶wrap
+    static FOnLuaContextStart   OnLuaStateStart; // æ‰§è¡Œå®Œwrapæ³¨å†Œåï¼Œå¼€å§‹æ‰§è¡Œä»£ç äº†
+    static FOnLuaContextCleanup OnLuaContextCleanup; // è™šæ‹Ÿæœºé‡Šæ”¾é€»è¾‘
+    static FLuaFileLoader LoadLuaFile;  // åŠ è½½æ–‡ä»¶çš„æ‹¦æˆªæ¥å£
     static FGenericLuaDelegate ReportLuaCallError;
 };

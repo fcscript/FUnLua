@@ -1,4 +1,4 @@
-#include "FCUObjectWrap.h"
+ï»¿#include "FCUObjectWrap.h"
 #include "FCObjectManager.h"
 #include "FCGetObj.h"
 #include "FCRunTimeRegister.h"
@@ -35,11 +35,11 @@ int FCUObjectWrap::LibOpen_wrap(lua_State* L)
     };
     //luaL_newmetatable(L, ClassName);
 
-    //lua_pushstring(L, "__index");                           // 2  ¶Ô²»´æÔÚµÄË÷Òı(³ÉÔ±±äÁ¿)·ÃÎÊÊ±´¥·¢
+    //lua_pushstring(L, "__index");                           // 2  å¯¹ä¸å­˜åœ¨çš„ç´¢å¼•(æˆå‘˜å˜é‡)è®¿é—®æ—¶è§¦å‘
     //lua_pushcfunction(L, obj_Index);                      // 3
     //lua_rawset(L, -3);
 
-    //lua_pushstring(L, "__newindex");                        // 2  ¶Ô²»´æÔÚµÄË÷Òı(³ÉÔ±±äÁ¿)¸³ÖµÊ±´¥·¢
+    //lua_pushstring(L, "__newindex");                        // 2  å¯¹ä¸å­˜åœ¨çš„ç´¢å¼•(æˆå‘˜å˜é‡)èµ‹å€¼æ—¶è§¦å‘
     //lua_pushcfunction(L, obj_NewIndex);                   // 3
     //lua_rawset(L, -3);
 
@@ -86,7 +86,7 @@ int FCUObjectWrap::GetClass_wrap(lua_State* L)
 }
 int FCUObjectWrap::FindClass_wrap(lua_State* L)
 {
-    const char* ClassName = lua_tostring(L, 1); // ClassName ±ØĞëÊÇ´ø _C ½áÎ²µÄ, Èç "/Game/CMShow/GitCMShow/Test/CMShowDomo/UMG/CMShowDemoUI.CMShowDemoUI_C"
+    const char* ClassName = lua_tostring(L, 1); // ClassName å¿…é¡»æ˜¯å¸¦ _C ç»“å°¾çš„, å¦‚ "/Game/CMShow/GitCMShow/Test/CMShowDomo/UMG/CMShowDemoUI.CMShowDemoUI_C"
 
     UStruct* Struct = FC_FindUEClass(ClassName);
     FCScript::PushUObject(L, Struct);

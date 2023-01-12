@@ -1,8 +1,8 @@
-#include "FCScriptDelegates.h"
+ï»¿#include "FCScriptDelegates.h"
 
 
-FCScriptDelegates::FOnLuaContextCreateWrap FCScriptDelegates::OnLuaStateCreateWrap;  // LUAĞéÄâ»ú´´½¨ºó£¬¿ÉÒÔÖ´ĞĞÒ»Ğ©×¢²áµÄÊÂ¼şwrap
-FCScriptDelegates::FOnLuaContextStart   FCScriptDelegates::OnLuaStateStart; // Ö´ĞĞÍêwrap×¢²áºó£¬¿ªÊ¼Ö´ĞĞ´úÂëÁË
-FCScriptDelegates::FOnLuaContextCleanup FCScriptDelegates::OnLuaContextCleanup; // ĞéÄâ»úÊÍ·ÅÂß¼­
-FCScriptDelegates::FLuaFileLoader FCScriptDelegates::LoadLuaFile;  // ¼ÓÔØÎÄ¼şµÄÀ¹½Ø½Ó¿Ú
+FCScriptDelegates::FOnLuaContextCreateWrap FCScriptDelegates::OnLuaStateCreateWrap;  // LUAè™šæ‹Ÿæœºåˆ›å»ºåï¼Œå¯ä»¥æ‰§è¡Œä¸€äº›æ³¨å†Œçš„äº‹ä»¶wrap
+FCScriptDelegates::FOnLuaContextStart   FCScriptDelegates::OnLuaStateStart; // æ‰§è¡Œå®Œwrapæ³¨å†Œåï¼Œå¼€å§‹æ‰§è¡Œä»£ç äº†
+FCScriptDelegates::FOnLuaContextCleanup FCScriptDelegates::OnLuaContextCleanup; // è™šæ‹Ÿæœºé‡Šæ”¾é€»è¾‘
+FCScriptDelegates::FLuaFileLoader FCScriptDelegates::LoadLuaFile;  // åŠ è½½æ–‡ä»¶çš„æ‹¦æˆªæ¥å£
 FCScriptDelegates::FGenericLuaDelegate FCScriptDelegates::ReportLuaCallError;

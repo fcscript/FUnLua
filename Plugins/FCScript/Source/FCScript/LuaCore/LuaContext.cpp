@@ -1,4 +1,4 @@
-#include "LuaContext.h"
+ï»¿#include "LuaContext.h"
 #include "FCScriptDelegates.h"
 
 struct FTableFlagList
@@ -28,7 +28,7 @@ public:
 FLuaValue   DepthCloneTable(lua_State* L, int SrcIdx, FTableFlagList& TableFlags)
 {
     int nTopIdx = lua_gettop(L);
-    // Èç¹ûÊ¹ÓÃÕ»¶¥£¬¾Í×ª»»³ÉÕ»µ×
+    // å¦‚æœä½¿ç”¨æ ˆé¡¶ï¼Œå°±è½¬æ¢æˆæ ˆåº•
     if (SrcIdx < 0)
     {
         SrcIdx += nTopIdx + 1;
@@ -41,17 +41,17 @@ FLuaValue   DepthCloneTable(lua_State* L, int SrcIdx, FTableFlagList& TableFlags
     const void* TableAddr = lua_topointer(L, SrcIdx);
     TableFlags.Push(TableAddr);
 
-    // ´´½¨Ò»¸öĞÂµÄTable
+    // åˆ›å»ºä¸€ä¸ªæ–°çš„Table
     lua_newtable(L);
     FLuaValue  RetValue(lua_gettop(L));
 
     bool ontop = SrcIdx == -1 || SrcIdx == (lua_gettop(L));
-    // Èç¹û²»ÔÚÕ»¶¥ÉÏ£¬¾ÍÑ¹Èë´Ë±íµÄÒ»·İÒıÓÃµ½Õ»¶¥
+    // å¦‚æœä¸åœ¨æ ˆé¡¶ä¸Šï¼Œå°±å‹å…¥æ­¤è¡¨çš„ä¸€ä»½å¼•ç”¨åˆ°æ ˆé¡¶
     if (!ontop)
         lua_pushvalue(L, SrcIdx);
 
     lua_pushnil(L);
-    // ÏÖÔÚµÄÕ»£º-2 => table; -1 => nil
+    // ç°åœ¨çš„æ ˆï¼š-2 => table; -1 => nil
     while (lua_next(L, -2))
     {
         lua_pushvalue(L, -2);
@@ -60,7 +60,7 @@ FLuaValue   DepthCloneTable(lua_State* L, int SrcIdx, FTableFlagList& TableFlags
         lua_pushvalue(L, -2);
         if (LUA_TTABLE == nMemberType2)
         {
-            const char* key = lua_tostring(L, -2); // key, ÓÉÓÚÖÃ»»ÁË£¬ËùÒÔÕâ¸öÊÇ-2£¬²»ÔÙÊÇ-1
+            const char* key = lua_tostring(L, -2); // key, ç”±äºç½®æ¢äº†ï¼Œæ‰€ä»¥è¿™ä¸ªæ˜¯-2ï¼Œä¸å†æ˜¯-1
             if (strcmp(key, "__index") == 0)
             {
                 lua_rawset(L, RetValue.ValueIdx);
@@ -138,12 +138,12 @@ int LoopTable(lua_State* L, int TableIdx, void (*Callback)(lua_State* L, int Ind
         return 0;
     }
     bool bOnTop = TableIdx == -1 || TableIdx == TopIdx;
-    // Èç¹û²»ÔÚÕ»¶¥ÉÏ£¬¾ÍÑ¹Èë´Ë±íµÄÒ»·İÒıÓÃµ½Õ»¶¥
+    // å¦‚æœä¸åœ¨æ ˆé¡¶ä¸Šï¼Œå°±å‹å…¥æ­¤è¡¨çš„ä¸€ä»½å¼•ç”¨åˆ°æ ˆé¡¶
     if (!bOnTop)
         lua_pushvalue(L, TableIdx);
 
     lua_pushnil(L);
-    // ÏÖÔÚµÄÕ»£º-2 => table; -1 => nil
+    // ç°åœ¨çš„æ ˆï¼š-2 => table; -1 => nil
     while (lua_next(L, -2))
     {
         lua_pushvalue(L, -2);

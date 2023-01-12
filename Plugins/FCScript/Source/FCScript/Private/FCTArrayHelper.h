@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "FCBrigeHelper.h"
 #include "Containers/ScriptArray.h"
 #include "FCTemplateType.h"
@@ -121,8 +121,8 @@ public:
 
                 FCDynamicProperty* ElementProperty = GetDynamicPropertyByUEProperty(Inner);
 
-                // Õâ¸öµØ·½¿½±´Ò»¸ö¶ÔÏó£¬²»ÄÜÒıÓÃ£¬ËùÒÔ²»ÄÜ´«¸¸¶ÔÏó
-                ElementProperty->m_WriteScriptFunc(L, ElementProperty, ValueAddr, NULL, NULL);  // ¶Ï¾øÒıÓÃ¹ØÏµ
+                // è¿™ä¸ªåœ°æ–¹æ‹·è´ä¸€ä¸ªå¯¹è±¡ï¼Œä¸èƒ½å¼•ç”¨ï¼Œæ‰€ä»¥ä¸èƒ½ä¼ çˆ¶å¯¹è±¡
+                ElementProperty->m_WriteScriptFunc(L, ElementProperty, ValueAddr, NULL, NULL);  // æ–­ç»å¼•ç”¨å…³ç³»
                 return 1;
             }
         }

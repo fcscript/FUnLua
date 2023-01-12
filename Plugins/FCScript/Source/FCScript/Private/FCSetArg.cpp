@@ -1,4 +1,4 @@
-
+ï»¿
 #include "FCSetArg.h"
 #include "FCDynamicClassDesc.h"
 #include "FCTemplateType.h"
@@ -100,7 +100,7 @@ UStruct* FC_GetArgValue_UStruct(lua_State* L, int Index)
     int Type = lua_type(L, Index);
     if (LUA_TTABLE == Type)
     {
-        // Ö±½ÓÈ¡ÀàÃû°É    
+        // ç›´æ¥å–ç±»åå§    
         //lua_pushvalue(L, Index);
         lua_pushstring(L, "__name");        // 3
         int ClassType = lua_rawget(L, Index);                 // 3
@@ -132,7 +132,7 @@ UObject* FC_GetArgValue_UStructOrUObject(lua_State* L, int Index)
     int Type = lua_type(L, Index);
     if (LUA_TTABLE == Type)
     {
-        // Ö±½ÓÈ¡ÀàÃû°É    
+        // ç›´æ¥å–ç±»åå§    
         //lua_pushvalue(L, Index);
         lua_pushstring(L, "__name");        // 3
         int ClassType = lua_rawget(L, Index);                 // 3
@@ -179,10 +179,10 @@ void FC_PushBindLuaValue(lua_State* L, int64 ObjID, const char* ClassName)
 
     //if (0)
     //{
-    //    // Èç¹ûÕâ¸öÀàĞÍ»¹Ã»ÓĞ×¢²á¹ı£¬ÔÙ×¢²áÒ»´Î    
+    //    // å¦‚æœè¿™ä¸ªç±»å‹è¿˜æ²¡æœ‰æ³¨å†Œè¿‡ï¼Œå†æ³¨å†Œä¸€æ¬¡    
     //    GlbRegisterClass(L, ClassName);
 
-    //    // ÕâÀïÃ¿´Î´´½¨»áÓĞµãÂı£¬¿ÉÒÔ¼ÓÒ»¸öÈ«¾Ö»º´æ£¬»º´æµ½luaÀïÃæ£¬È»ºó¶¨Ê±ÊÍ·Å°É
+    //    // è¿™é‡Œæ¯æ¬¡åˆ›å»ºä¼šæœ‰ç‚¹æ…¢ï¼Œå¯ä»¥åŠ ä¸€ä¸ªå…¨å±€ç¼“å­˜ï¼Œç¼“å­˜åˆ°luaé‡Œé¢ï¼Œç„¶åå®šæ—¶é‡Šæ”¾å§
     //    void* addr = lua_newuserdata(L, sizeof(int64*));
     //    *((int64*)addr) = ObjID;
 

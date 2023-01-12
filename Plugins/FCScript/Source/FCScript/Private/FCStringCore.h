@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <vector>
 #include <string>
@@ -99,7 +99,7 @@ template<> struct std::equal_to<FCDoubleKey>
 struct ObjRefKey
 {
 	const unsigned char* ParentAddr;    // 
-    const unsigned char* OffsetPtr;    // ¶ÔÏó×Ô¼ºµÄµØÖ·
+    const unsigned char* OffsetPtr;    // å¯¹è±¡è‡ªå·±çš„åœ°å€
 	ObjRefKey() :ParentAddr(nullptr), OffsetPtr(nullptr) {}
     ObjRefKey(const void* InParentAddr, const void* InOffsetPtr) : ParentAddr((const unsigned char* )InParentAddr), OffsetPtr((const unsigned char* )InOffsetPtr) {}
 };
