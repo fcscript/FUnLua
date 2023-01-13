@@ -1,5 +1,5 @@
-require "UnLua.Script.UnLua"
-local TestCrash = require "UnLua.Script.UI.UnLuaCrashTest"
+require "UnLua.UnLua"
+local TestCrash = require "UnLua.UI.UnLuaCrashTest"
 local UMG_MainPanel = LuaUnrealClass()
 
 _G.handle = function  (target, func)
@@ -10,27 +10,22 @@ end
 
 function UMG_MainPanel:Construct()
     UEPrint("[Unlua]UMG_MainPanel:Construct, Button_0=", self.Button_0)
-    self.Button_0.OnClicked:Clear()
-    self.Button_0.OnClicked:Add(self, handle(self, self.OnBtnOKClick))
-    
-    self.Button.OnClicked:Clear()
-    self.Button.OnClicked:Add(self, handle(self, self.OnClickGC))
-
-    self.Button_1.OnClicked:Clear()
-    self.Button_1.OnClicked:Add(self, handle(self, self.OnClickButton_1))
-
-    self.Button_Print.OnClicked:Clear()
-    self.Button_Print.OnClicked:Add(self, handle(self, self.OnClickPrint))
-    
-    self.ButtonCrash.OnClicked:Clear()
-    self.ButtonCrash.OnClicked:Add(self, handle(self, self.OnButtonCrashClicked))
-    
+    self:BindButton(self.Button_0, self.OnClickButton_0)
+    self:BindButton(self.ButtonGC, self.OnClickGC)
+    self:BindButton(self.Button_1, self.OnClickButton_1)
+    self:BindButton(self.ButtonProfile, self.OnClickProfile)
+    self:BindButton(self.ButtonCrash, self.OnButtonCrashClicked)
+        
 	local world = self:GetWorld()
 	local localPlayerControler = _G.UGameplayStatics.GetPlayerController(world, 0)
 	if localPlayerControler ~= nil then
 		localPlayerControler.bShowMouseCursor = 1
 	end
 	self.MapName:SetText(world:GetName())
+end
+
+function UMG_MainPanel:BindButton(button, func)
+    button.OnClicked:Add(self, handle(self, func))
 end
 
 function UMG_MainPanel:OnClickButton_0()
@@ -47,9 +42,9 @@ function UMG_MainPanel:OnClickButton_1()
     UEPrint("[Unlua]UMG_MainPanel:OnClickButton_1")
 end
 
-function UMG_MainPanel:OnClickPrint()
+function UMG_MainPanel:OnClickProfile()
     UEPrint("[Unlua]UMG_MainPanel:OnClickPrint")    
-    local UIManager = require "UnLua.Script.UI.UIManager"
+    local UIManager = require "UnLua.UI.UIManager"
 	local ClassName = "/Game/UnLua/UI/UMG/UMG_Profile"    
 	local world = self:GetWorld()
     UIManager.OpenPanel(world, ClassName)

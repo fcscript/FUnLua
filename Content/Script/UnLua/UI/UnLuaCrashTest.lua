@@ -332,7 +332,7 @@ end
 -- 只是测试功能
 function TestCrash:Crash18(worldContextObject)
     -- Blueprint'/Game/TestActorBP.TestActorBP'    
-    local actor = CreateTestActor("/Game/TestActorBP.TestActorBP", "UnLua.Script.UI.ActorCallback", worldContextObject)
+    local actor = CreateTestActor("/Game/TestActorBP.TestActorBP", "UnLua.UI.ActorCallback", worldContextObject)
     actor:Died_Brocast(100)
 end
 

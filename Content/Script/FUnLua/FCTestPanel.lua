@@ -1,4 +1,4 @@
-require "UnLua"
+require "FUnLua.UnLua"
 local FCTestPanel = LuaUnrealClass("UIPanelBase")
 
 function FCTestPanel:ReceiveBeginPlay()
@@ -21,7 +21,7 @@ function FCTestPanel:OnButtonCloseClicked()
 	print("[FCTestScript]FCTestPanel:OnButtonCloseClicked, self=", self, ",__TableAddr=", self.__TableAddr, ",clickCount=", clickCount)
 	self.bVisiable = true
 	self.ClickCount = clickCount + 1
-	local UIManager = require "UIManager"
+	local UIManager = require "FUnLua.UIManager"
 	UIManager.HidePanel(self)
 end
 

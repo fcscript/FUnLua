@@ -1,5 +1,5 @@
-require "UnLua"
-local UIManager = require "UIManager"
+require "FUnLua.UnLua"
+local UIManager = require "FUnLua.UIManager"
 
 local FCUIEntrypoint = {}
 

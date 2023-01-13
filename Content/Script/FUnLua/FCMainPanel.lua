@@ -1,5 +1,5 @@
 local FCMainPanel = {}
-local TestCrash = require "UnLua.Script.UI.UnLuaCrashTest"
+local TestCrash = require "UnLua.UI.UnLuaCrashTest"
 
 function FCMainPanel:ReceiveBeginPlay()
 	print("[FCTestScript]FCMainPanel:ReceiveBeginPlay")
@@ -26,7 +26,7 @@ function FCMainPanel:OnButtonClicked()
 	print("[FCTestScript]FCMainPanel:OnButtonClicked")
 	local world = self:GetWorld()
 	local  ClassName = "/Game/UMG/UMG_TestPanel.UMG_TestPanel_C"
-	local UIManager = require "UIManager"
+	local UIManager = require "FUnLua.UIManager"
 	UIManager.OpenPanel(world, ClassName)
 end
 
@@ -41,7 +41,7 @@ function FCMainPanel:OnButtonProfileClicked()
 	print("[FCTestScript]FCMainPanel:OnButtonProfileClicked")
 	local world = self:GetWorld()
 	local ClassName = "/Game/UMG/UMG_Profile.UMG_Profile_C"
-	local UIManager = require "UIManager"
+	local UIManager = require "FUnLua.UIManager"
 	UIManager.OpenPanel(world, ClassName)
 end
 

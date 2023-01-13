@@ -1,5 +1,5 @@
 
-local FCPrint = require "FCPrint"
+local FCPrint = require "FUnLua.FCPrint"
 local UMG_Profile = {}
 
 function UMG_Profile:Construct()
@@ -24,7 +24,7 @@ function UMG_Profile:BindButton(button, func)
 end
 
 function UMG_Profile:OnClickButtonClose()
-    local UIManager = require "UIManager"
+    local UIManager = require "FUnLua.UIManager"
     UIManager.HidePanel(self)
 end
 
@@ -151,7 +151,7 @@ function UMG_Profile:DoOther()
     local AvatarClass = UClass.Load("UFCTest")
     local obj = NewObject(AvatarClass)
     local objAvatar = obj.AvatarParams
-    local ProfileFrame = require "ProfileFrame"
+    local ProfileFrame = require "FUnLua.ProfileFrame"
     local world = self:GetWorld()
     print("[ProfileFrame]FUnLua------------------")
     ProfileFrame.DoStruct(world, objAvatar)

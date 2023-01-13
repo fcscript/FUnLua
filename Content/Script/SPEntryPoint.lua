@@ -5,8 +5,8 @@
 ------------------------------------------
 ------------------------------------------
 ------------------------------------------
-require "UnLua.Script.UnLua"
-require "UnLua.Script.SPParallelGlobalFuncDefine"
+require "UnLua.UnLua"
+require "SPParallelGlobalFuncDefine"
 
 function  _G.SPWorldAfterInit(world, gameInstance)
 end
