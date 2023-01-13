@@ -48,7 +48,6 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
 {
     Name = TCHAR_TO_UTF8(*(InFunction->GetName()));
     Name = GetConstName(Name);
-    LuaFunctionMame = Name;
 	Function = InFunction;
 	ParmsSize = InFunction->ParmsSize;
 	m_Property.resize(InFunction->NumParms);

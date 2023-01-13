@@ -128,9 +128,8 @@ struct  FCDynamicFunction : public FCDynamicField
 	bool    bRegister;        // 是不是在类中注册了
 	bool    bDelegate;
 	const char* Name;        // 函数名
-    const char* LuaFunctionMame; // Lua端的函数名(RPC)
 	std::vector<FCDynamicFunctionParam>   m_Property;
-	FCDynamicFunction():Function(nullptr), LatentPropertyIndex(-1), ReturnPropertyIndex(-1), ParmsSize(0), ParamCount(0), OuterParamCount(0), OuterParamSize(0), bOverride(false), bOuter(false), bRegister(false), bDelegate(false), Name(nullptr), LuaFunctionMame(nullptr)
+	FCDynamicFunction():Function(nullptr), LatentPropertyIndex(-1), ReturnPropertyIndex(-1), ParmsSize(0), ParamCount(0), OuterParamCount(0), OuterParamSize(0), bOverride(false), bOuter(false), bRegister(false), bDelegate(false), Name(nullptr)
 	{
 	}
 	void  InitParam(UFunction *InFunction);
@@ -152,12 +151,17 @@ struct FCDynamicOverrideFunction : public FCDynamicFunction
 {
 	FNativeFuncPtr   OleNativeFuncPtr;  // 原始的NativeFunc函数
 	FNativeFuncPtr   CurOverrideFuncPtr;
+    const char*      LuaFunctionMame; // Lua端的函数名(RPC)
 	int              m_NativeBytecodeIndex;
 	bool             m_bLockCall;
 	TArray<uint8>    m_NativeScript;
-	FCDynamicOverrideFunction() : OleNativeFuncPtr(nullptr), CurOverrideFuncPtr(nullptr), m_NativeBytecodeIndex(0), m_bLockCall(false)
+	FCDynamicOverrideFunction() : OleNativeFuncPtr(nullptr), CurOverrideFuncPtr(nullptr), LuaFunctionMame(nullptr), m_NativeBytecodeIndex(0), m_bLockCall(false)
 	{
 	}
+    const char *GetLuaFunctionName() const
+    {
+        return LuaFunctionMame ? LuaFunctionMame : Name;
+    }
     virtual int GetMemSize() const { return sizeof(FCDynamicOverrideFunction); }
 };
 

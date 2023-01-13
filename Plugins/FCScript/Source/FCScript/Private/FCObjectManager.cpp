@@ -188,6 +188,7 @@ FCDynamicOverrideFunction * FFCObjectdManager::ToOverrideFunction(UObject *InObj
 	DynamicFunc->CurOverrideFuncPtr = InFuncPtr;
 	DynamicFunc->m_NativeBytecodeIndex = InNativeBytecodeIndex;
 	DynamicFunc->m_NativeScript = InFunction->Script;
+    DynamicFunc->LuaFunctionMame = DynamicFunc->Name;
 
 	TArray<uint8> Script;
 	Script.Add(InNativeBytecodeIndex);
