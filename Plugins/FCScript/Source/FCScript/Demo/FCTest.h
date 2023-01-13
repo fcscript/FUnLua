@@ -50,7 +50,7 @@ enum EFCTestEnum
     One,
     Two,
     Three,
-    Wan = 100,  // ²âÊÔ·¢ÏÖ£¬UE²»Ö§³Ö255ÒÔÉÏµÄÄ¬ÈÏ²ÎÊı
+    Wan = 100,  // æµ‹è¯•å‘ç°ï¼ŒUEä¸æ”¯æŒ255ä»¥ä¸Šçš„é»˜è®¤å‚æ•°
 };
 
 UCLASS()
@@ -132,7 +132,7 @@ public:
 
 	
 	//UPROPERTY()
-	//TSharedPtr<UFCTest> SharedPtr;  // Õâ¸öÊÇ²»Ö§³ÖµÄ
+	//TSharedPtr<UFCTest> SharedPtr;  // è¿™ä¸ªæ˜¯ä¸æ”¯æŒçš„
 
 	UPROPERTY()
 	TWeakObjectPtr<UFCTest>   WeakPtr;

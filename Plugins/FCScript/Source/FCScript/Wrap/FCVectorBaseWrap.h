@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "FCBrigeHelper.h"
 
 struct OperatorAdd {};

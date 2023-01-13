@@ -1,4 +1,4 @@
-﻿#include "FCUObjectWrap.h"
+#include "FCUObjectWrap.h"
 #include "FCObjectManager.h"
 #include "FCGetObj.h"
 #include "FCRunTimeRegister.h"

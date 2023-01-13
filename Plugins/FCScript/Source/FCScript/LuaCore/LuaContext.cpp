@@ -1,4 +1,4 @@
-﻿#include "LuaContext.h"
+#include "LuaContext.h"
 #include "FCScriptDelegates.h"
 
 struct FTableFlagList

@@ -1,4 +1,4 @@
-﻿#include "FCScriptDelegates.h"
+#include "FCScriptDelegates.h"
 
 
 FCScriptDelegates::FOnLuaContextCreateWrap FCScriptDelegates::OnLuaStateCreateWrap;  // LUA虚拟机创建后，可以执行一些注册的事件wrap
