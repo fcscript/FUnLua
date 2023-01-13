@@ -49,7 +49,7 @@ void FCDynamicOverrideNative(UObject* Context, FFrame& TheStack, RESULT_DECL)
             int64 ScriptIns = FFCObjectdManager::GetSingleIns()->FindOverrideScriptIns(Object, Func);
 			if (ScriptIns)
 			{
-				if(FCCallScriptFunc(ScriptContext, Object, ScriptIns, DynamicFunction->Name, DynamicFunction, TheStack))
+				if(FCCallScriptFunc(ScriptContext, Object, ScriptIns, DynamicFunction->LuaFunctionMame, DynamicFunction, TheStack))
                 {
                     return ;
                 }
@@ -57,7 +57,7 @@ void FCDynamicOverrideNative(UObject* Context, FFrame& TheStack, RESULT_DECL)
 		}
 		else
 		{
-			if(FCCallScriptFunc(ScriptContext, Object, 0, DynamicFunction->Name, DynamicFunction, TheStack))
+			if(FCCallScriptFunc(ScriptContext, Object, 0, DynamicFunction->LuaFunctionMame, DynamicFunction, TheStack))
             {
                 return ;
             }
@@ -77,6 +77,15 @@ struct FUnluaOverrideCallInfo
 	FBindObjectInfo* BindInfo;
 };
 
+bool UnLuaOverride_IsRPCName(const char *FuncName, int Len)
+{
+    if(Len > 4)
+    {
+        return FuncName[Len - 4] == '_' && FuncName[Len-3] == 'R' && FuncName[Len - 2] == 'P' && FuncName[Len - 1] == 'C';
+    }
+    return false;
+}
+
 void UnLuaOverride_Callback(lua_State* L, int Index, void* UserData)
 {
 	FUnluaOverrideCallInfo* CallInfo = (FUnluaOverrideCallInfo*)UserData;
@@ -84,11 +93,29 @@ void UnLuaOverride_Callback(lua_State* L, int Index, void* UserData)
 	if (ValueType == LUA_TFUNCTION)
 	{
 		const char* FuncName = lua_tostring(L, -1);
-		const FCDynamicFunction *DynamicFunction = CallInfo->ClassDesc->FindFunctionByName(FuncName);
-		if (DynamicFunction)
-		{
-			FFCObjectdManager::GetSingleIns()->RegisterOverrideFunc(CallInfo->Object, CallInfo->BindInfo->m_ScriptIns, FuncName);
-		}
+        int  Len = strlen(FuncName);
+        if(UnLuaOverride_IsRPCName(FuncName, Len))
+        {
+            const char *RPCName = FuncName;
+            FCStringBuffer128  NameBuffer;
+            NameBuffer.PushStr(FuncName, Len - 4);
+            FuncName = NameBuffer.GetString();
+            const FCDynamicFunction* DynamicFunction = CallInfo->ClassDesc->FindFunctionByName(FuncName);
+            if (DynamicFunction)
+            {
+                FCDynamicOverrideFunction *OverrideFunction = FFCObjectdManager::GetSingleIns()->RegisterOverrideFunc(CallInfo->Object, CallInfo->BindInfo->m_ScriptIns, FuncName);
+                if(OverrideFunction)
+                    OverrideFunction->LuaFunctionMame = GetConstName(RPCName);
+            }
+        }
+        else
+        {
+            const FCDynamicFunction* DynamicFunction = CallInfo->ClassDesc->FindFunctionByName(FuncName);
+            if (DynamicFunction)
+            {
+                FFCObjectdManager::GetSingleIns()->RegisterOverrideFunc(CallInfo->Object, CallInfo->BindInfo->m_ScriptIns, FuncName);
+            }
+        }
 	}
 }
 

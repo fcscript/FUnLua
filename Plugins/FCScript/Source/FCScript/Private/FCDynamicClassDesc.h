@@ -128,8 +128,9 @@ struct  FCDynamicFunction : public FCDynamicField
 	bool    bRegister;        // 是不是在类中注册了
 	bool    bDelegate;
 	const char* Name;        // 函数名
+    const char* LuaFunctionMame; // Lua端的函数名(RPC)
 	std::vector<FCDynamicFunctionParam>   m_Property;
-	FCDynamicFunction():Function(nullptr), LatentPropertyIndex(-1), ReturnPropertyIndex(-1), ParmsSize(0), ParamCount(0), OuterParamCount(0), OuterParamSize(0), bOverride(false), bOuter(false), bRegister(false), bDelegate(false), Name(nullptr)
+	FCDynamicFunction():Function(nullptr), LatentPropertyIndex(-1), ReturnPropertyIndex(-1), ParmsSize(0), ParamCount(0), OuterParamCount(0), OuterParamSize(0), bOverride(false), bOuter(false), bRegister(false), bDelegate(false), Name(nullptr), LuaFunctionMame(nullptr)
 	{
 	}
 	void  InitParam(UFunction *InFunction);

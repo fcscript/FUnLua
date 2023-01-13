@@ -17,6 +17,7 @@ void  FCDynamicProperty::InitProperty(const FProperty *InProperty, const char* I
     {
         Name = GetConstName(InName);
     }
+    LuaFunctionMame = Name;
 	ElementSize = InProperty->ElementSize;
 	Offset_Internal = InProperty->GetOffset_ForInternal();
 	Property = InProperty;

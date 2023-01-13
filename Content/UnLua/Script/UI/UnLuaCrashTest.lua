@@ -281,7 +281,7 @@ function TestCrash:Crash15(worldContextObject)
 end
 
 -- 只是测试DataTable的功能
-function TestCrash:Crash16()
+function TestCrash:Crash16(worldContextObject)
     local classType = UE4.UDataTable
     local dataTable = LoadObject("/Game/TestDataTable.TestDataTable")
     UEPrint("[Crash16]dataTable=", dataTable, ",classType=", classType)
@@ -300,7 +300,7 @@ function TestCrash:Crash16()
 end
 
 -- 只是测试GetSubSystem()
-function TestCrash:Crash17()
+function TestCrash:Crash17(worldContextObject)
     local subSystem = UE4.USubsystemBlueprintLibrary.GetEngineSubsystem(UE4.UAssetTagsSubsystem)
     UEPrint("[Crash17]subSystem:", subSystem)
 
@@ -329,6 +329,13 @@ function TestCrash:Crash17()
     UEPrint("[Crash17]assetName1:", assetName1, "assetName2:", assetName2)
 end
 
+-- 只是测试功能
+function TestCrash:Crash18(worldContextObject)
+    -- Blueprint'/Game/TestActorBP.TestActorBP'    
+    local actor = CreateTestActor("/Game/TestActorBP.TestActorBP", "UnLua.Script.UI.ActorCallback", worldContextObject)
+    actor:Died_Brocast(100)
+end
+
 function  TestCrash:DoCrash(worldContextObject)
     local nextFuncIndex = self.NextFuncIndex or 0
     nextFuncIndex = nextFuncIndex + 1
@@ -355,7 +362,8 @@ function  TestCrash:DoCrash(worldContextObject)
     -- self:Crash14(worldContextObject) --会Crash, 功能不正确
     -- self:Crash15(worldContextObject) --
     -- self:Crash16(worldContextObject) --
-    self:Crash17(worldContextObject) --
+    -- self:Crash17(worldContextObject) --
+    self:Crash18(worldContextObject) --
 
     ----- 下面是FUnLua的测试结果
     -- self:Crash1(worldContextObject) -- 正常

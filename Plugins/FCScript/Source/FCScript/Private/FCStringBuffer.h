@@ -87,6 +87,16 @@ public:
         mBuffer[mSize++] = ch;
         mBuffer[mSize] = 0;
     }
+    void  PushStr(const char *InStr, int InLen)
+    {
+        if(InStr && InLen > 0)
+        {
+            Reserve(mSize + InLen + 1);
+            memcpy(mBuffer + mSize, InStr, InLen);
+            mSize += InLen;
+            mBuffer[mSize] = 0;
+        }
+    }
     const char* ReadValue(const char *InStr, char chEnd)
     {        
         Empty();

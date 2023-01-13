@@ -9,8 +9,8 @@ function ActorCallback:ReceiveBeginPlay()
 end
 
 function ActorCallback:NotifyIDList(OutIDList)
-    UEPrint("[ActorCallback]NotifyIDList, OutIDList=", OutIDList, ",Len=", #OutIDList)
-    local len = #OutIDList
+    UEPrint("[ActorCallback]NotifyIDList, OutIDList=", OutIDList, ",Len=", OutIDList:Num())
+    local len = OutIDList:Num()
     for i = 1, len do
         UEPrint("[ActorCallback]NotifyIDList, OutIDList[]=", OutIDList[i])
     end
@@ -57,6 +57,10 @@ end
 
 function ActorCallback:Touch_Pressed(FingerId, Location)
     UEPrint("[ActorCallback]OnTouchBegin, FingerId=", FingerId, ",Location=", Location)
+end
+
+function ActorCallback:Died_Brocast_RPC(InID)
+    UEPrint("[ActorCallback]Died_Brocast_RPC, InID=", InID)
 end
 
 return ActorCallback
