@@ -17,7 +17,6 @@ void  FCDynamicProperty::InitProperty(const FProperty *InProperty, const char* I
     {
         Name = GetConstName(InName);
     }
-    LuaFunctionMame = Name;
 	ElementSize = InProperty->ElementSize;
 	Offset_Internal = InProperty->GetOffset_ForInternal();
 	Property = InProperty;
@@ -49,6 +48,7 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
 {
     Name = TCHAR_TO_UTF8(*(InFunction->GetName()));
     Name = GetConstName(Name);
+    LuaFunctionMame = Name;
 	Function = InFunction;
 	ParmsSize = InFunction->ParmsSize;
 	m_Property.resize(InFunction->NumParms);
