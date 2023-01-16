@@ -1,13 +1,16 @@
-require "FUnLua.UnLua"
+-- require "FUnLua.UnLua"
 local UIManager = require "FUnLua.UIManager"
 
 local FCUIEntrypoint = {}
 
 function FCUIEntrypoint:ReceiveBeginPlay()	
+	print("[FCTestScript]ReceiveBeginPlay")
     local AvatarClass = UClass.Load("UFCTest")
-    local obj = NewObject(AvatarClass)
+	print("[FCTestScript]ReceiveBeginPlay 1111")
+    local obj = UE4.NewObject(AvatarClass)
     local objAvatar = obj.AvatarParams	
 	objAvatar.BoneAdjustItem.SlotName = "abc"
+	print("[FCTestScript]ReceiveBeginPlay 12222")
 
 	local v = FVector(1, 2, 3)
 	local vecList = TArray("FVector")

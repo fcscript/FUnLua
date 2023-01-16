@@ -22,6 +22,8 @@
 #include "FCTransformWrap.h"
 #include "FCClassWrap.h"
 #include "FCDataTableWrap.h"
+#include "FCUnLuaLib.h"
+#include "FCUELibWrap.h"
 
 
 void FCInitWrap::Register(lua_State* L)
@@ -50,5 +52,8 @@ void FCInitWrap::Register(lua_State* L)
 	FCRotatorWrap::Register(L);
 	FCTransformWrap::Register(L);
     FCDataTableWrap::Register(L);
+
+    FCUnLuaWrap::Register(L);
+    FCUELibWrap::Register(L);
 }
 

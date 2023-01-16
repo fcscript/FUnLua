@@ -118,7 +118,7 @@ else
 	local global_mt = {}
 	global_mt.__index = global_index
 	setmetatable(_G, global_mt)
-	UE4 = _G
+	-- UE4 = _G
 	UnLua = _G
 
 	print("WITH_UE4_NAMESPACE==false");

@@ -27,6 +27,10 @@ struct FLuaRetValues
     {
 
     }
+    bool IsValid() const
+    {
+        return RetCount > 0;
+    }
     int size() const
     {
         return RetCount;

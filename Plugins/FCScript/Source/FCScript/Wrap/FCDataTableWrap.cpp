@@ -14,6 +14,7 @@ void FCDataTableWrap::Register(lua_State* L)
         ClassDesc->RegisterWrapLibFunction("Load", DoLoad_wrap, nullptr);
         ClassDesc->RegisterWrapLibFunction("GetRow", DoGetRow_wrap, nullptr);
         ClassDesc->RegisterWrapLibFunction("GetRowNumb", DoGetRowNumb_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("GetRowDataStructure", DoGetRow_wrap, nullptr);
 
         ClassDesc->AddSystemFunction("__pairs", obj_pairs);
         ClassDesc->AddSystemFunction("__index", obj_Index);

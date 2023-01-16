@@ -224,7 +224,8 @@ void FFCDelegateModule::Startup()
 		GUObjectArray.AddUObjectCreateListener(this);    // add listener for creating UObject
 		GUObjectArray.AddUObjectDeleteListener(this);    // add listener for deleting UObject
 	}
-	
+
+    GetContextManger()->Init();
 	FString  ScriptPath = GetScriptPath();
 	LoadFCScript(GetClientScriptContext(), ScriptPath);
 

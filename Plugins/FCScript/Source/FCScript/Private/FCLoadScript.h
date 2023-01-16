@@ -1,3 +1,4 @@
+#pragma once
 #include "FCDynamicClassDesc.h"
 
 //#if STATS

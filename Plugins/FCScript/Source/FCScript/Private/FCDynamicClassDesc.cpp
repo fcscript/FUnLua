@@ -684,6 +684,15 @@ int FCScriptContext::GetClassMemSize(const char* InClassName) const
     return 0;
 }
 
+void FCScriptContext::Init()
+{
+    if(!m_ManualObjectReference)
+    {
+        m_ManualObjectReference = new FCObjectReferencer();
+        m_ManualObjectReference->SetName("FUnLua_ManualReference");
+    }
+}
+
 void FCScriptContext::Clear()
 {
 	m_bInit = false;
@@ -701,6 +710,13 @@ void FCScriptContext::Clear()
 	m_ClassFinder.clear();
     m_ThreadToRef.clear();
     m_RefToThread.clear();
+
+    if(m_ManualObjectReference)
+    {
+        m_ManualObjectReference->Clear();
+        delete m_ManualObjectReference;
+        m_ManualObjectReference = nullptr;
+    }
 }
 
 //--------------------------------------------------------
@@ -715,6 +731,11 @@ FCContextManager::~FCContextManager()
 {
 	ConextMgrInsPtr = nullptr;
 	Clear();
+}
+
+void FCContextManager::Init()
+{
+    ClientDSContext.Init();
 }
 
 void  FCContextManager::Clear()

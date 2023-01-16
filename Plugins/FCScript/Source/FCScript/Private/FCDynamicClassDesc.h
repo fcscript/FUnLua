@@ -9,6 +9,7 @@
 #include "FCStringCore.h"
 #include "FCStringBuffer.h"
 #include "../LuaCore/LuaHeader.h"
+#include "FCObjectReferencer.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFCScript, Log, All);
 
@@ -435,7 +436,9 @@ struct FCScriptContext
     ThreadToRefMap        m_ThreadToRef;
     RefToThreadMap        m_RefToThread;
 
-	FCScriptContext():m_bInit(false), m_LuaState(nullptr), m_Ticker(nullptr)
+    FCObjectReferencer    *m_ManualObjectReference;
+
+	FCScriptContext():m_bInit(false), m_LuaState(nullptr), m_Ticker(nullptr), m_ManualObjectReference(nullptr)
 	{
 	}
 
@@ -448,6 +451,7 @@ struct FCScriptContext
     FDynamicEnum*        RegisterEnum(const char *InEnumName);
     int GetMemSize() const;
     int GetClassMemSize(const char *InClassName) const;
+    void Init();
 	void Clear();
 };
 
@@ -457,6 +461,7 @@ struct FCContextManager
 	static  FCContextManager  *ConextMgrInsPtr;
 	FCContextManager();
 	~FCContextManager();
+    void Init();
 	void Clear();
 };
 

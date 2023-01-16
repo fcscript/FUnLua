@@ -1,5 +1,4 @@
-require "FUnLua.UnLua"
-local FCTestPanel = LuaUnrealClass("UIPanelBase")
+local FCTestPanel = UnLua.Class("FUnLua.UIPanelBase")
 
 function FCTestPanel:ReceiveBeginPlay()
 	print("[FCTestScript]FCTestPanel:ReceiveBeginPlay, self=", self, ",__TableAddr=", self.__TableAddr)
