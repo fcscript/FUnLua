@@ -702,6 +702,7 @@ void FCScriptContext::Clear()
         m_LuaState = nullptr;
     }
     m_Ticker = nullptr;
+    m_DelegateObject = nullptr;
 
 	ReleasePtrMap(m_ClassNameMap);
     ReleasePtrMap(m_EnumNameMap);

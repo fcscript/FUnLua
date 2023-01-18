@@ -10,6 +10,7 @@
 #include "FCBrigeBase.h"
 #include "../LuaCore/LuaContext.h"
 #include "FCTemplateType.h"
+#include "FCDynamicDelegateManager.h"
 
 #include "FCGetObj.h"
 
@@ -848,6 +849,32 @@ void ReadScriptTSet(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
     }
 }
 
+void ReadScriptDelegate(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+// 这个还是不要支持了，因为不好追踪生命周期, 只能传入UObject，按该绑定的对象的生命周期来
+    FScriptDelegate* Delegate = (FScriptDelegate*)ValueAddr;
+    int Type = lua_type(L, ValueIdx);
+    if (LUA_TFUNCTION == Type)
+    {
+        const void *FuncAddr = lua_topointer(L, ValueIdx);  // 单纯的绑定一个函数，无法确认名字，但可以用函数地址做函数名, 如果该对象释放，则这个函数也释放
+        FCLuaDelegate *LuaDelegate = FCDynamicDelegateManager::GetIns().MakeLuaDelegate(nullptr, L, ValueIdx, DynamicProperty);
+        *Delegate = LuaDelegate->Delegate;
+    }
+    else
+    {
+        FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+        if(ObjRef && ObjRef->RefType == EFCObjRefType::LuaDelegate)
+        {
+            FCDelegateInfo* LuaDelegate = (FCDelegateInfo*)ObjRef->GetPropertyAddr();
+        }
+    }
+}
+
+void ReadScriptMulticastDelegate(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    int iii = 0;    
+}
+
 LPOuterScriptValueFunc  InitDynamicPropertyReadFunc(FCPropertyType Flag)
 {
     LPOuterScriptValueFunc  ReadScriptFunc = ReadScriptDefault;
@@ -924,6 +951,12 @@ LPOuterScriptValueFunc  InitDynamicPropertyReadFunc(FCPropertyType Flag)
             break;
         case FCPROPERTY_Set:
             ReadScriptFunc = ReadScriptTSet;
+            break;
+        case FCPROPERTY_DelegateProperty:
+            ReadScriptFunc = ReadScriptDelegate;
+            break;
+        case FCPROPERTY_MulticastDelegateProperty:
+            ReadScriptFunc = ReadScriptMulticastDelegate;
             break;
 		default:
 			break;

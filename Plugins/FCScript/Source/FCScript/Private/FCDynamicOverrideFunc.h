@@ -10,6 +10,8 @@ enum
     EX_CallFCDelegate = EX_Max - 20,
 };
 
+UFunction* FirstNative(UObject* Context, FFrame& TheStack, bool& bUnpackParams);
+
 // 动态覆盖普通的函数
 void FCDynamicOverrideNative(UObject* Context, FFrame& TheStack, RESULT_DECL);
 

@@ -14,6 +14,7 @@
 #include "FCTemplateType.h"
 #include "FCScriptDelegates.h"
 #include "FCDefaultParam.h"
+#include "FCDynamicDelegateManager.h"
 
 #include "Interfaces/IPluginManager.h"
 
@@ -75,6 +76,10 @@ void FFCDelegateModule::OnPostWorldInitialization(UWorld *World, const UWorld::I
 				Ticker = NewObject<UFCTicker>(GameInstance);
 				Ticker->AddToRoot();
                 GetScriptContext()->m_Ticker = Ticker;
+
+                DelegateObject = NewObject<UFCDelegateObject>(GameInstance);
+                DelegateObject->AddToRoot();
+                GetScriptContext()->m_DelegateObject = DelegateObject;
 			}
 		}
 	}
@@ -139,6 +144,10 @@ void FFCDelegateModule::PostPIEStarted(bool bIsSimulating)
 			Ticker = NewObject<UFCTicker>(GameInstance);
 			Ticker->AddToRoot();
             GetScriptContext()->m_Ticker = Ticker;
+
+            DelegateObject = NewObject<UFCDelegateObject>(GameInstance);
+            DelegateObject->AddToRoot();
+            GetScriptContext()->m_DelegateObject = DelegateObject;
 		}
 	}
 }
@@ -192,6 +201,7 @@ void FFCDelegateModule::OnUObjectArrayShutdown()
 
 void FFCDelegateModule::NotifyUObjectDeleted(const class UObjectBase *InObject, int32 Index)
 {
+    FCDynamicDelegateManager::GetIns().DeleteAllDelegateByUObject(InObject);
 	FFCObjectdManager::GetSingleIns()->NotifyDeleteUObject(InObject, Index);
 	FCGetObj::GetIns()->NotifyDeleteUObject(InObject, Index);
 }
@@ -247,6 +257,7 @@ void FFCDelegateModule::Shutdown()
 	lua_State* L = GetClientScriptContext()->m_LuaState;
 	FCScriptDelegates::OnLuaStateStart.Broadcast(L);
 
+    FCDynamicDelegateManager::GetIns().Clear();
 	FCGetObj::GetIns()->Clear();
 	FCRefObjCache::GetIns()->Clear();
 	ReleaseTempalteProperty();
@@ -261,6 +272,11 @@ void FFCDelegateModule::Shutdown()
 		Ticker->RemoveFromRoot();
 		Ticker = nullptr;
 	}
+    if(DelegateObject)
+    {
+        DelegateObject->RemoveFromRoot();
+        DelegateObject = nullptr;
+    }
 	if(bAddUObjectNotify)
 	{
 		bAddUObjectNotify = false;

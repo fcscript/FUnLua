@@ -121,3 +121,12 @@ void UFCTest::SetSoftPtr(TSoftObjectPtr<UObject> Arg1, TSoftClassPtr<UClass> Arg
     ResPtr = Arg1;
     TSoftClassPtrVar = Arg2;
 }
+
+void UFCTest::RegisterUIActionBindingByTag(FName InTagName, FOnExecuteActionCallback InOnExecuteAction)
+{
+    OnExecuteAction = InOnExecuteAction;
+    if(OnExecuteAction.IsBound())
+    {
+        OnExecuteAction.Execute(InTagName);
+    }
+}

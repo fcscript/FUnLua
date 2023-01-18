@@ -20,6 +20,7 @@ enum EFCObjRefType
     NewTSoftClassPtr, // 
 	CppPtr,         // 全局的Cpp对象指针
 	MapIterator,    // map_iterator
+    LuaDelegate,    // Lua委托对象
 };
 
 struct TMapIterator
@@ -173,6 +174,9 @@ public:
     // 功能：压入一个TMap的迭代器
     int64  PushMapIterator(void* IteratorPtr);
 
+    // 功能：压入一个全局的Lua委托对象
+    int64  PushLuaDelegate(const FCDelegateInfo *DelegateInfo);
+
 	// 功能：对象释放事件
 	void  NotifyDeleteUObject(const class UObjectBase* Object, int32 Index);
 
@@ -196,6 +200,15 @@ public:
 		}
 		return nullptr;
 	}
+    FCObjRef *FindObjRefByKey(const ObjRefKey & ObjKey)
+    {
+        CScriptRefObjMap::iterator itObj = m_ObjMap.find(ObjKey);
+        if (itObj != m_ObjMap.end())
+        {
+            return itObj->second;
+        }
+        return nullptr;
+    }
 
 	UObject *GetUObject(int64 ObjID)
 	{

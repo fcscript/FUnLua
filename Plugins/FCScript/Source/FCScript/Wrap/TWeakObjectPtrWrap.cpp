@@ -25,8 +25,7 @@ int TWeakObjectPtrWrap::LibOpen_wrap(lua_State* L)
         { nullptr, nullptr }
     };
     const char* ClassName = lua_tostring(L, 1);
-    FCExportedClass::RegisterLibClass(L, ClassName, LibFuncs);
-    return 1;
+    return FCExportedClass::RegisterLibClass(L, ClassName, LibFuncs);
 }
 
 int TWeakObjectPtrWrap::obj_New(lua_State* L)

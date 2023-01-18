@@ -225,7 +225,7 @@ struct FCDelegateInfo
     int           FunctionRef;  // lua 引用的函数
     int           ParamCount;  // lua 回调参数个数
     int           CallbackParams[CallbackParamMax];  // 回调参数，最多4个
-	FCDelegateInfo():DynamicFunc(nullptr), DynamicProperty(nullptr), FunctionRef(0){}
+	FCDelegateInfo():DynamicFunc(nullptr), DynamicProperty(nullptr), FunctionRef(0), ParamCount(0){}
 	FCDelegateInfo(const FCDynamicOverrideFunction *InDynamicFunc, const FCDynamicProperty *InDynamicProperty, const void *InFunctionAddr, int InFunctionRef, const int *InCallbackParams, int InCallbackParamCount)
 		: DynamicFunc((FCDynamicOverrideFunction*)InDynamicFunc)
 		, DynamicProperty((FCDynamicProperty*)InDynamicProperty)
@@ -426,6 +426,7 @@ struct FCScriptContext
 	bool                  m_bInit;
 	lua_State            *m_LuaState;
     UObject              *m_Ticker;
+    UObject              *m_DelegateObject;
 
 	CDynamicClassNameMap  m_ClassNameMap;   // name == > class ptr
 	CDynamicClassNameMap  m_ClassFinder;   // name == > class ptr
@@ -438,7 +439,7 @@ struct FCScriptContext
 
     FCObjectReferencer    *m_ManualObjectReference;
 
-	FCScriptContext():m_bInit(false), m_LuaState(nullptr), m_Ticker(nullptr), m_ManualObjectReference(nullptr)
+	FCScriptContext():m_bInit(false), m_LuaState(nullptr), m_Ticker(nullptr), m_DelegateObject(nullptr), m_ManualObjectReference(nullptr)
 	{
 	}
 

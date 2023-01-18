@@ -6,6 +6,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnButtonClickedEvent);
 DECLARE_DYNAMIC_DELEGATE_TwoParams(FOnHttpResponseMessage, FString, MessageContent, bool, bWasSuccessful);
+DECLARE_DYNAMIC_DELEGATE_OneParam(FOnExecuteActionCallback, const FName&, TagName);
 
 USTRUCT(BlueprintType)
 struct FTestBoneAdjustItemInfo
@@ -130,7 +131,9 @@ public:
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "SetSoftPtr"))
     void SetSoftPtr(TSoftObjectPtr<UObject> Arg1, TSoftClassPtr<UClass> Arg2);
 
-	
+    UFUNCTION(BlueprintCallable)
+    void RegisterUIActionBindingByTag(FName InTagName, FOnExecuteActionCallback InOnExecuteAction);
+
 	//UPROPERTY()
 	//TSharedPtr<UFCTest> SharedPtr;  // 这个是不支持的
 
@@ -190,4 +193,7 @@ public:
 
     UPROPERTY(BlueprintReadWrite, EditAnywhere)
     FTestAvatarSystemInitParams   AvatarParams;
+
+    UPROPERTY()
+    FOnExecuteActionCallback  OnExecuteAction;
 };

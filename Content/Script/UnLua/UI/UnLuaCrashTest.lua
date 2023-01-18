@@ -284,7 +284,7 @@ end
 function TestCrash:Crash16(worldContextObject)
     local classType = UE4.UDataTable
     local dataTable = LoadObject("/Game/TestDataTable.TestDataTable")
-    UEPrint("[Crash16]dataTable=", dataTable, ",classType=", classType)
+    UEPrint("[TestCrash][Crash16]dataTable=", dataTable, ",classType=", classType)
     local OutRowNames = UE4.TArray(UE4.FName)
     UE4.UDataTableFunctionLibrary.GetDataTableRowNames(dataTable, OutRowNames)
     -- for i = 1, #OutRowNames do
@@ -293,16 +293,16 @@ function TestCrash:Crash16(worldContextObject)
     --     UEPrint("[Crash16]dataTable,[]", rowName, ",rowData=", rowData, ",row ID=", rowData.ID, ",Name=", rowData.Name)
     -- end
     for k, v in pairs(dataTable) do
-        UEPrint("[Crash16]dataTable,[]key", k, ",rowData=", v, ",row ID=", v.ID, ",Name=", v.Name)
+        UEPrint("[TestCrash][Crash16]dataTable,[]key", k, ",rowData=", v, ",row ID=", v.ID, ",Name=", v.Name)
     end
     local row = dataTable["Row1"]
-    UEPrint("[Crash16]dataTable,row=", row, ",row ID=", row.ID, ",Name=", row.Name)
+    UEPrint("[TestCrash][Crash16]dataTable,row=", row, ",row ID=", row.ID, ",Name=", row.Name)
 end
 
 -- 只是测试GetSubSystem()
 function TestCrash:Crash17(worldContextObject)
     local subSystem = UE4.USubsystemBlueprintLibrary.GetEngineSubsystem(UE4.UAssetTagsSubsystem)
-    UEPrint("[Crash17]subSystem:", subSystem)
+    UEPrint("[TestCrash][Crash17]subSystem:", subSystem)
 
     local AvatarClass = UE4.UFCTest
     local obj = NewObject(AvatarClass)
@@ -315,7 +315,7 @@ function TestCrash:Crash17(worldContextObject)
     obj:CallClicked()
     obj.ResPtr = "/Game/TestDataTable.TestDataTable"
     local asetName0 = obj.ResPtr:GetAssetName()
-    UEPrint("[Crash17]asetName0:", asetName0)
+    UEPrint("[TestCrash][Crash17]asetName0:", asetName0)
 
     local ResPtr = UE4.TSoftObjectPtr("/Game/TestDataTable.TestDataTable")
     obj.ResPtr = ResPtr
@@ -326,7 +326,7 @@ function TestCrash:Crash17(worldContextObject)
     obj:SetSoftPtr(ResPtr, ClassPtr)
     local assetName1 = ResPtr:GetAssetName()
     local assetName2 = ClassPtr:GetAssetName()
-    UEPrint("[Crash17]assetName1:", assetName1, "assetName2:", assetName2)
+    UEPrint("[TestCrash][Crash17]assetName1:", assetName1, "assetName2:", assetName2)
 end
 
 -- 只是测试功能
@@ -334,6 +334,30 @@ function TestCrash:Crash18(worldContextObject)
     -- Blueprint'/Game/TestActorBP.TestActorBP'    
     local actor = CreateTestActor("/Game/TestActorBP.TestActorBP", "UnLua.UI.ActorCallback", worldContextObject)
     actor:Died_Brocast(100)
+end
+
+-- 只是测试功能
+function TestCrash:Crash19(worldContextObject)    
+    local actor = CreateTestActor("/Game/TestCharacter.TestCharacter", "UnLua.UI.ActorCallback", worldContextObject)
+    local WeaponPoint = actor.WeaponPoint
+    UEPrint("[TestCrash]Crash19, WeapointPoint:", WeaponPoint)
+end
+
+-- 只是测试功能
+function TestCrash:Crash20(worldContextObject)    
+    local AvatarClass = UE4.UFCTest
+    local obj = NewObject(AvatarClass)
+    local delegate = UE4.FScriptDelegate(self, TestCrash.OnDelegateCall)
+    obj:RegisterUIActionBindingByTag("abc", TestCrash.OnUIAction)
+    UEPrint("[TestCrash]Crash20")
+end
+
+function TestCrash:OnDelegateCall(tagName)
+    UEPrint("[TestCrash]OnUIAction-------, tagName:", tagName)
+end
+
+function TestCrash.OnUIAction(tagName)
+    UEPrint("[TestCrash]OnUIAction-------, tagName:", tagName)
 end
 
 function  TestCrash:DoCrash(worldContextObject)
@@ -363,7 +387,9 @@ function  TestCrash:DoCrash(worldContextObject)
     -- self:Crash15(worldContextObject) --
     -- self:Crash16(worldContextObject) --
     -- self:Crash17(worldContextObject) --
-    self:Crash18(worldContextObject) --
+    -- self:Crash18(worldContextObject) --
+    -- self:Crash19(worldContextObject) --
+    self:Crash20(worldContextObject) --
 
     ----- 下面是FUnLua的测试结果
     -- self:Crash1(worldContextObject) -- 正常

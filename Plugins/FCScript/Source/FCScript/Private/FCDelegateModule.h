@@ -5,6 +5,7 @@
 #include "Engine/World.h"
 #include "CoreUObject.h"
 #include "FCTicker.h"
+#include "FCDelegateObject.h"
 #include "FCPropertyType.h"
 
 // -- 这个类用于UE的全局委托的交互模块，负责UE的全局委托与脚本的沟通
@@ -70,6 +71,7 @@ protected:
 	TArray<UObject*> Candidates;        // binding candidates during async loading
 	FCriticalSection CandidatesCS;      // critical section for accessing 'Candidates'
 	UFCTicker  *Ticker = nullptr;
+    UFCDelegateObject *DelegateObject = nullptr;
 	UGameInstance *GameInstance = nullptr;
 	bool        bStartInit = false;
 	bool        bAddUObjectNotify = false;

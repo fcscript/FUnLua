@@ -387,6 +387,31 @@ int64  FCGetObj::PushMapIterator(void* IteratorPtr)
     return ObjRef->PtrIndex;
 }
 
+int64  FCGetObj::PushLuaDelegate(const FCDelegateInfo* DelegateInfo)
+{
+    ObjRefKey  ObjKey(nullptr, DelegateInfo);
+    CScriptRefObjMap::iterator itObj = m_ObjMap.find(ObjKey);
+    if (itObj != m_ObjMap.end())
+    {
+        ++(itObj->second->Ref);
+        return itObj->second->PtrIndex;
+    }
+
+    FCScriptContext* ScriptContext = GetScriptContext();
+
+    FCObjRef* ObjRef = NewObjRef();
+    ObjRef->Ref = 1;
+    ObjRef->RefType = EFCObjRefType::LuaDelegate;
+    ObjRef->Parent = nullptr;
+    ObjRef->ClassDesc = nullptr;
+    ObjRef->PtrIndex = ++m_nObjID;
+    ObjRef->DynamicProperty = &m_MapIteratorProperty;
+    ObjRef->ThisObjAddr = (uint8*)DelegateInfo;
+    m_ObjMap[ObjKey] = ObjRef;
+    m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
+    return ObjRef->PtrIndex;
+}
+
 void   FCGetObj::NotifyDeleteUObject(const class UObjectBase* Object, int32 Index)
 {
 	ObjRefKey  ObjKey(nullptr, Object);
