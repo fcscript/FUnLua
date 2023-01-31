@@ -13,20 +13,6 @@ FCDynamicDelegateManager & FCDynamicDelegateManager::GetIns()
     return sIns;
 }
 
-int64  FCDynamicDelegateManager::MakeLuaDelegateRefObj(UObject* Object, lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty)
-{
-    FCLuaDelegate *Deleagte = MakeLuaDelegate(Object, L, ValueIdx, DynamicProperty);
-    if(Deleagte)
-    {
-        if(0 == Deleagte->ObjRefID)
-        {
-            Deleagte->ObjRefID = FCGetObj::GetIns()->PushLuaDelegate(Deleagte);
-            return Deleagte->ObjRefID;
-        }
-    }
-    return 0;
-}
-
 FCLuaDelegate* FCDynamicDelegateManager::MakeLuaDelegate(UObject* Object, lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty)
 {
     int Type = lua_type(L, ValueIdx);

@@ -10,9 +10,8 @@ struct FCLuaDelegate : public FCDelegateInfo
     FScriptDelegate  Delegate;
     UObject *Object; // 脚本中的来源对象
     UObject *Outer;  // 当前的Outer对象
-    int   ObjRefID;
     int   ScriptIns;
-    FCLuaDelegate():m_pNext(nullptr), OuterClass(nullptr), Function(nullptr), Object(nullptr), Outer(nullptr), ObjRefID(0), ScriptIns(0)
+    FCLuaDelegate():m_pNext(nullptr), OuterClass(nullptr), Function(nullptr), Object(nullptr), Outer(nullptr), ScriptIns(0)
     {
     }
 };
@@ -27,9 +26,6 @@ class FCDynamicDelegateManager
 public:
     static FCDynamicDelegateManager &GetIns();
 public:
-    // 功能：生成一个Lua函数的委托对象(如果没有Object对象，就是纯Lua函数)
-    int64  MakeLuaDelegateRefObj(UObject * Object, lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty);
-
     // 功能：生成一个Lua函数的委托对象(如果没有Object对象，就是纯Lua函数)
     FCLuaDelegate* MakeLuaDelegate(UObject* Object, lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty);
     // 功能：通过函数地址一个委托对象
