@@ -243,6 +243,8 @@ void FCDynamicDelegateManager::MakeScriptDelegate(FCLuaDelegate* Delegate, const
     FDelegateProperty  *DelegateProperty = (FDelegateProperty *)DynamicProperty->Property;
     UFunction *Function = DelegateProperty->SignatureFunction;
 
+    UFunction *OldFunction = OuterClass->FindFunctionByName(FuncName);
+
     FObjectDuplicationParameters DuplicationParams(Function, OuterClass);
     DuplicationParams.InternalFlagMask &= ~EInternalObjectFlags::Native;
     DuplicationParams.DestName = FuncName;
@@ -257,8 +259,27 @@ void FCDynamicDelegateManager::MakeScriptDelegate(FCLuaDelegate* Delegate, const
 
     if (!FPlatformProperties::RequiresCookedData())
         UMetaData::CopyMetadata(Function, LuaFunction);
+            
+    // 这个只能Link一次
+    CAdr2FlagsMap::const_iterator itLink = m_FuncLinkFlagMap.find(Function);
+    if(itLink == m_FuncLinkFlagMap.end())
+        LuaFunction->StaticLink(true);
+    else
+    {
+        //FArchive  Ar;
+        //LuaFunction->Link(Ar, false);
+    }
 
-    LuaFunction->StaticLink(true);
+    m_FuncLinkFlagMap[Function] = true;
+
+    if(LuaFunction->NumParms != Function->NumParms)
+    {
+        LuaFunction->NumParms = Function->NumParms;
+        LuaFunction->ParmsSize = Function->ParmsSize;
+        LuaFunction->ReturnValueOffset = Function->ReturnValueOffset;
+        LuaFunction->RPCId = Function->RPCId;
+        LuaFunction->RPCResponseId = Function->RPCResponseId;
+    }
 
     OuterClass->AddFunctionToFunctionMap(LuaFunction, FuncName);
 

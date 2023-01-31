@@ -22,6 +22,8 @@ public:
     static int DoOverridden_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
     static int DoGetClassDesc_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
     static int DoGetStaticClass_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+    static int DoAddGCRef_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+    static int DoReleaseGCRef_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
     static int DoSpawActor_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
 
 	static int NewObject_wrap(lua_State* L);
@@ -34,4 +36,6 @@ public:
     static int GetTotalIntPtr_wrap(lua_State* L);
     static int GetObjRefSize_wrap(lua_State* L);
     static int GetClassDescMemSize_wrap(lua_State* L);
+    static int ListGCObjects_wrap(lua_State* L);
+    static int PrintGCObjects_wrap(lua_State* L);
 };

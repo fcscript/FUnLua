@@ -39,6 +39,10 @@ public:
     {
         return Name;
     }
+    const TSet<UObject*> &GetReferencedObjects() const
+    {
+        return ReferencedObjects;
+    }
 private:
     TSet<UObject*> ReferencedObjects;
     FString Name = TEXT("FObjectReferencer");

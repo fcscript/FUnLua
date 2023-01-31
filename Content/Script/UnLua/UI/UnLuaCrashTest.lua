@@ -317,9 +317,9 @@ function TestCrash:Crash17(worldContextObject)
     local asetName0 = obj.ResPtr:GetAssetName()
     UEPrint("[TestCrash][Crash17]asetName0:", asetName0)
 
-    local ResPtr = UE4.TSoftObjectPtr("/Game/TestDataTable.TestDataTable")
+    local ResPtr = UE4.FSoftObjectPtr("/Game/TestDataTable.TestDataTable")
     obj.ResPtr = ResPtr
-    local ClassPtr = UE4.TSoftClassPtr(AvatarClass)
+    local ClassPtr = UE4.FSoftClassPtr(AvatarClass)
     obj.TSoftClassPtrVar = ClassPtr
     ResPtr:LoadSynchronous()
     ClassPtr:LoadSynchronous()
@@ -350,6 +350,10 @@ function TestCrash:Crash20(worldContextObject)
     local delegate = UE4.FScriptDelegate(self, TestCrash.OnDelegateCall)
     obj:RegisterUIActionBindingByTag("abc", TestCrash.OnUIAction)
     UEPrint("[TestCrash]Crash20")
+    local allObjs = ListGCObjects()
+    for key, value in pairs(allObjs) do
+        UEPrint("[TestCrash]Crash20, value=", value, ",name=", value:GetName())
+    end
 end
 
 function TestCrash:OnDelegateCall(tagName)

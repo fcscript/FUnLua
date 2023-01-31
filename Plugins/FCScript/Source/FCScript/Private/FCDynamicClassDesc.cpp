@@ -61,8 +61,9 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
 
     TMap<FName, FString>* MetaMap = UMetaData::GetMapForObject(Function);
 
+    int SrcCount = InFunction->NumParms;
     FCStringBuffer128 DefaultName;
-	for (TFieldIterator<FProperty> It(InFunction); It && (It->PropertyFlags & CPF_Parm); ++It, ++Index)
+	for (TFieldIterator<FProperty> It(InFunction); It && (It->PropertyFlags & CPF_Parm) && Index < SrcCount; ++It, ++Index)
 	{
 		FProperty *Property = *It;
 

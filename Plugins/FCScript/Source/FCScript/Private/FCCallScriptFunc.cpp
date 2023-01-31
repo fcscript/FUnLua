@@ -1209,9 +1209,9 @@ int  FCInnerCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 Scri
 	}
 	int32 MessageHandlerIdx = lua_gettop(L) - 1;
 
-	int nParamCount = DynamicFunction->ParamCount;
+	int nParamCount = DynamicFunction->ParamCount; // DynamicFunction->m_Property.size();
     FCDynamicFunctionParam *BeginProperty = DynamicFunction->m_Property.data();
-    FCDynamicFunctionParam *EndProperty = BeginProperty + nParamCount;
+    FCDynamicFunctionParam *EndProperty = BeginProperty + DynamicFunction->m_Property.size();
     FCDynamicFunctionParam *DynamicProperty = BeginProperty;
 
     FOutParmRec *OutParms = TheStack.OutParms;

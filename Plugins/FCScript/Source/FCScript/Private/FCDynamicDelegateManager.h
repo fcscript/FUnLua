@@ -20,6 +20,7 @@ struct FCLuaDelegate : public FCDelegateInfo
 typedef  std::unordered_map<const void*, FCLuaDelegate*>   CAdr2DelegateMap; // void* ==> FCLuaDelegate
 typedef  std::unordered_map<const void*, FCDynamicOverrideFunction*>   CAdr2DynamicFuncMap; // void* ==> FCDynamicFunction
 typedef  std::unordered_map<const void*, FCDynamicProperty*>   CAdr2DynamicPropertyMap; // void* ==> FCDynamicProperty
+typedef  std::unordered_map<const void*, bool>   CAdr2FlagsMap; // void* ==> bool
 
 class FCDynamicDelegateManager
 {
@@ -64,6 +65,8 @@ protected:
 
     CAdr2DynamicFuncMap m_DynamicFuncMap;
     CAdr2DynamicPropertyMap m_DynamicProperyMap;
+
+    CAdr2FlagsMap  m_FuncLinkFlagMap;  // 函数Link标记(不可释放)
 };
 
 void FCDynamicDelegate_CallLua(UObject* Context, FFrame& TheStack, RESULT_DECL);

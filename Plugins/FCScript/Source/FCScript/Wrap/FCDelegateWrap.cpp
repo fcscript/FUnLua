@@ -55,7 +55,7 @@ int FCDelegateWrap::obj_new(lua_State* L)
     // DelegateEvent(self, func) 两个参数
     // DelegateEvent(func) 一个参数
     int ParamCount = lua_gettop(L);  // 获取当前参数数量
-    const char *ClassName = lua_tostring(L, 1);
+    const char *ClassName = lua_tostring(L, -1);
 
     FCDelegateInfo* DelegateInfo = new FCDelegateInfo();
 
@@ -83,7 +83,7 @@ int FCDelegateWrap::obj_new(lua_State* L)
     DelegateInfo->ParamCount = CallbackParamCount;
 
     int64 ObjID = FCGetObj::GetIns()->PushLuaDelegate(DelegateInfo);
-    FCScript::PushBindObjRef(L, ObjID, ClassName);
+    FCScript::PushBindObjRef(L, ObjID, "FScriptDelegate");
     return 1;
 }
 

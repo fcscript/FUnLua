@@ -7,6 +7,7 @@
 void TSoftObjectPtrWrap::Register(lua_State* L)
 {
     luaL_requiref(L, "TSoftObjectPtr", LibOpen_wrap, 1);
+    luaL_requiref(L, "FSoftObjectPtr", LibOpen_wrap, 1); // UnLua使用FSoftObjectPtr
     luaL_requiref(L, "SoftPtr", LibOpen_wrap, 1);
 }
 
@@ -105,6 +106,7 @@ int TSoftObjectPtrWrap::GetAssetName_wrap(lua_State* L)
 void TSoftClassPtrWrap::Register(lua_State* L)
 {
     luaL_requiref(L, "TSoftClassPtr", LibOpen_wrap, 1);
+    luaL_requiref(L, "FSoftClassPtr", LibOpen_wrap, 1);
 }
 
 int TSoftClassPtrWrap::LibOpen_wrap(lua_State* L)
@@ -119,13 +121,14 @@ int TSoftClassPtrWrap::LibOpen_wrap(lua_State* L)
         { "__eq", FCExportedClass::obj_equal },
         { nullptr, nullptr }
     };
-    FCExportedClass::RegisterLibClass(L, "TSoftClassPtr", LibFuncs);
+    const char* ClassName = lua_tostring(L, 1);
+    FCExportedClass::RegisterLibClass(L, ClassName, LibFuncs);
     return 1;
 }
 
 int TSoftClassPtrWrap::obj_New(lua_State* L)
 {
-    // TSoftClassPtr(Path or UClass)
+    // FSoftClassPtr(Path or UClass)
     FSoftObjectPtr* SoftObjectPtr = nullptr;
     int Type = lua_type(L, 2);
     if (LUA_TSTRING == Type)
@@ -173,8 +176,8 @@ int TSoftClassPtrWrap::obj_New(lua_State* L)
     {
         SoftObjectPtr = new FSoftObjectPtr();
     }
-    FCDynamicProperty* DynamicProperty = GetDynamicPropertyByCppType(FCPROPERTY_SoftClassReference, "TSoftClassPtr", sizeof(FSoftObjectPtr));
+    FCDynamicProperty* DynamicProperty = GetDynamicPropertyByCppType(FCPROPERTY_SoftClassReference, "FSoftClassPtr", sizeof(FSoftObjectPtr));
     int64 ObjID = FCGetObj::GetIns()->PushTemplate((const FCDynamicProperty*)DynamicProperty, SoftObjectPtr, EFCObjRefType::NewTSoftClassPtr);
-    FCScript::PushBindObjRef(L, ObjID, "TSoftClassPtr");
+    FCScript::PushBindObjRef(L, ObjID, "FSoftClassPtr");
     return 1;
 }

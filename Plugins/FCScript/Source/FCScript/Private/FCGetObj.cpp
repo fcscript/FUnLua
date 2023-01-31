@@ -514,7 +514,9 @@ void  FCGetObj::DestroyObjRef(FCObjRef *ObjRef)
 		switch(ObjRef->RefType)
 		{
 			case EFCObjRefType::NewUObject:
+            case EFCObjRefType::RefObject:
 			{
+                GetScriptContext()->m_ManualObjectReference->Remove(ObjRef->GetUObject());
 			}
 			break;
 			case EFCObjRefType::NewUStruct:

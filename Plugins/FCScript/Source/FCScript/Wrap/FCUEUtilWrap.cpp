@@ -1,4 +1,4 @@
-﻿#include "FCUEUtilWrap.h"
+#include "FCUEUtilWrap.h"
 #include "FCObjectManager.h"
 #include "FCGetObj.h"
 #include "FCRunTimeRegister.h"
@@ -28,6 +28,8 @@ void FCUEUtilWrap::Register(lua_State* L)
         ClassDesc->RegisterWrapLibAttrib("Overridden", DoOverridden_wrap, nullptr);
         //ClassDesc->RegisterWrapLibAttrib("ClassDesc", DoGetClassDesc_wrap, nullptr);
         ClassDesc->RegisterWrapLibFunction("StaticClass", DoGetStaticClass_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("AddGCRef", DoAddGCRef_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("ReleaseGCRef", DoReleaseGCRef_wrap, nullptr);
     }
     ClassDesc = GetScriptContext()->RegisterUClass("UWorld");
     if(ClassDesc)
@@ -46,6 +48,8 @@ void FCUEUtilWrap::Register(lua_State* L)
     lua_register(L, "GetTotalIntPtr", GetTotalIntPtr_wrap);
     lua_register(L, "GetObjRefSize", GetObjRefSize_wrap);
     lua_register(L, "GetClassDescMemSize", GetClassDescMemSize_wrap);
+    lua_register(L, "ListGCObjects", ListGCObjects_wrap);
+    lua_register(L, "PrintGCObjects", PrintGCObjects_wrap);
 
     // 注册基础数据类型，兼容UnLua
     RegisterBaseType(L);
@@ -269,6 +273,26 @@ int FCUEUtilWrap::DoGetStaticClass_wrap(lua_State* L, void* ObjRefPtr, UObject* 
     return 1;
 }
 
+int FCUEUtilWrap::DoAddGCRef_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    FCObjRef* ObjRef = (FCObjRef*)ObjRefPtr;
+    if (ObjRef && ObjRef->IsValid())
+    {
+        GetScriptContext()->m_ManualObjectReference->Add(ObjRef->GetUObject());
+    }
+    return 0;
+}
+
+int FCUEUtilWrap::DoReleaseGCRef_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    FCObjRef* ObjRef = (FCObjRef*)ObjRefPtr;
+    if (ObjRef && ObjRef->IsValid())
+    {
+        GetScriptContext()->m_ManualObjectReference->Remove(ObjRef->GetUObject());
+    }
+    return 0;
+}
+
 int FCUEUtilWrap::DoSpawActor_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
 {
     return SpawActor_wrap(L);
@@ -348,6 +372,8 @@ int FCUEUtilWrap::NewObject_wrap(lua_State* L)
         {
             FFCObjectdManager::GetSingleIns()->CallBindScript(Obj, ScriptClassName);
         }
+        // 增加引用GC计数吧, 这个其实可以PushUObject里面做
+        GetScriptContext()->m_ManualObjectReference->Add(Obj);
         FCScript::PushUObject(L, Obj);
         return 1;
 	}
@@ -428,6 +454,8 @@ int FCUEUtilWrap::SpawActor_wrap(lua_State* L)
     {
         FFCObjectdManager::GetSingleIns()->CallBindScript(NewActor, ModuleName);
     }
+    // 增加引用GC计数吧, 这个其实可以PushUObject里面做
+    GetScriptContext()->m_ManualObjectReference->Add(NewActor);
     FCScript::PushUObject(L, NewActor);
 
     return 1;
@@ -456,6 +484,8 @@ int FCUEUtilWrap::LoadObject_wrap(lua_State* L)
         }
     }
     UObject* Object = LoadObject<UObject>(nullptr, *ObjectPath);
+    // 增加引用GC计数吧, 这个其实可以PushUObject里面做
+    GetScriptContext()->m_ManualObjectReference->Add(Object);
     FCScript::PushUObject(L, Object);
     return 1;
 }
@@ -526,3 +556,42 @@ int FCUEUtilWrap::GetClassDescMemSize_wrap(lua_State* L)
     }
     return 1;
 }
+
+int FCUEUtilWrap::ListGCObjects_wrap(lua_State* L)
+{
+    const TSet<UObject*> &ObjList = GetScriptContext()->m_ManualObjectReference->GetReferencedObjects();
+    TSet<UObject*>::TConstIterator it = ObjList.CreateConstIterator();
+    lua_createtable(L, 0, 0);
+    int nTableIdx = lua_gettop(L);
+    int Index = 0;
+    for(; it; ++it)
+    {
+        UObject *Obj = *it;
+        if(Obj)
+        {
+            FCScript::PushUObject(L, Obj);
+            lua_rawseti(L, nTableIdx, Index + 1);
+            ++Index;
+        }
+    }
+    int nCurIdx = lua_gettop(L);
+    return 1;
+}
+
+int FCUEUtilWrap::PrintGCObjects_wrap(lua_State* L)
+{
+    const TSet<UObject*>& ObjList = GetScriptContext()->m_ManualObjectReference->GetReferencedObjects();
+    TSet<UObject*>::TConstIterator it = ObjList.CreateConstIterator();
+    UE_LOG(LogFCScript, Log, TEXT("Lua GC Objects total num:%d"), ObjList.Num());
+
+    for (; it; ++it)
+    {
+        UObject* Obj = *it;
+        if (Obj)
+        {
+            UE_LOG(LogFCScript, Log, TEXT("Lua GC Objects %p : %s"), Obj, *(Obj->GetName()));
+        }
+    }
+    return 0;
+}
+
