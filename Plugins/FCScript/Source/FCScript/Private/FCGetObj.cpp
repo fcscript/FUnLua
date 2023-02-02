@@ -1,6 +1,7 @@
 #include "FCGetObj.h"
 #include "FCTemplateType.h"
 #include "FCCallScriptFunc.h"
+#include "FCObjectUseFlag.h"
 
 FCGetObj* FCGetObj::s_Ins = nullptr;
 
@@ -75,6 +76,8 @@ FCObjRef* FCGetObj::PushUObjectNoneRef(UObject* Obj)
 	ObjRef->ThisObjAddr = (uint8 *)Obj;
 	m_ObjMap[ObjKey] = ObjRef;
 	m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
+
+    FCObjectUseFlag::GetIns().Ref(Obj);
 	return ObjRef;
 }
 
@@ -109,6 +112,7 @@ int64  FCGetObj::PushNewObject(FCDynamicClassDesc* ClassDesc, const FName& Name,
         ObjRef->ThisObjAddr = (uint8 *)Obj;
         m_ObjMap[ObjKey] = ObjRef;
     }
+    FCObjectUseFlag::GetIns().Ref(Obj);
 
 	return ObjRef->PtrIndex;
 }

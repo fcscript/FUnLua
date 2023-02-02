@@ -10,6 +10,7 @@
 #include "FCStringBuffer.h"
 #include "../LuaCore/LuaHeader.h"
 #include "FCObjectReferencer.h"
+#include "FCObjectUseFlag.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFCScript, Log, All);
 

@@ -2,6 +2,7 @@
 #include "FCDynamicOverrideFunc.h"
 #include "FCCallScriptFunc.h"
 #include "FCRunTimeRegister.h"
+#include "FCObjectUseFlag.h"
 
 extern uint8 GRegisterNative(int32 NativeBytecodeIndex, const FNativeFuncPtr& Func);
 
@@ -49,6 +50,7 @@ void  FFCObjectdManager::BindScript(const class UObjectBaseUtility *Object, UCla
 void  FFCObjectdManager::BindToScript(const class UObjectBaseUtility* Object, UClass* Class, const char* ScriptClassName)
 {
 	ScriptClassName = GetConstName(ScriptClassName);
+    FCObjectUseFlag::GetIns().Ref(Object);
 	FBindObjectInfo &Info = m_BindObjects[Object];
 	Info.Set(Object, Object->GetLinkerIndex(), ScriptClassName);
 	RegisterReceiveBeginPlayFunction((UObject*)Object, Class);
@@ -57,6 +59,7 @@ void  FFCObjectdManager::BindToScript(const class UObjectBaseUtility* Object, UC
 void  FFCObjectdManager::CallBindScript(UObject *InObject, const char *ScriptClassName)
 {
     ScriptClassName = GetConstName(ScriptClassName);
+    FCObjectUseFlag::GetIns().Ref(InObject);
     FBindObjectInfo &Info = m_BindObjects[InObject];
     Info.Set(InObject, InObject->GetLinkerIndex(), ScriptClassName);
     Info.m_ScriptIns = FCDynamicBindScript(InObject);
@@ -287,6 +290,7 @@ void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynam
 	FCDynamicOverrideFunction *DynamicFunc = this->ToOverrideFunction(InObject, Func, FCDynamicOverrideDelegate, EX_CallFCDelegate);
 
 	FCDynamicDelegateList  &DelegateList = m_ObjectDelegateMap[InObject];
+    FCObjectUseFlag::GetIns().Ref(InObject);
 	FCDelegateInfo  Info(DynamicFunc, InDynamicProperty, InFuncAddr, InFunctionRef, InParams, InParamCount);
 	if(!DelegateList.AddScriptDelegate(Info))
 	{

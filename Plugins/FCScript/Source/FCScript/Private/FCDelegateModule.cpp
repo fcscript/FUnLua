@@ -3,6 +3,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Templates/Casts.h"
 #include "Logging/LogMacros.h"
+#include "Misc/EmbeddedCommunication.h"
 
 #include "FCScriptInterface.h"
 #include "FCDynamicClassDesc.h"
@@ -266,9 +267,32 @@ void FFCDelegateModule::OnUObjectArrayShutdown()
 
 void FFCDelegateModule::NotifyUObjectDeleted(const class UObjectBase *InObject, int32 Index)
 {
-    FCDynamicDelegateManager::GetIns().DeleteAllDelegateByUObject(InObject);
-	FFCObjectdManager::GetSingleIns()->NotifyDeleteUObject(InObject, Index);
-	FCGetObj::GetIns()->NotifyDeleteUObject(InObject, Index);
+    // 这个如果开启了异步加载，就可能不是在主线程触发的
+    if(IsInGameThread())
+    {
+        if(FCObjectUseFlag::GetIns().IsRef(InObject))
+        {
+            FCObjectUseFlag::GetIns().UnRef(InObject);
+            FCDynamicDelegateManager::GetIns().DeleteAllDelegateByUObject(InObject);
+            FFCObjectdManager::GetSingleIns()->NotifyDeleteUObject(InObject, Index);
+            FCGetObj::GetIns()->NotifyDeleteUObject(InObject, Index);
+        }
+    }
+    else
+    {
+        // 必要的话，可以加一个表，标记绑定了UObject对象的, 这个就可以检查，省掉一个异步
+        if (FCObjectUseFlag::GetIns().IsRef(InObject))
+        {
+            auto func = [InObject, Index]()
+            {
+                FCObjectUseFlag::GetIns().UnRef(InObject);
+                FCDynamicDelegateManager::GetIns().DeleteAllDelegateByUObject(InObject);
+                FFCObjectdManager::GetSingleIns()->NotifyDeleteUObject(InObject, Index);
+                FCGetObj::GetIns()->NotifyDeleteUObject(InObject, Index);
+            };
+            AsyncTaskSafe(ENamedThreads::GameThread, MoveTemp(func));
+        }
+    }
 }
 
 //-------------------------------------------------------------

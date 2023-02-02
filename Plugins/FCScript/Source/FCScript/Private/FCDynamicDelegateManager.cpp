@@ -54,6 +54,7 @@ FCLuaDelegate* FCDynamicDelegateManager::MakeLuaDelegate(UObject* Object, lua_St
             Delegate->m_pNext = itChild->second;
             m_Object2ChildMap[Object] = Delegate;
         }
+        FCObjectUseFlag::GetIns().Ref(Object);
     }
     m_FuncAdr2DelegateMap[LuaFuncAddr] = Delegate;
     m_UEFuncAddr2DelegateMap[Delegate->Function] = Delegate;
