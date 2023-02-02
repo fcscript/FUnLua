@@ -378,14 +378,20 @@ void FFCDelegateModule::Shutdown()
 
 UFunction* FFCDelegateModule::GetScriptNameFunction(UClass* ObjClass)
 {
+    mScriptNameCS.Lock();
     CClassToFunctionScriptMap::iterator itFunction = mScriptNameMap.find(ObjClass);
     if(itFunction != mScriptNameMap.end())
     {
+        mScriptNameCS.Unlock();
         return itFunction->second;
     }
+    mScriptNameCS.Unlock();
+
     if (ObjClass->IsChildOf<UPackage>() || ObjClass->IsChildOf<UClass>())             // filter out UPackage and UClass
     {
+        mScriptNameCS.Lock();
         mScriptNameMap[ObjClass] = nullptr;
+        mScriptNameCS.Unlock();
         return nullptr;
     }
     UFunction* InterfaceFunc = ObjClass->FindFunctionByName(mName_GetScriptClassName);
@@ -395,7 +401,9 @@ UFunction* FFCDelegateModule::GetScriptNameFunction(UClass* ObjClass)
     if (!InterfaceFunc)
         InterfaceFunc = ObjClass->FindFunctionByName(mName_GetModuleName); // 兼容UnLua
 #endif
+    mScriptNameCS.Lock();
     mScriptNameMap[ObjClass] = InterfaceFunc;
+    mScriptNameCS.Unlock();
     return InterfaceFunc;
 }
 

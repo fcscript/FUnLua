@@ -79,6 +79,7 @@ protected:
 
     typedef  std::unordered_map<UClass*, UFunction*>   CClassToFunctionScriptMap; // UClass == > UFunction
     CClassToFunctionScriptMap   mScriptNameMap;
+    FCriticalSection            mScriptNameCS;
     FName   mName_GetScriptClassName = "GetScriptClassName";
     FName   mName_GetModuleName = "GetModuleName";
 };
