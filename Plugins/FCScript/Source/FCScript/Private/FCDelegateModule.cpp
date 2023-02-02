@@ -100,7 +100,72 @@ void FFCDelegateModule::OnPreExit()
 
 void FFCDelegateModule::OnAsyncLoadingFlushUpdate()
 {
+    constexpr EInternalObjectFlags AsyncObjectFlags = EInternalObjectFlags::AsyncLoading | EInternalObjectFlags::Async;
 
+    TArray<FWeakObjectPtr> CandidatesTemp;
+    TArray<UObject*> CandidatesActive; // Only touch objects which are active and loaded
+    TArray<int> CandidatesRemovedIndexes;
+
+    {
+        {
+            FScopeLock Lock(&CandidatesCS);
+            CandidatesTemp.Append(Candidates);
+        }
+
+        for (int32 i = CandidatesTemp.Num() - 1; i >= 0; --i)
+        {
+            FWeakObjectPtr ObjectPtr = CandidatesTemp[i];
+            if (!ObjectPtr.IsValid())
+            {
+                // discard invalid objects
+                CandidatesRemovedIndexes.Add(i);
+                continue;
+            }
+
+            UObject* Object = ObjectPtr.Get();
+            if (Object->HasAnyFlags(RF_NeedPostLoad)
+                || Object->HasAnyInternalFlags(AsyncObjectFlags)
+                || Object->GetClass()->HasAnyInternalFlags(AsyncObjectFlags))
+            {
+                // Delay bind on next update 
+                continue;
+            }
+
+            CandidatesActive.Add(Object);
+            CandidatesRemovedIndexes.Add(i);
+        }
+    }
+
+    {
+        FScopeLock Lock(&CandidatesCS);
+        for (int32 j = 0; j < CandidatesRemovedIndexes.Num(); ++j)
+        {
+            Candidates.RemoveAt(CandidatesRemovedIndexes[j]);
+        }
+    }
+
+    for (int32 i = CandidatesActive.Num() - 1; i >= 0; --i)
+    {
+        UObject* Object = CandidatesActive[i];
+        if (Object->IsPendingKill())
+        {
+            continue;
+        }
+        UClass *ObjClass = Object->GetClass();
+        UFunction * InterfaceFunc = GetScriptNameFunction(ObjClass);
+
+        if(InterfaceFunc)
+        {
+            FString ScriptClassName;
+            UObject* DefaultObject = ObjClass->GetDefaultObject();             // get CDO
+            DefaultObject->UObject::ProcessEvent(InterfaceFunc, &ScriptClassName);   // force to invoke UObject::ProcessEvent(...)
+            if (ScriptClassName.Len() > 0)
+            {
+                // 绑定一个UObject到脚本对象, 脚本的类名不可以为空串
+                FFCObjectdManager::GetSingleIns()->BindScript(Object, ObjClass, ScriptClassName);
+            }
+        }
+    }
 }
 
 void FFCDelegateModule::OnCrash()
@@ -284,6 +349,30 @@ void FFCDelegateModule::Shutdown()
 		GUObjectArray.RemoveUObjectDeleteListener(this);
 	}
 	ReleasePropertyTable();
+    mScriptNameMap.clear();
+}
+
+UFunction* FFCDelegateModule::GetScriptNameFunction(UClass* ObjClass)
+{
+    CClassToFunctionScriptMap::iterator itFunction = mScriptNameMap.find(ObjClass);
+    if(itFunction != mScriptNameMap.end())
+    {
+        return itFunction->second;
+    }
+    if (ObjClass->IsChildOf<UPackage>() || ObjClass->IsChildOf<UClass>())             // filter out UPackage and UClass
+    {
+        mScriptNameMap[ObjClass] = nullptr;
+        return nullptr;
+    }
+    UFunction* InterfaceFunc = ObjClass->FindFunctionByName(mName_GetScriptClassName);
+
+    // 做UnLua升级是可以这样
+#ifdef COMPATIBLE_UNLUA
+    if (!InterfaceFunc)
+        InterfaceFunc = ObjClass->FindFunctionByName(mName_GetModuleName); // 兼容UnLua
+#endif
+    mScriptNameMap[ObjClass] = InterfaceFunc;
+    return InterfaceFunc;
 }
 
 void  FFCDelegateModule::TryBindScript(const class UObjectBaseUtility *Object)
@@ -293,52 +382,98 @@ void  FFCDelegateModule::TryBindScript(const class UObjectBaseUtility *Object)
 		return ;
 	}
 
-	static UClass *InterfaceClass = UFCScriptInterface::StaticClass();
-	if (!Object->HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))           // filter out CDO and ArchetypeObjects
-	{
-		UClass *Class = Object->GetClass();
-		if (Class->IsChildOf<UPackage>() || Class->IsChildOf<UClass>())             // filter out UPackage and UClass
-		{
-			return ;
-		}
-        if (Class->ImplementsInterface(InterfaceClass))                             // static binding
+    if (Object->HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))           // filter out CDO and ArchetypeObjects
+        return ;
+
+    UClass *ObjClass = Object->GetClass();
+    if (ObjClass->IsChildOf<UPackage>() || ObjClass->IsChildOf<UClass>())             // filter out UPackage and UClass
+    {
+        return;
+    }
+
+    UFunction* InterfaceFunc = GetScriptNameFunction(ObjClass);
+    if(InterfaceFunc)
+    {
+        if (InterfaceFunc->GetNativeFunc() && IsInGameThread())
         {
-            UFunction *Func = Class->FindFunctionByName(FName("GetScriptClassName"));
-            if (Func)
+            FString ScriptClassName;
+            UObject* DefaultObject = ObjClass->GetDefaultObject();             // get CDO
+            DefaultObject->UObject::ProcessEvent(InterfaceFunc, &ScriptClassName);   // force to invoke UObject::ProcessEvent(...)
+            if (ScriptClassName.Len() > 0)
             {
-                bool bIsActor = Class->IsChildOf<AActor>();
-                bool bIsUObject = Class->IsChildOf<UObject>();
-                if (Func->GetNativeFunc() && IsInGameThread())
+                // 绑定一个UObject到脚本对象, 脚本的类名不可以为空串
+                FFCObjectdManager::GetSingleIns()->BindScript(Object, ObjClass, ScriptClassName);
+            }
+        }
+        else
+        {
+            // 如果是后台线程，或对象在异步加载中, 做延迟绑定
+            if (IsAsyncLoading())
+            {
+                bool bIsUObject = ObjClass->IsChildOf<UObject>();
+                if(bIsUObject)
                 {
-                    FString ScriptClassName;
-                    UObject *DefaultObject = Class->GetDefaultObject();             // get CDO
-                    DefaultObject->UObject::ProcessEvent(Func, &ScriptClassName);   // force to invoke UObject::ProcessEvent(...)
-					if(ScriptClassName.Len() > 0)
-					{
-						// 绑定一个UObject到脚本对象, 脚本的类名不可以为空串
-						FFCObjectdManager::GetSingleIns()->BindScript(Object, Class, ScriptClassName);
-					}
-                }
-                else
-                {
-					// 如果是后台线程，或对象在异步加载中, 做延迟绑定
-					if (IsAsyncLoading())
-                    {
-                        FScopeLock Lock(&CandidatesCS);
-                        Candidates.Add((UObject*)Object);  // mark the UObject as a candidate
-                    }
+                    FScopeLock Lock(&CandidatesCS);
+                    Candidates.Add((UObject*)Object);  // mark the UObject as a candidate
                 }
             }
-		}
-		else
-		{
-			// 如果是脚本中动态绑定的那种
-			if( IsInGameThread() && FFCObjectdManager::GetSingleIns()->IsDynamicBindClass(Class))
-			{
-				FFCObjectdManager::GetSingleIns()->DynamicBind(Object, Class);
-			}
-		}
-	}
+        }        
+    }
+    else
+    {
+        // 如果是脚本中动态绑定的那种
+        if (IsInGameThread() && FFCObjectdManager::GetSingleIns()->IsDynamicBindClass(ObjClass))
+        {
+            FFCObjectdManager::GetSingleIns()->DynamicBind(Object, ObjClass);
+        }
+    }
+
+	//static UClass *InterfaceClass = UFCScriptInterface::StaticClass();
+	//if (!Object->HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject))           // filter out CDO and ArchetypeObjects
+	//{
+	//	UClass *Class = Object->GetClass();
+	//	if (Class->IsChildOf<UPackage>() || Class->IsChildOf<UClass>())             // filter out UPackage and UClass
+	//	{
+	//		return ;
+	//	}
+ //       if (Class->ImplementsInterface(InterfaceClass))                             // static binding
+ //       {
+ //           UFunction *Func = Class->FindFunctionByName(FName("GetScriptClassName"));
+ //           if (Func)
+ //           {
+ //               bool bIsActor = Class->IsChildOf<AActor>();
+ //               bool bIsUObject = Class->IsChildOf<UObject>();
+ //               if (Func->GetNativeFunc() && IsInGameThread())
+ //               {
+ //                   FString ScriptClassName;
+ //                   UObject *DefaultObject = Class->GetDefaultObject();             // get CDO
+ //                   DefaultObject->UObject::ProcessEvent(Func, &ScriptClassName);   // force to invoke UObject::ProcessEvent(...)
+	//				if(ScriptClassName.Len() > 0)
+	//				{
+	//					// 绑定一个UObject到脚本对象, 脚本的类名不可以为空串
+	//					FFCObjectdManager::GetSingleIns()->BindScript(Object, Class, ScriptClassName);
+	//				}
+ //               }
+ //               else
+ //               {
+	//				// 如果是后台线程，或对象在异步加载中, 做延迟绑定
+	//				if (IsAsyncLoading())
+ //                   {
+ //                       FScopeLock Lock(&CandidatesCS);
+ //                       Candidates.Add((UObject*)Object);  // mark the UObject as a candidate
+ //                   }
+ //               }
+ //           }
+	//	}
+	//	else
+	//	{
+	//		// 如果是脚本中动态绑定的那种
+	//		if( IsInGameThread() && FFCObjectdManager::GetSingleIns()->IsDynamicBindClass(Class))
+	//		{
+	//			FFCObjectdManager::GetSingleIns()->DynamicBind(Object, Class);
+	//		}
+	//	}
+	//}
 }
 
 #if OLD_UE_ENGINE == 0

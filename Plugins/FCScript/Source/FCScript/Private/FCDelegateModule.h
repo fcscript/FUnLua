@@ -54,6 +54,7 @@ protected:
     FString GetScriptPath();
 	void Startup();
 	void Shutdown();
+    UFunction *GetScriptNameFunction(UClass* ObjClass);
 	void  TryBindScript(const class UObjectBaseUtility *Object);
 
 #if OLD_UE_ENGINE == 0
@@ -68,11 +69,16 @@ protected:
 
 	TArray<class UInputComponent*> CandidateInputComponents;
 
-	TArray<UObject*> Candidates;        // binding candidates during async loading
+	TArray<FWeakObjectPtr> Candidates;        // binding candidates during async loading
 	FCriticalSection CandidatesCS;      // critical section for accessing 'Candidates'
 	UFCTicker  *Ticker = nullptr;
     UFCDelegateObject *DelegateObject = nullptr;
 	UGameInstance *GameInstance = nullptr;
 	bool        bStartInit = false;
 	bool        bAddUObjectNotify = false;
+
+    typedef  std::unordered_map<UClass*, UFunction*>   CClassToFunctionScriptMap; // UClass == > UFunction
+    CClassToFunctionScriptMap   mScriptNameMap;
+    FName   mName_GetScriptClassName = "GetScriptClassName";
+    FName   mName_GetModuleName = "GetModuleName";
 };
