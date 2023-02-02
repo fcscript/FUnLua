@@ -50,6 +50,8 @@ public:
 	virtual void OnUObjectArrayShutdown() override;
 	
 	virtual void NotifyUObjectDeleted(const class UObjectBase *InObject, int32 Index) override;
+
+    void OnUObjectDeleteOnMainThread(const class UObjectBase* InObject, int32 Index);
 protected:
     FString GetScriptPath();
 	void Startup();

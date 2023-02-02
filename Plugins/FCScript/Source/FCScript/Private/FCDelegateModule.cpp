@@ -252,6 +252,7 @@ void FFCDelegateModule::NotifyUObjectCreated(const class UObjectBase *InObject, 
 		if (Actor && Actor->GetLocalRole() >= ROLE_AutonomousProxy)
 		{
 			CandidateInputComponents.AddUnique((UInputComponent*)InObject);
+            FCObjectUseFlag::GetIns().Ref(InObject);
 			if (!FWorldDelegates::OnWorldTickStart.IsBoundToObject(this))
 			{
 				OnWorldTickStartHandle = FWorldDelegates::OnWorldTickStart.AddRaw(this, &FFCDelegateModule::OnWorldTickStart);
@@ -272,10 +273,7 @@ void FFCDelegateModule::NotifyUObjectDeleted(const class UObjectBase *InObject, 
     {
         if(FCObjectUseFlag::GetIns().IsRef(InObject))
         {
-            FCObjectUseFlag::GetIns().UnRef(InObject);
-            FCDynamicDelegateManager::GetIns().DeleteAllDelegateByUObject(InObject);
-            FFCObjectdManager::GetSingleIns()->NotifyDeleteUObject(InObject, Index);
-            FCGetObj::GetIns()->NotifyDeleteUObject(InObject, Index);
+            OnUObjectDeleteOnMainThread(InObject, Index);
         }
     }
     else
@@ -283,14 +281,28 @@ void FFCDelegateModule::NotifyUObjectDeleted(const class UObjectBase *InObject, 
         // 必要的话，可以加一个表，标记绑定了UObject对象的, 这个就可以检查，省掉一个异步
         if (FCObjectUseFlag::GetIns().IsRef(InObject))
         {
-            auto func = [InObject, Index]()
+            auto func = [this, InObject, Index]()
             {
-                FCObjectUseFlag::GetIns().UnRef(InObject);
-                FCDynamicDelegateManager::GetIns().DeleteAllDelegateByUObject(InObject);
-                FFCObjectdManager::GetSingleIns()->NotifyDeleteUObject(InObject, Index);
-                FCGetObj::GetIns()->NotifyDeleteUObject(InObject, Index);
+                this->OnUObjectDeleteOnMainThread(InObject, Index);
             };
             AsyncTaskSafe(ENamedThreads::GameThread, MoveTemp(func));
+        }
+    }
+}
+
+void FFCDelegateModule::OnUObjectDeleteOnMainThread(const class UObjectBase* InObject, int32 Index)
+{
+    FCObjectUseFlag::GetIns().UnRef(InObject);
+    FCDynamicDelegateManager::GetIns().DeleteAllDelegateByUObject(InObject);
+    FFCObjectdManager::GetSingleIns()->NotifyDeleteUObject(InObject, Index);
+    FCGetObj::GetIns()->NotifyDeleteUObject(InObject, Index);
+
+    if (CandidateInputComponents.Num() > 0)
+    {
+        int32 NumRemoved = CandidateInputComponents.Remove((UInputComponent*)InObject);
+        if (NumRemoved > 0 && CandidateInputComponents.Num() < 1)
+        {
+            FWorldDelegates::OnWorldTickStart.Remove(OnWorldTickStartHandle);
         }
     }
 }
@@ -374,6 +386,9 @@ void FFCDelegateModule::Shutdown()
 	}
 	ReleasePropertyTable();
     mScriptNameMap.clear();
+
+    CandidateInputComponents.Empty();
+    FWorldDelegates::OnWorldTickStart.Remove(OnWorldTickStartHandle);
 }
 
 UFunction* FFCDelegateModule::GetScriptNameFunction(UClass* ObjClass)
@@ -514,7 +529,8 @@ void FFCDelegateModule::OnWorldTickStart(UWorld *World, ELevelTick TickType, flo
 void FFCDelegateModule::OnWorldTickStart(ELevelTick TickType, float DeltaTime)
 #endif
 {
-
+    CandidateInputComponents.Empty();
+    FWorldDelegates::OnWorldTickStart.Remove(OnWorldTickStartHandle);
 }
 
 //-------------------------------------------------------------
