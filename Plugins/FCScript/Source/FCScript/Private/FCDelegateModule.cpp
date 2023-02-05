@@ -281,11 +281,11 @@ void FFCDelegateModule::NotifyUObjectDeleted(const class UObjectBase *InObject, 
         // 必要的话，可以加一个表，标记绑定了UObject对象的, 这个就可以检查，省掉一个异步
         if (FCObjectUseFlag::GetIns().IsRef(InObject))
         {
-            auto func = [this, InObject, Index]()
+            AsyncTask(ENamedThreads::GameThread, 
+            [this, InObject, Index]()
             {
                 this->OnUObjectDeleteOnMainThread(InObject, Index);
-            };
-            AsyncTaskSafe(ENamedThreads::GameThread, MoveTemp(func));
+            });
         }
     }
 }
@@ -364,8 +364,11 @@ void FFCDelegateModule::Shutdown()
 	ReleaseTempalteProperty();
     ClearAllDefaultValue();
 	FFCObjectdManager::GetSingleIns()->Clear();
-    lua_gc(L, LUA_GCCOLLECT, 0);
-    lua_gc(L, LUA_GCCOLLECT, 0);
+    if(L)
+    {
+        lua_gc(L, LUA_GCCOLLECT, 0);
+        lua_gc(L, LUA_GCCOLLECT, 0);
+    }
 	GetContextManger()->Clear();
 	GameInstance = nullptr;
 	if(Ticker)
