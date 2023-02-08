@@ -13,7 +13,7 @@ FCDynamicDelegateManager & FCDynamicDelegateManager::GetIns()
     return sIns;
 }
 
-FCLuaDelegate* FCDynamicDelegateManager::MakeLuaDelegate(UObject* Object, lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty)
+FCLuaDelegate* FCDynamicDelegateManager::MakeLuaDelegate(UObject* Object, UObject* Outer, lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty)
 {
     int Type = lua_type(L, ValueIdx);
     if (LUA_TFUNCTION != Type)
@@ -34,7 +34,8 @@ FCLuaDelegate* FCDynamicDelegateManager::MakeLuaDelegate(UObject* Object, lua_St
     Delegate->FunctionRef = CallbackRef;
 
     // 生成UE的反射函数
-    UObject *Outer = Object ? Object : GetScriptContext()->m_DelegateObject;
+    if(!Outer)
+        Outer = GetScriptContext()->m_DelegateObject;
     Delegate->Object = Object;
     Delegate->Outer = Outer;
     MakeScriptDelegate(Delegate, LuaFuncAddr, Outer, DynamicProperty);
@@ -42,23 +43,55 @@ FCLuaDelegate* FCDynamicDelegateManager::MakeLuaDelegate(UObject* Object, lua_St
     Delegate->DynamicProperty = GetDynamicProperty(DynamicProperty->Property);
     Delegate->DynamicFunc = GetDynamicFunction(Delegate->Function);
 
-    if(Object)
-    {
-        CAdr2DelegateMap::iterator itChild = m_Object2ChildMap.find(Object);
-        if(itChild == m_Object2ChildMap.end())
-        {
-            m_Object2ChildMap[Object] = Delegate;
-        }
-        else
-        {
-            Delegate->m_pNext = itChild->second;
-            m_Object2ChildMap[Object] = Delegate;
-        }
-        FCObjectUseFlag::GetIns().Ref(Object);
-    }
-    m_FuncAdr2DelegateMap[LuaFuncAddr] = Delegate;
-    m_UEFuncAddr2DelegateMap[Delegate->Function] = Delegate;
+    AddBindLuaFunction(Delegate, Object, LuaFuncAddr);
     return Delegate;
+}
+
+UObject* FCDynamicDelegateManager::OverridenLuaFunction(UObject* Object, UObject* Outer, lua_State* L, int ScriptIns, UFunction* ActionFunc, const FName& FuncName, bool bNoneCallByZeroParam)
+{
+    FString  NameValue(FuncName.ToString());
+    const char *NewFuncName = TCHAR_TO_UTF8(*NameValue);
+    if(!Outer)
+        Outer = GetScriptContext()->m_DelegateObject;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ScriptIns);
+    lua_pushstring(L, NewFuncName);
+    lua_rawget(L, -2);
+
+    int Type = lua_type(L, -1);
+    const void* LuaFuncAddr = lua_topointer(L, -1);
+    if(LUA_TFUNCTION != Type)
+    {
+        lua_pop(L, 2);
+        return nullptr;
+    }
+    CAdr2DelegateMap::iterator itDelegate = m_FuncAdr2DelegateMap.find(LuaFuncAddr);
+    if (itDelegate != m_FuncAdr2DelegateMap.end())
+    {
+        lua_pop(L, 2);
+        return Outer;
+    }
+    lua_pushvalue(L, -1);
+    int CallbackRef = luaL_ref(L, LUA_REGISTRYINDEX);  // 将这个参数添加到全局引用表
+    lua_pop(L, 2);
+
+    FCLuaDelegate* Delegate = new FCLuaDelegate();
+    Delegate->FunctionAddr = LuaFuncAddr;
+    Delegate->FunctionRef = CallbackRef;
+    Delegate->ScriptIns = ScriptIns;
+    Delegate->bNoneCallByZeroParam = bNoneCallByZeroParam;
+
+    // 生成UE的反射函数
+    Delegate->Object = Object;
+    Delegate->Outer = Outer;
+
+    UClass* OuterClass = Outer->GetClass();
+    Delegate->Function = MakeReplaceFunction(ActionFunc, OuterClass, FuncName, FCDynamicDelegate_CallLua);
+    Delegate->DynamicFunc = GetDynamicFunction(Delegate->Function);
+    Delegate->OuterClass = OuterClass;
+
+    AddBindLuaFunction(Delegate, Object, LuaFuncAddr);
+    return Outer;
 }
 
 void   FCDynamicDelegateManager::DeleteLuaDelegateByFuncAddr(const void* LuaFuncAddr)
@@ -69,7 +102,7 @@ void   FCDynamicDelegateManager::DeleteLuaDelegateByFuncAddr(const void* LuaFunc
         FCLuaDelegate* Delegate = itDelegate->second;
 
         EraseDelegatePtr(m_Object2ChildMap, Delegate, Delegate->Object);
-        EraseDelegatePtr(m_UEFuncAddr2DelegateMap, Delegate, Delegate->Function);
+        EraseFuncAddr2Delegete(Delegate, Delegate->Function);
 
         FCLuaDelegate* FindPtr = nullptr;
         if(Delegate->FunctionAddr == LuaFuncAddr)
@@ -126,7 +159,7 @@ void   FCDynamicDelegateManager::Clear()
         CAdr2DelegateMap::iterator itBegin = m_FuncAdr2DelegateMap.begin();
         FCLuaDelegate* Delegate = itBegin->second;
         m_FuncAdr2DelegateMap.erase(itBegin);
-        DeleteDelegateList(Delegate);
+        DeleteLuaDelegate(Delegate);
     }
     m_Object2ChildMap.clear();
     m_UEFuncAddr2DelegateMap.clear();
@@ -146,6 +179,32 @@ FCDynamicOverrideFunction* FCDynamicDelegateManager::GetDynamicFunction(UFunctio
     DynamicFunc->InitParam(Function);
     m_DynamicFuncMap[Function] = DynamicFunc;
     return DynamicFunc;
+}
+
+void  FCDynamicDelegateManager::AddBindLuaFunction(FCLuaDelegate* Delegate, UObject* Object, const void* LuaFuncAddr)
+{
+    if (Object)
+    {
+        CAdr2DelegateMap::iterator itChild = m_Object2ChildMap.find(Object);
+        if (itChild == m_Object2ChildMap.end())
+        {
+            m_Object2ChildMap[Object] = Delegate;
+        }
+        else
+        {
+            Delegate->m_pNext = itChild->second;
+            m_Object2ChildMap[Object] = Delegate;
+        }
+        FCObjectUseFlag::GetIns().Ref(Object);
+    }
+    m_FuncAdr2DelegateMap[LuaFuncAddr] = Delegate;
+    CAdr2DelegateMap::iterator itDelegate = m_UEFuncAddr2DelegateMap.find(Delegate->Function);
+    if(itDelegate == m_UEFuncAddr2DelegateMap.end())
+        m_UEFuncAddr2DelegateMap[Delegate->Function] = Delegate;
+    else
+    {
+        itDelegate->second->m_pNextDelegate = Delegate;
+    }
 }
 
 FCDynamicProperty* FCDynamicDelegateManager::GetDynamicProperty(const FProperty* InProperty, const char* InName)
@@ -168,13 +227,63 @@ void  FCDynamicDelegateManager::EraseDelegatePtr(CAdr2DelegateMap& PtrMap, FCLua
     CAdr2DelegateMap::iterator itFind = PtrMap.find(Key);
     if(itFind != PtrMap.end())
     {
-        if(Delegate->m_pNext)
+        if(itFind->second == Delegate)
         {
-            itFind->second = Delegate->m_pNext;
+            if (Delegate->m_pNext)
+            {
+                PtrMap[Key] = Delegate->m_pNext;
+            }
+            else
+            {
+                PtrMap.erase(itFind);
+            }
         }
         else
         {
-            PtrMap.erase(itFind);
+            FCLuaDelegate* DelegateList = itFind->second;
+            while (DelegateList)
+            {
+                if (DelegateList->m_pNext == Delegate)
+                {
+                    DelegateList->m_pNext = Delegate->m_pNext;
+                    break;
+                }
+                DelegateList = DelegateList->m_pNext;
+            }
+        }
+    }
+}
+
+void  FCDynamicDelegateManager::EraseFuncAddr2Delegete(FCLuaDelegate* Delegate, const void* Key)
+{
+    if(!Key)
+        return ;
+    CAdr2DelegateMap::iterator itFind = m_UEFuncAddr2DelegateMap.find(Key);
+    if (itFind != m_UEFuncAddr2DelegateMap.end())
+    {
+        if(itFind->second == Delegate)
+        {
+            if(Delegate->m_pNextDelegate)
+            {
+                m_UEFuncAddr2DelegateMap[Key] = Delegate->m_pNextDelegate;
+            }
+            else
+            {
+                m_UEFuncAddr2DelegateMap.erase(itFind);
+            }
+        }
+        else
+        {
+            FCLuaDelegate *DelegateList = itFind->second;
+            while(DelegateList)
+            {
+                if(DelegateList->m_pNextDelegate == Delegate)
+                {
+                    DelegateList->m_pNextDelegate = Delegate->m_pNextDelegate;
+                    break;
+                }
+                DelegateList = DelegateList->m_pNextDelegate;
+            }
         }
     }
 }
@@ -184,7 +293,7 @@ void  FCDynamicDelegateManager::DeleteDelegateList(FCLuaDelegate* Delegate)
     while(Delegate)
     {
         FCLuaDelegate *Ptr = Delegate;
-        EraseDelegatePtr(m_UEFuncAddr2DelegateMap, Delegate, Delegate->Function);
+        EraseFuncAddr2Delegete(Delegate, Delegate->Function);
         EraseDelegatePtr(m_FuncAdr2DelegateMap, Delegate, Delegate->FunctionAddr);
 
         Delegate = Delegate->m_pNext;
@@ -228,52 +337,48 @@ void FCDynamicDelegateManager::MakeScriptDelegate(FCLuaDelegate* Delegate, const
 
     UClass* OuterClass = Outer->GetClass();
     FDelegateProperty  *DelegateProperty = (FDelegateProperty *)DynamicProperty->Property;
-    UFunction *Function = DelegateProperty->SignatureFunction;
-
-    UFunction *OldFunction = OuterClass->FindFunctionByName(FuncName);
-
-    FObjectDuplicationParameters DuplicationParams(Function, OuterClass);
-    DuplicationParams.InternalFlagMask &= ~EInternalObjectFlags::Native;
-    DuplicationParams.DestName = FuncName;
-    DuplicationParams.DestClass = UFCLuaFunction::StaticClass();
-    DuplicationParams.ApplyFlags |= RF_ClassDefaultObject;
-    UFunction *LuaFunction = static_cast<UFunction*>(StaticDuplicateObjectEx(DuplicationParams));
-    LuaFunction->FunctionFlags |= FUNC_Native;
-    LuaFunction->ClearInternalFlags(EInternalObjectFlags::Native);
-    LuaFunction->SetNativeFunc(FCDynamicDelegate_CallLua);
-
-    LuaFunction->SetSuperStruct(Function->GetSuperStruct());
-
-    if (!FPlatformProperties::RequiresCookedData())
-        UMetaData::CopyMetadata(Function, LuaFunction);
-            
-    // 这个只能Link一次
-    CAdr2FlagsMap::const_iterator itLink = m_FuncLinkFlagMap.find(Function);
-    if(itLink == m_FuncLinkFlagMap.end())
-        LuaFunction->StaticLink(true);
-    else
-    {
-        //FArchive  Ar;
-        //LuaFunction->Link(Ar, false);
-    }
-
-    m_FuncLinkFlagMap[Function] = true;
-
-    if(LuaFunction->NumParms != Function->NumParms)
-    {
-        LuaFunction->NumParms = Function->NumParms;
-        LuaFunction->ParmsSize = Function->ParmsSize;
-        LuaFunction->ReturnValueOffset = Function->ReturnValueOffset;
-        LuaFunction->RPCId = Function->RPCId;
-        LuaFunction->RPCResponseId = Function->RPCResponseId;
-    }
-
-    OuterClass->AddFunctionToFunctionMap(LuaFunction, FuncName);
+    UFunction* LuaFunction = MakeReplaceFunction(DelegateProperty->SignatureFunction, OuterClass, FuncName, FCDynamicDelegate_CallLua);
 
     Delegate->Delegate.BindUFunction(Outer, FuncName);
     Delegate->Function = LuaFunction;
     Delegate->OuterClass = OuterClass;
 };
+
+UFunction* FCDynamicDelegateManager::MakeReplaceFunction(UFunction* SrcFunction, UClass* OuterClass, const FName& NewFuncName, FNativeFuncPtr InFunc)
+{
+    UFunction* LuaFunction = OuterClass->FindFunctionByName(NewFuncName);
+    if(!LuaFunction)
+    {
+        FObjectDuplicationParameters DuplicationParams(SrcFunction, OuterClass);
+        DuplicationParams.InternalFlagMask &= ~EInternalObjectFlags::Native;
+        DuplicationParams.DestName = NewFuncName;
+        DuplicationParams.DestClass = UFCLuaFunction::StaticClass();
+        LuaFunction = static_cast<UFunction*>(StaticDuplicateObjectEx(DuplicationParams));
+        LuaFunction->FunctionFlags |= FUNC_Native;
+        LuaFunction->ClearInternalFlags(EInternalObjectFlags::Native);
+        LuaFunction->SetNativeFunc(InFunc);
+
+        LuaFunction->SetSuperStruct(SrcFunction->GetSuperStruct());
+
+        if (!FPlatformProperties::RequiresCookedData())
+            UMetaData::CopyMetadata(SrcFunction, LuaFunction);
+
+        LuaFunction->StaticLink(true);
+
+        OuterClass->AddFunctionToFunctionMap(LuaFunction, NewFuncName);
+    }
+
+    // 如果当前函数与来源的函数参数不一样，修复一下
+    if (LuaFunction->NumParms != SrcFunction->NumParms)
+    {
+        LuaFunction->NumParms = SrcFunction->NumParms;
+        LuaFunction->ParmsSize = SrcFunction->ParmsSize;
+        LuaFunction->ReturnValueOffset = SrcFunction->ReturnValueOffset;
+        LuaFunction->RPCId = SrcFunction->RPCId;
+        LuaFunction->RPCResponseId = SrcFunction->RPCResponseId;
+    }
+    return LuaFunction;
+}
 
 void FCDynamicDelegate_CallLua(UObject* Context, FFrame& TheStack, RESULT_DECL)
 {
@@ -287,11 +392,37 @@ void FCDynamicDelegate_CallLua(UObject* Context, FFrame& TheStack, RESULT_DECL)
         bool bUnpackParams = false;
         UFunction* Func = FirstNative(Context, TheStack, bUnpackParams);
         FCLuaDelegate* Delegate = FCDynamicDelegateManager::GetIns().FindDelegateByFunction(Func);
-        if (!Delegate)
+        bool bInitParam = false;
+        bool bZeroParam = false;
+
+        while(Delegate)
         {
-            return;
+            if(Delegate->bNoneCallByZeroParam)
+            {
+                if(!bInitParam)
+                {
+                    bInitParam = true;
+                    if (Delegate->DynamicFunc->m_Property.size() == 1)
+                    {
+                        FCDynamicFunctionParam* DynamicProperty = Delegate->DynamicFunc->m_Property.data();
+                        float* ParamValue = (float*)(TheStack.Locals + DynamicProperty->Offset_Internal);
+                        if (*ParamValue == 0)
+                        {
+                            bZeroParam = true;
+                        }
+                    }
+                }
+                if (!bZeroParam)
+                {
+                    FCCallScriptDelegate(ScriptContext, Delegate->Object, Delegate->ScriptIns, *Delegate, Delegate->DynamicFunc, TheStack);
+                }
+            }
+            else
+            {
+                FCCallScriptDelegate(ScriptContext, Delegate->Object, Delegate->ScriptIns, *Delegate, Delegate->DynamicFunc, TheStack);
+            }
+
+            Delegate = Delegate->m_pNextDelegate;
         }
-        Object = Delegate->Object;
-        FCCallScriptDelegate(ScriptContext, Object, Delegate->ScriptIns, *Delegate, Delegate->DynamicFunc, TheStack);
     }
 }

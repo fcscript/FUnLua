@@ -86,6 +86,16 @@ bool UnLuaOverride_IsRPCName(const char *FuncName, int Len)
     return false;
 }
 
+bool UnLuaOverride_IsAniNotify(const char *FuncName, int Len)
+{
+    // AnimNotify_
+    if(Len >11)
+    {
+        return memcmp(FuncName, "AnimNotify_", 11) == 0;
+    }
+    return false;
+}
+
 void UnLuaOverride_Callback(lua_State* L, int Index, void* UserData)
 {
 	FUnluaOverrideCallInfo* CallInfo = (FUnluaOverrideCallInfo*)UserData;
@@ -112,9 +122,16 @@ void UnLuaOverride_Callback(lua_State* L, int Index, void* UserData)
         {
             const FCDynamicFunction* DynamicFunction = CallInfo->ClassDesc->FindFunctionByName(FuncName);
             if (DynamicFunction)
-            {
+            {                
                 FFCObjectdManager::GetSingleIns()->RegisterOverrideFunc(CallInfo->Object, CallInfo->BindInfo->m_ScriptIns, FuncName);
             }
+            //else if (UnLuaOverride_IsAniNotify(FuncName, Len))  // 这个感觉没有必要，在蓝图添加一个接口，然后Overriden就可以了
+            //{
+            //    if (CallInfo->Object->GetClass()->IsChildOf<UAnimInstance>())
+            //    {
+
+            //    }
+            //}
         }
 	}
 }

@@ -34,7 +34,8 @@ enum FCPropertyType
 	FCPROPERTY_StrProperty,     // FString
 	FCPROPERTY_TextProperty,    // FText
 	FCPROPERTY_Property,        // 
-	FCPROPERTY_ObjectProperty,  // UObject*  // CPT_ObjectReference // CPT_WeakObjectReference // CPT_LazyObjectReference
+	FCPROPERTY_ObjectProperty,  // UObject* // FObjPtr(TObjectPtr<class>) //   // CPT_ObjectReference // CPT_WeakObjectReference // CPT_LazyObjectReference
+    FCPROPERTY_ObjectPtrProperty,  // TObjectPtr<class> // FObjPtr
 	FCPROPERTY_WeakObjectPtr,   // FWeakObjectProperty, TWeakObjectPtr<_Ty>, FWeakObjectPtr
 	FCPROPERTY_LazyObjectPtr,   // FLazyObjectProperty, TLazyObjectPtr<_Ty>, FLazyObjectPtr
 	FCPROPERTY_Interface,       // FInterfaceProperty

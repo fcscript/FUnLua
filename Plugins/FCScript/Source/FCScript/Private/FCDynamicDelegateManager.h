@@ -5,13 +5,15 @@
 struct FCLuaDelegate : public FCDelegateInfo
 {
     FCLuaDelegate* m_pNext;  // 同一个UObect下面的
+    FCLuaDelegate* m_pNextDelegate;
     UClass* OuterClass;
     UFunction* Function;
     FScriptDelegate  Delegate;
     UObject *Object; // 脚本中的来源对象
     UObject *Outer;  // 当前的Outer对象
     int   ScriptIns;
-    FCLuaDelegate():m_pNext(nullptr), OuterClass(nullptr), Function(nullptr), Object(nullptr), Outer(nullptr), ScriptIns(0)
+    bool  bNoneCallByZeroParam;
+    FCLuaDelegate():m_pNext(nullptr), m_pNextDelegate(nullptr), OuterClass(nullptr), Function(nullptr), Object(nullptr), Outer(nullptr), ScriptIns(0), bNoneCallByZeroParam(false)
     {
     }
 };
@@ -27,7 +29,8 @@ public:
     static FCDynamicDelegateManager &GetIns();
 public:
     // 功能：生成一个Lua函数的委托对象(如果没有Object对象，就是纯Lua函数)
-    FCLuaDelegate* MakeLuaDelegate(UObject* Object, lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty);
+    FCLuaDelegate* MakeLuaDelegate(UObject* Object, UObject* Outer, lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty);
+    UObject* OverridenLuaFunction(UObject* Object, UObject* Outer, lua_State* L, int ScriptIns, UFunction* ActionFunc, const FName& FuncName, bool bNoneCallByZeroParam);
     // 功能：通过函数地址一个委托对象
     void   DeleteLuaDelegateByFuncAddr(const void* LuaFuncAddr);
 
@@ -46,14 +49,21 @@ public:
             return nullptr;
     }
 protected:
+    void  AddBindLuaFunction(FCLuaDelegate *Delegate, UObject* Object, const void* LuaFuncAddr);
     FCDynamicOverrideFunction *GetDynamicFunction(UFunction* Function);
     FCDynamicProperty  *GetDynamicProperty(const FProperty* InProperty, const char* InName = nullptr);
 
     void  EraseDelegatePtr(CAdr2DelegateMap &PtrMap, FCLuaDelegate* Delegate, const void *Key);
+    void  EraseFuncAddr2Delegete(FCLuaDelegate* Delegate, const void* Key);
 
     void  DeleteDelegateList(FCLuaDelegate* Delegate);
     void  DeleteLuaDelegate(FCLuaDelegate* Delegate);
     void  MakeScriptDelegate(FCLuaDelegate *Delegate, const void *LuaFuncAddr, UObject* Outer, const FCDynamicPropertyBase* DynamicProperty);
+    // 生成一个替换的接口
+    // SrcFunction - 来源函数
+    // OuterClass - 来源UClass
+    // NewFuncName - 新的函数名
+    UFunction *  MakeReplaceFunction(UFunction *SrcFunction, UClass* OuterClass, const FName &NewFuncName, FNativeFuncPtr InFunc);
 protected:
     CAdr2DelegateMap   m_FuncAdr2DelegateMap;
     CAdr2DelegateMap   m_Object2ChildMap;

@@ -172,6 +172,16 @@ void  PushScriptUObject(lua_State* L, const FCDynamicPropertyBase *DynamicProper
 	FCScript::PushUObject(L, value);
 }
 
+void PushScriptObjectPtr(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    // 直接这样也行，更高效，与下面的功能是一样的
+    UObject* value = *((UObject**)ValueAddr);
+    FCScript::PushUObject(L, value);
+
+    //FObjectPtr  *value = (FObjectPtr*)ValueAddr;
+    //FCScript::PushUObject(L, value->Get());
+}
+
 void  PushScriptCppPtr(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
 	int64 ObjID = FCGetObj::GetIns()->PushCppPtr(ValueAddr);
@@ -399,6 +409,9 @@ LPPushScriptValueFunc  InitDynamicPropertyWriteFunc(FCPropertyType Flag)
 		case FCPROPERTY_ObjectProperty:
             WriteFunc = PushScriptUObject;
 			break;
+        case FCPROPERTY_ObjectPtrProperty:
+            WriteFunc = PushScriptObjectPtr;
+            break;
 		case FCPROPERTY_WeakObjectPtr:
             WriteFunc = PushScriptWeakObject;
 			break;
@@ -588,6 +601,31 @@ void  ReadScriptUObject(lua_State* L, int ValueIdx, const FCDynamicPropertyBase 
     {
         *((UObject**)ValueAddr) = nullptr;
         ReportLuaError(L, "invalid object param, cast to nullptr");
+    }
+}
+
+void  ReadScriptObjectPtr(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FObjectPtr  *DesValue = (FObjectPtr *)ValueAddr;
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
+    if(DynamicProperty->Type == FCPropertyType::FCPROPERTY_ObjectPtrProperty)
+    {
+        if(ObjRef && ObjRef->IsValid())
+        {
+            *DesValue = (FObjectPtr*)ObjRef->GetPropertyAddr();
+        }
+        else
+        {
+            *DesValue = nullptr;
+        }
+    }
+    else if(ObjRef && ObjRef->IsValid())
+    {
+        *DesValue = ObjRef->GetUObject();
+    }
+    else
+    {
+        *DesValue = nullptr;
     }
 }
 
@@ -857,7 +895,7 @@ void ReadScriptDelegate(lua_State* L, int ValueIdx, const FCDynamicPropertyBase*
     if (LUA_TFUNCTION == Type)
     {
         const void *FuncAddr = lua_topointer(L, ValueIdx);  // 单纯的绑定一个函数，无法确认名字，但可以用函数地址做函数名, 如果该对象释放，则这个函数也释放
-        FCLuaDelegate *LuaDelegate = FCDynamicDelegateManager::GetIns().MakeLuaDelegate(nullptr, L, ValueIdx, DynamicProperty);
+        FCLuaDelegate *LuaDelegate = FCDynamicDelegateManager::GetIns().MakeLuaDelegate(nullptr, nullptr, L, ValueIdx, DynamicProperty);
         *Delegate = LuaDelegate->Delegate;
     }
     else
@@ -916,6 +954,9 @@ LPOuterScriptValueFunc  InitDynamicPropertyReadFunc(FCPropertyType Flag)
 		case FCPROPERTY_ObjectProperty:
             ReadScriptFunc = ReadScriptUObject;
 			break;
+        case FCPROPERTY_ObjectPtrProperty:
+            ReadScriptFunc = ReadScriptObjectPtr;
+            break;
 		case FCPROPERTY_WeakObjectPtr:
             ReadScriptFunc = ReadScriptWeakObject;
 			break;

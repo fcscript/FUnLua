@@ -139,6 +139,7 @@ FCDynamicOverrideFunction *FFCObjectdManager::RegisterReceiveBeginPlayFunction(U
 	if(ClassFunc)
 	{
 		FNativeFuncPtr OleNativeFuncPtr = ClassFunc->Function->GetNativeFunc();
+        FCDynamicBindScript(InObject);
 		FCDynamicOverrideFunction *DynamicFunc = ToOverrideFunction(InObject, ClassFunc->Function, FCDynamicOverrideBeginBeginPlay, EX_CallFCBeginPlay);
 		return DynamicFunc;
 	}
@@ -243,11 +244,16 @@ int  FFCObjectdManager::NativeCall(UObject* InObject, FCDynamicFunction* Dynamic
 		{
 			return 0;
 		}
+        // 如果没有原生的函数，空的蓝图的接口
+        if (OverideFunc->m_NativeScript.IsEmpty() && OverideFunc->Function->Script.Num() == 5)
+        {
+            return 0;
+        }
 		OverideFunc->m_bLockCall = true;
 		FNativeFuncPtr OldFuncPtr = OverideFunc->Function->GetNativeFunc();
 		TArray<uint8>& Script = OverideFunc->Function->Script;
-		Script[0] = EX_Nothing;
-		Script[1] = EX_Nothing;
+		Script[0] = EX_Nothing;        
+        Script[1] = EX_Nothing;
 		Script[3] = EX_Nothing;
 		RetCount = WrapNativeCallFunction(L, nStart, InObject, OverideFunc, Buffer, sizeof(Buffer), OverideFunc->OleNativeFuncPtr);
 		Script[0] = OverideFunc->m_NativeBytecodeIndex;

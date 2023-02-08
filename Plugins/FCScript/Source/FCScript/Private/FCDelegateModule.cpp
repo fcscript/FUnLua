@@ -16,6 +16,7 @@
 #include "FCScriptDelegates.h"
 #include "FCDefaultParam.h"
 #include "FCDynamicDelegateManager.h"
+#include "FCInputReplace.h"
 
 #include "Interfaces/IPluginManager.h"
 
@@ -252,7 +253,6 @@ void FFCDelegateModule::NotifyUObjectCreated(const class UObjectBase *InObject, 
 		if (Actor && Actor->GetLocalRole() >= ROLE_AutonomousProxy)
 		{
 			CandidateInputComponents.AddUnique((UInputComponent*)InObject);
-            FCObjectUseFlag::GetIns().Ref(InObject);
 			if (!FWorldDelegates::OnWorldTickStart.IsBoundToObject(this))
 			{
 				OnWorldTickStartHandle = FWorldDelegates::OnWorldTickStart.AddRaw(this, &FFCDelegateModule::OnWorldTickStart);
@@ -364,6 +364,7 @@ void FFCDelegateModule::Shutdown()
 	ReleaseTempalteProperty();
     ClearAllDefaultValue();
 	FFCObjectdManager::GetSingleIns()->Clear();
+    FCInputReplace::GetIns().Clear();
     if(L)
     {
         lua_gc(L, LUA_GCCOLLECT, 0);
@@ -532,6 +533,23 @@ void FFCDelegateModule::OnWorldTickStart(UWorld *World, ELevelTick TickType, flo
 void FFCDelegateModule::OnWorldTickStart(ELevelTick TickType, float DeltaTime)
 #endif
 {
+    for (UInputComponent* InputComponent : CandidateInputComponents)
+    {
+        if (!InputComponent->IsRegistered())
+            continue;
+
+#if ENGINE_MAJOR_VERSION >=5
+        if (!IsValid(InputComponent))
+            continue;
+#else
+        if (InputComponent->IsPendingKill())
+            continue;
+#endif
+        AActor* Actor = Cast<AActor>(InputComponent->GetOuter());
+        // 这里覆写按键等输入事件
+        FCInputReplace::GetIns().ReplaceInputs(Actor, InputComponent); // try to replace/override input events
+    }
+
     CandidateInputComponents.Empty();
     FWorldDelegates::OnWorldTickStart.Remove(OnWorldTickStartHandle);
 }

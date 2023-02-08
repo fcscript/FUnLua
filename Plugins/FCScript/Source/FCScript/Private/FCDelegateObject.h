@@ -16,4 +16,34 @@ public:
 public:
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "DelegateHelper"))
     void OnDelegateExcute();
+public:
+    UFUNCTION(BlueprintImplementableEvent)
+    void EnhancedInputActionDigital(bool ActionValue, float ElapsedSeconds, float TriggeredSeconds);
+
+    UFUNCTION(BlueprintImplementableEvent)
+    void EnhancedInputActionAxis1D(float ActionValue, float ElapsedSeconds, float TriggeredSeconds);
+
+    UFUNCTION(BlueprintImplementableEvent)
+    void EnhancedInputActionAxis2D(const FVector2D& ActionValue, float ElapsedSeconds, float TriggeredSeconds);
+
+    UFUNCTION(BlueprintImplementableEvent)
+    void EnhancedInputActionAxis3D(const FVector& ActionValue, float ElapsedSeconds, float TriggeredSeconds);
+
+    UFUNCTION(BlueprintImplementableEvent)
+    void InputAction(FKey Key);
+
+    UFUNCTION(BlueprintImplementableEvent)
+    void InputAxis(float AxisValue);
+
+    UFUNCTION(BlueprintImplementableEvent)
+    void InputTouch(ETouchIndex::Type FingerIndex, const FVector& Location);
+
+    UFUNCTION(BlueprintImplementableEvent)
+    void InputVectorAxis(const FVector& AxisValue);
+
+    UFUNCTION(BlueprintImplementableEvent)
+    void InputGesture(float Value);
+
+    UFUNCTION(BlueprintImplementableEvent)
+    void TriggerAnimNotify();
 };
