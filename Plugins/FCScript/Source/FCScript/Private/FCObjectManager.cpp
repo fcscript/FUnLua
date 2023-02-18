@@ -182,32 +182,41 @@ FCDynamicOverrideFunction * FFCObjectdManager::RegisterOverrideFunc(UObject *InO
 FCDynamicOverrideFunction * FFCObjectdManager::ToOverrideFunction(UObject *InObject, UFunction *InFunction, FNativeFuncPtr InFuncPtr, int InNativeBytecodeIndex)
 {
 	COverrideFunctionMap::iterator itFunc = m_OverrideFunctionMap.find(InFunction);
+    FCDynamicOverrideFunction* DynamicFunc = nullptr;
 	if(itFunc != m_OverrideFunctionMap.end())
 	{
-		return itFunc->second;
+        DynamicFunc = itFunc->second;
 	}
-	FCDynamicOverrideFunction * DynamicFunc = new FCDynamicOverrideFunction();
-	DynamicFunc->InitParam(InFunction);
-	DynamicFunc->OleNativeFuncPtr = InFunction->GetNativeFunc();
-	DynamicFunc->CurOverrideFuncPtr = InFuncPtr;
-	DynamicFunc->m_NativeBytecodeIndex = InNativeBytecodeIndex;
-	DynamicFunc->m_NativeScript = InFunction->Script;
-    DynamicFunc->LuaFunctionMame = DynamicFunc->Name;
-    DynamicFunc->m_bNeedRestoreNative = true;
+    else
+    {
+        DynamicFunc = new FCDynamicOverrideFunction();
+        DynamicFunc->InitParam(InFunction);
+        DynamicFunc->OleNativeFuncPtr = InFunction->GetNativeFunc();
+        DynamicFunc->CurOverrideFuncPtr = InFuncPtr;
+        DynamicFunc->m_NativeBytecodeIndex = InNativeBytecodeIndex;
+        DynamicFunc->m_NativeScript = InFunction->Script;
+        DynamicFunc->LuaFunctionMame = DynamicFunc->Name;
 
-	TArray<uint8> Script;
-	Script.Add(InNativeBytecodeIndex);
-	Script.Add(EX_Return);
-	Script.Add(EX_Nothing);
-	Script.Add(EX_Return);
-	Script.Add(EX_Nothing);
-	Script += DynamicFunc->m_NativeScript;
+        m_OverrideFunctionMap[InFunction] = DynamicFunc;
+    }
 
-	InFunction->Script.Empty();
-	InFunction->Script = Script;
+    if(!DynamicFunc->m_bNeedRestoreNative)
+    {
+        DynamicFunc->m_bNeedRestoreNative = true;
 
-	InFunction->SetNativeFunc(InFuncPtr);
-	m_OverrideFunctionMap[InFunction] = DynamicFunc;
+        TArray<uint8> Script;
+        Script.Add(InNativeBytecodeIndex);
+        Script.Add(EX_Return);
+        Script.Add(EX_Nothing);
+        Script.Add(EX_Return);
+        Script.Add(EX_Nothing);
+        Script += DynamicFunc->m_NativeScript;
+
+        InFunction->Script.Empty();
+        InFunction->Script = Script;
+
+        InFunction->SetNativeFunc(InFuncPtr);
+    }
 
 	return DynamicFunc;
 }
