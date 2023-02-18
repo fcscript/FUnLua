@@ -156,8 +156,9 @@ struct FCDynamicOverrideFunction : public FCDynamicFunction
     const char*      LuaFunctionMame; // Lua端的函数名(RPC)
 	int              m_NativeBytecodeIndex;
 	bool             m_bLockCall;
+    bool             m_bNeedRestoreNative;
 	TArray<uint8>    m_NativeScript;
-	FCDynamicOverrideFunction() : OleNativeFuncPtr(nullptr), CurOverrideFuncPtr(nullptr), LuaFunctionMame(nullptr), m_NativeBytecodeIndex(0), m_bLockCall(false)
+	FCDynamicOverrideFunction() : OleNativeFuncPtr(nullptr), CurOverrideFuncPtr(nullptr), LuaFunctionMame(nullptr), m_NativeBytecodeIndex(0), m_bLockCall(false), m_bNeedRestoreNative(false)
 	{
 	}
     const char *GetLuaFunctionName() const

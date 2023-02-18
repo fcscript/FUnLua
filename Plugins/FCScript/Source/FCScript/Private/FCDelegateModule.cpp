@@ -358,8 +358,8 @@ void FFCDelegateModule::Shutdown()
 	lua_State* L = GetClientScriptContext()->m_LuaState;
 	FCScriptDelegates::OnLuaStateStart.Broadcast(L);
 
-    FCDynamicDelegateManager::GetIns().Clear();
 	FCGetObj::GetIns()->Clear();
+    FCDynamicDelegateManager::GetIns().Clear();
 	FCRefObjCache::GetIns()->Clear();
 	ReleaseTempalteProperty();
     ClearAllDefaultValue();

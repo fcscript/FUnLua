@@ -45,9 +45,9 @@ int FCRotatorWrap::LibOpen_wrap(lua_State* L)
     };
     const LuaRegAttrib LibAttrib[] =
     {
-        { "Pitch", Vector_GetFloat<FRotator, 0>, Vector_SetFloat<FRotator, 0> },
-        { "Yaw",   Vector_GetFloat<FRotator, 1>, Vector_SetFloat<FRotator, 1> },
-        { "Roll",  Vector_GetFloat<FRotator, 2>, Vector_SetFloat<FRotator, 2> },
+        { "Pitch", GetPitch_wrap, SetPitch_wrap },
+        { "Yaw",   GetYaw_wrap, SetYaw_wrap },
+        { "Roll",  GetRoll_wrap, SetRoll_wrap },
         { nullptr, nullptr, nullptr }
     };
     const LuaRegFunc LibTable[] =
@@ -199,6 +199,51 @@ int FCRotatorWrap::MakeFromEuler_wrap(lua_State* L)
     return 1;
 }
 
+int FCRotatorWrap::GetPitch_wrap(lua_State* L)
+{
+    FRotator* A = (FRotator*)VectorBase_GetAddr(L, 1, "FRotator");
+    lua_pushnumber(L, A ? A->Pitch : 0);
+    return 1;
+}
+int FCRotatorWrap::GetYaw_wrap(lua_State* L)
+{
+    FRotator* A = (FRotator*)VectorBase_GetAddr(L, 1, "FRotator");
+    lua_pushnumber(L, A ? A->Yaw : 0);
+    return 1;
+}
+int FCRotatorWrap::GetRoll_wrap(lua_State* L)
+{
+    FRotator* A = (FRotator*)VectorBase_GetAddr(L, 1, "FRotator");
+    lua_pushnumber(L, A ? A->Roll : 0);
+    return 1;
+}
+int FCRotatorWrap::SetPitch_wrap(lua_State* L)
+{
+    FRotator* A = (FRotator*)VectorBase_GetAddr(L, 1, "FRotator");
+    if(A)
+    {
+        A->Pitch = lua_tonumber(L, 3);
+    }
+    return 0;
+}
+int FCRotatorWrap::SetYaw_wrap(lua_State* L)
+{
+    FRotator* A = (FRotator*)VectorBase_GetAddr(L, 1, "FRotator");
+    if (A)
+    {
+        A->Yaw = lua_tonumber(L, 3);
+    }
+    return 0;
+}
+int FCRotatorWrap::SetRoll_wrap(lua_State* L)
+{
+    FRotator* A = (FRotator*)VectorBase_GetAddr(L, 1, "FRotator");
+    if (A)
+    {
+        A->Roll = lua_tonumber(L, 3);
+    }
+    return 0;
+}
 int FCRotatorWrap::tostring_wrap(lua_State* L)
 {
     FRotator* A = (FRotator*)VectorBase_GetAddr(L, 1);

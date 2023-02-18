@@ -193,6 +193,7 @@ FCDynamicOverrideFunction * FFCObjectdManager::ToOverrideFunction(UObject *InObj
 	DynamicFunc->m_NativeBytecodeIndex = InNativeBytecodeIndex;
 	DynamicFunc->m_NativeScript = InFunction->Script;
     DynamicFunc->LuaFunctionMame = DynamicFunc->Name;
+    DynamicFunc->m_bNeedRestoreNative = true;
 
 	TArray<uint8> Script;
 	Script.Add(InNativeBytecodeIndex);
@@ -453,12 +454,19 @@ void  FFCObjectdManager::ClearObjectDelegate(const class UObjectBase *Object)
 			if(Ref <= 0)
 			{
 				// 没有地方引用了, 需要还原NativeFuncPtr
-				Func->Script = Info.DynamicFunc->m_NativeScript;
-				Func->SetNativeFunc(Info.DynamicFunc->OleNativeFuncPtr);
+                if(Info.DynamicFunc->m_bNeedRestoreNative)
+                {
+                    Info.DynamicFunc->m_bNeedRestoreNative = false;
+                    Func->Script = Info.DynamicFunc->m_NativeScript;
+                    Func->SetNativeFunc(Info.DynamicFunc->OleNativeFuncPtr);
 
-				RemoveDelegateFromClass(Info.DynamicFunc, Class);
-				m_OverrideFunctionMap.erase(Func);
-				delete Info.DynamicFunc;
+                    RemoveDelegateFromClass(Info.DynamicFunc, Class);
+                }
+
+                // 不要立即释放，因为可能还有地方引用这个，在Clear时延迟释放吧
+
+				//m_OverrideFunctionMap.erase(Func);
+				//delete Info.DynamicFunc;
 			}
 		}
 		m_ObjectDelegateMap.erase(itDelegateList);
@@ -538,9 +546,13 @@ void  FFCObjectdManager::ClearAllDynamicFunction()
 	for (COverrideFunctionMap::iterator itOverride = m_OverrideFunctionMap.begin(); itOverride != m_OverrideFunctionMap.end(); ++itOverride)
 	{
 		FCDynamicOverrideFunction* DynamicFunc = itOverride->second;
-		UFunction* NativeFunction = DynamicFunc->Function;
-		NativeFunction->Script = DynamicFunc->m_NativeScript;
-		NativeFunction->SetNativeFunc(DynamicFunc->OleNativeFuncPtr);
+        if(DynamicFunc->m_bNeedRestoreNative)
+        {
+            DynamicFunc->m_bNeedRestoreNative = false;
+            UFunction* NativeFunction = DynamicFunc->Function;
+            NativeFunction->Script = DynamicFunc->m_NativeScript;
+            NativeFunction->SetNativeFunc(DynamicFunc->OleNativeFuncPtr);
+        }
 	}
 	ReleasePtrMap(m_OverrideFunctionMap);
 

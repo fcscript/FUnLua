@@ -314,11 +314,100 @@ int Vector_GetIntValue(lua_State* L)
 	return 1;
 }
 
+template <class _Ty>
+int Vector_GetX(lua_State* L)
+{
+    const char* ClassName = FCScript::ExtractTypeName(_Ty());
+    _Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
+    lua_pushnumber(L, A ? A->X : 0);
+    return 1;
+}
+
+template <class _Ty>
+int Vector_GetY(lua_State* L)
+{
+    const char* ClassName = FCScript::ExtractTypeName(_Ty());
+    _Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
+    lua_pushnumber(L, A ? A->Y : 0);
+    return 1;
+}
+
+template <class _Ty>
+int Vector_GetZ(lua_State* L)
+{
+    const char* ClassName = FCScript::ExtractTypeName(_Ty());
+    _Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
+    lua_pushnumber(L, A ? A->Z : 0);
+    return 1;
+}
+
+template <class _Ty>
+int Vector_GetW(lua_State* L)
+{
+    const char* ClassName = FCScript::ExtractTypeName(_Ty());
+    _Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
+    lua_pushnumber(L, A ? A->W : 0);
+    return 1;
+}
+
+template <class _Ty>
+int Vector_SetX(lua_State* L)
+{
+    // A->X = value
+    const char* ClassName = FCScript::ExtractTypeName(_Ty());
+    _Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
+    if(A)
+    {
+        A->X = lua_tonumber(L, 3);
+    }
+    return 0;
+}
+
+template <class _Ty>
+int Vector_SetY(lua_State* L)
+{
+    // A->X = value
+    const char* ClassName = FCScript::ExtractTypeName(_Ty());
+    _Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
+    if (A)
+    {
+        A->Y = lua_tonumber(L, 3);
+    }
+    return 0;
+}
+
+template <class _Ty>
+int Vector_SetZ(lua_State* L)
+{
+    // A->X = value
+    const char* ClassName = FCScript::ExtractTypeName(_Ty());
+    _Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
+    if (A)
+    {
+        A->Z = lua_tonumber(L, 3);
+    }
+    return 0;
+}
+
+template <class _Ty>
+int Vector_SetW(lua_State* L)
+{
+    // A->X = value
+    const char* ClassName = FCScript::ExtractTypeName(_Ty());
+    _Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
+    if (A)
+    {
+        A->W = lua_tonumber(L, 3);
+    }
+    return 0;
+}
+
+
 template <class _Ty, int MemberIndex>
 int Vector_GetFloat(lua_State* L)
 {
     const char* ClassName = FCScript::ExtractTypeName(_Ty());
-	float* A = (float*)VectorBase_GetAddr(L, 1, ClassName);
+    float* A = (float*)VectorBase_GetAddr(L, 1, ClassName);
 	lua_pushnumber(L, A ? A[MemberIndex] : 0);
 	return 1;
 }
@@ -328,11 +417,10 @@ int Vector_SetFloat(lua_State* L)
 {
 	// (table, key, value)
     const char* ClassName = FCScript::ExtractTypeName(_Ty());
-	float* A = (float*)VectorBase_GetAddr(L, 1, ClassName);
-	float Value = lua_tonumber(L, 3);
+    FLargeWorldCoordinatesReal* A = (FLargeWorldCoordinatesReal*)VectorBase_GetAddr(L, 1, ClassName);
 	if (A)
 	{
-		A[MemberIndex] = Value;
+		A[MemberIndex] = lua_tonumber(L, 3);
 	}
 	return 0;
 }

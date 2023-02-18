@@ -31,10 +31,10 @@ int FCLinearColorWrap::LibOpen_wrap(lua_State* L)
     };
     const LuaRegAttrib LibAttrib[] =
     {
-        { "R", Vector_GetFloat<FLinearColor, 0>, Vector_SetFloat<FLinearColor, 0> },
-        { "G", Vector_GetFloat<FLinearColor, 1>, Vector_SetFloat<FLinearColor, 1> },
-        { "B", Vector_GetFloat<FLinearColor, 2>, Vector_SetFloat<FLinearColor, 2> },
-        { "A", Vector_GetFloat<FLinearColor, 3>, Vector_SetFloat<FLinearColor, 3> },
+        { "R", GetR_wrap, SetR_wrap },
+        { "G", GetG_wrap, SetG_wrap },
+        { "B", GetB_wrap, SetB_wrap },
+        { "A", GetA_wrap, SetA_wrap },
         { nullptr, nullptr, nullptr }
     };
     const LuaRegFunc LibTable[] =
@@ -102,7 +102,7 @@ int FCLinearColorWrap::ToFColor_wrap(lua_State* L)
 
 int FCLinearColorWrap::Clamp_wrap(lua_State* L)
 {
-    FLinearColor* A = (FLinearColor*)VectorBase_GetAddr(L, 1);
+    FLinearColor* A = (FLinearColor*)VectorBase_GetAddr(L, 1, "FLinearColor");
     FLinearColor V;
     if (A)
     {
@@ -110,6 +110,67 @@ int FCLinearColorWrap::Clamp_wrap(lua_State* L)
     }
     FCScript::SetArgValue(L, V);
     return 1;
+}
+
+int FCLinearColorWrap::GetR_wrap(lua_State* L)
+{
+    FLinearColor* A = (FLinearColor*)VectorBase_GetAddr(L, 1, "FLinearColor");
+    lua_pushnumber(L, A ? A->R : 0);
+    return 1;
+}
+int FCLinearColorWrap::GetG_wrap(lua_State* L)
+{
+    FLinearColor* A = (FLinearColor*)VectorBase_GetAddr(L, 1, "FLinearColor");
+    lua_pushnumber(L, A ? A->G : 0);
+    return 1;
+}
+int FCLinearColorWrap::GetB_wrap(lua_State* L)
+{
+    FLinearColor* A = (FLinearColor*)VectorBase_GetAddr(L, 1, "FLinearColor");
+    lua_pushnumber(L, A ? A->B : 0);
+    return 1;
+}
+int FCLinearColorWrap::GetA_wrap(lua_State* L)
+{
+    FLinearColor* A = (FLinearColor*)VectorBase_GetAddr(L, 1, "FLinearColor");
+    lua_pushnumber(L, A ? A->A : 0);
+    return 1;
+}
+int FCLinearColorWrap::SetR_wrap(lua_State* L)
+{
+    FLinearColor* A = (FLinearColor*)VectorBase_GetAddr(L, 1, "FLinearColor");
+    if(A)
+    {
+        A->R = lua_tonumber(L, 3);
+    }
+    return 0;
+}
+int FCLinearColorWrap::SetG_wrap(lua_State* L)
+{
+    FLinearColor* A = (FLinearColor*)VectorBase_GetAddr(L, 1, "FLinearColor");
+    if (A)
+    {
+        A->G = lua_tonumber(L, 3);
+    }
+    return 0;
+}
+int FCLinearColorWrap::SetB_wrap(lua_State* L)
+{
+    FLinearColor* A = (FLinearColor*)VectorBase_GetAddr(L, 1, "FLinearColor");
+    if (A)
+    {
+        A->B = lua_tonumber(L, 3);
+    }
+    return 0;
+}
+int FCLinearColorWrap::SetA_wrap(lua_State* L)
+{
+    FLinearColor* A = (FLinearColor*)VectorBase_GetAddr(L, 1, "FLinearColor");
+    if (A)
+    {
+        A->A = lua_tonumber(L, 3);
+    }
+    return 0;
 }
 
 int FCLinearColorWrap::tostring_wrap(lua_State* L)

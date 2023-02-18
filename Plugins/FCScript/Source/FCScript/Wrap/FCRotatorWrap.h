@@ -23,6 +23,14 @@ public:
     static int Inverse_wrap(lua_State* L);
     static int MakeFromEuler_wrap(lua_State* L);
 
+    static int GetPitch_wrap(lua_State* L);
+    static int GetYaw_wrap(lua_State* L);
+    static int GetRoll_wrap(lua_State* L);
+
+    static int SetPitch_wrap(lua_State* L);
+    static int SetYaw_wrap(lua_State* L);
+    static int SetRoll_wrap(lua_State* L);
+
     static int tostring_wrap(lua_State* L);
     static int obj_New(lua_State* L);
     static int obj_Index(lua_State* L);

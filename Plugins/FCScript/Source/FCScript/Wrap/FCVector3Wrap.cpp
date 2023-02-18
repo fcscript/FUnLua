@@ -43,9 +43,9 @@ int FCVector3Wrap::LibOpen_wrap(lua_State* L)
     };
     const LuaRegAttrib LibAttrib[] =
     {
-        { "X", Vector_GetFloat<FVector, 0>, Vector_SetFloat<FVector, 0> },
-        { "Y", Vector_GetFloat<FVector, 1>, Vector_SetFloat<FVector, 1> },
-        { "Z", Vector_GetFloat<FVector, 2>, Vector_SetFloat<FVector, 2> },
+        { "X", Vector_GetX<FVector>, Vector_SetX<FVector> },
+        { "Y", Vector_GetY<FVector>, Vector_SetY<FVector> },
+        { "Z", Vector_GetZ<FVector>, Vector_SetZ<FVector> },
         { nullptr, nullptr, nullptr }
     };
     const LuaRegFunc LibTable[] =

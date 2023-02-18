@@ -50,10 +50,10 @@ int FCQuatWrap::LibOpen_wrap(lua_State* L)
     };
     const LuaRegAttrib LibAttrib[] =
     {
-        { "X", Vector_GetFloat<FQuat, 0>, Vector_SetFloat<FQuat, 0> },
-        { "Y", Vector_GetFloat<FQuat, 1>, Vector_SetFloat<FQuat, 1> },
-        { "Z", Vector_GetFloat<FQuat, 2>, Vector_SetFloat<FQuat, 2> },
-        { "W", Vector_GetFloat<FQuat, 3>, Vector_SetFloat<FQuat, 3> },
+        { "X", Vector_GetX<FQuat>, Vector_SetX<FQuat> },
+        { "Y", Vector_GetY<FQuat>, Vector_SetY<FQuat> },
+        { "Z", Vector_GetZ<FQuat>, Vector_SetZ<FQuat> },
+        { "W", Vector_GetW<FQuat>, Vector_SetW<FQuat> },
         { nullptr, nullptr, nullptr }
     };
     const LuaRegFunc LibTable[] =
