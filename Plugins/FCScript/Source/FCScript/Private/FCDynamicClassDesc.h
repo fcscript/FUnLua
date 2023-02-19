@@ -275,6 +275,8 @@ typedef  std::unordered_map<const char*, int, FCStringHash, FCStringEqual>   CDy
 typedef  std::vector<FCDynamicWrapSystemFunction>  CDynamicWrapSystemFunctionList;
 
 const char* GetUEClassName(const char* InName);
+int ScriptStruct_Copy_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+int ScriptStruct_CopyFrom_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
 
 // 一个动态类的数据结构
 struct FCDynamicClassDesc
@@ -441,7 +443,11 @@ struct FCScriptContext
 
     FCObjectReferencer    *m_ManualObjectReference;
 
+    FCDynamicWrapLibFunction  *m_CopyWrapFunc;
+    FCDynamicWrapLibFunction  *m_CopyFromWrapFunc;
+
 	FCScriptContext():m_bInit(false), m_LuaState(nullptr), m_Ticker(nullptr), m_DelegateObject(nullptr), m_ManualObjectReference(nullptr)
+        , m_CopyWrapFunc(nullptr), m_CopyFromWrapFunc(nullptr)
 	{
 	}
 

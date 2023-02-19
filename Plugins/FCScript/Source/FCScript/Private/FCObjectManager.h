@@ -72,7 +72,21 @@ public:
 	// 返回是不是当前动态绑定的对象
 	bool  IsDynamicBindClass(UClass *Class);
 
-	bool  IsBindScript(const class UObjectBaseUtility *Object)
+    void  OnBindScript(int64 ObjID, int64 ScriptIns)
+    {
+        m_BindScriptInsMap[ObjID] = ScriptIns;
+    }
+    bool  GetBindScriptIns(int64 ObjID, int64 &OutScriptIns) const
+    {        
+        CBindScriptInsMap::const_iterator itFind = m_BindScriptInsMap.find(ObjID);
+        if(itFind != m_BindScriptInsMap.end())
+        {
+            OutScriptIns = itFind->second;
+            return true;
+        }
+        return false;
+    }
+	bool  IsBindScript(const class UObjectBaseUtility *Object) const
 	{
         CBindObjectInfoMap::const_iterator itFind = m_BindObjects.find(Object);
         return itFind != m_BindObjects.end();
@@ -129,12 +143,14 @@ protected:
 	};
 	typedef  std::unordered_map<const UObjectBase*, FBindObjectInfo>   CBindObjectInfoMap;
 	typedef  std::unordered_map<const UClass*, FBindReceiveBeginPlayInfo>   CBindReceiveBeginPlayRefMap;
+    typedef  std::unordered_map<int64, int64>   CBindScriptInsMap;
 
 	std::vector<FDynmicBindClassInfo>   m_DynamicBindClassInfo;
 	UClass*             m_pCurrentBindClass;
 	const char *        m_ScriptsClassName;
  
 	CBindObjectInfoMap  m_BindObjects;
+    CBindScriptInsMap  m_BindScriptInsMap;
 
 	// ------------------------------	
 	typedef std::unordered_map<UFunction*, FCDynamicOverrideFunction*> COverrideFunctionMap;

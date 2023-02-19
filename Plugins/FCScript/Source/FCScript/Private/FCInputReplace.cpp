@@ -51,9 +51,9 @@ bool FCInputReplace::ReplaceInputs(AActor* Actor, class UInputComponent* InputCo
     return true;
 }
 
-UFunction* FCInputReplace::FindFuncByClass(const UClass* Class, const char* InFuncName)
+UFunction* FCInputReplace::FindFuncByClass(const char* InFuncName)
 {
-    Class = UFCDelegateObject::StaticClass();
+    const UClass* Class = UFCDelegateObject::StaticClass();
     FName  FuncName(InFuncName);
     UFunction* Func = Class->FindFunctionByName(FuncName);
     return Func;
@@ -61,7 +61,7 @@ UFunction* FCInputReplace::FindFuncByClass(const UClass* Class, const char* InFu
 
 void FCInputReplace::ReplaceActionInputs(AActor* Actor, UInputComponent* InputComponent)
 {
-    UFunction *InputActionFunc = FindFuncByClass(Actor->GetClass(), "InputAction");
+    UFunction *InputActionFunc = FindFuncByClass("InputAction");
     if (!InputActionFunc)
         return;
 
@@ -134,7 +134,7 @@ void FCInputReplace::ReplaceActionInputs(AActor* Actor, UInputComponent* InputCo
 
 void FCInputReplace::ReplaceKeyInputs(AActor* Actor, UInputComponent* InputComponent)
 {
-    UFunction* InputActionFunc = FindFuncByClass(Actor->GetClass(), "InputAction");
+    UFunction* InputActionFunc = FindFuncByClass("InputAction");
     if (!InputActionFunc)
         return;
 
@@ -214,7 +214,7 @@ void FCInputReplace::ReplaceKeyInputs(AActor* Actor, UInputComponent* InputCompo
 
 void FCInputReplace::ReplaceAxisInputs(AActor* Actor, UInputComponent* InputComponent)
 {
-    UFunction* InputActionFunc = FindFuncByClass(Actor->GetClass(), "InputAxis");
+    UFunction* InputActionFunc = FindFuncByClass("InputAxis");
     if (!InputActionFunc)
         return;
 
@@ -262,7 +262,7 @@ void FCInputReplace::ReplaceAxisInputs(AActor* Actor, UInputComponent* InputComp
 
 void FCInputReplace::ReplaceTouchInputs(AActor* Actor, UInputComponent* InputComponent)
 {
-    UFunction* InputActionFunc = FindFuncByClass(Actor->GetClass(), "InputTouch");
+    UFunction* InputActionFunc = FindFuncByClass("InputTouch");
     if (!InputActionFunc)
         return;
 
@@ -299,7 +299,7 @@ void FCInputReplace::ReplaceTouchInputs(AActor* Actor, UInputComponent* InputCom
 
 void FCInputReplace::ReplaceAxisKeyInputs(AActor* Actor, UInputComponent* InputComponent)
 {
-    UFunction* InputActionFunc = FindFuncByClass(Actor->GetClass(), "InputAxis");
+    UFunction* InputActionFunc = FindFuncByClass("InputAxis");
     if (!InputActionFunc)
         return;
     for (FInputAxisKeyBinding& IAKB : InputComponent->AxisKeyBindings)
@@ -318,7 +318,7 @@ void FCInputReplace::ReplaceAxisKeyInputs(AActor* Actor, UInputComponent* InputC
 
 void FCInputReplace::ReplaceVectorAxisInputs(AActor* Actor, UInputComponent* InputComponent)
 {
-    UFunction* InputActionFunc = FindFuncByClass(Actor->GetClass(), "InputVectorAxis");
+    UFunction* InputActionFunc = FindFuncByClass("InputVectorAxis");
     if (!InputActionFunc)
         return;
     for (FInputVectorAxisBinding& IVAB : InputComponent->VectorAxisBindings)
@@ -337,7 +337,7 @@ void FCInputReplace::ReplaceVectorAxisInputs(AActor* Actor, UInputComponent* Inp
 
 void FCInputReplace::ReplaceGestureInputs(AActor* Actor, UInputComponent* InputComponent)
 {
-    UFunction* InputActionFunc = FindFuncByClass(Actor->GetClass(), "InputGesture");
+    UFunction* InputActionFunc = FindFuncByClass("InputGesture");
     if (!InputActionFunc)
         return;
     for (FInputGestureBinding& IGB : InputComponent->GestureBindings)
@@ -356,7 +356,7 @@ void FCInputReplace::ReplaceGestureInputs(AActor* Actor, UInputComponent* InputC
 
 void FCInputReplace::ReplaceAnimInstance(AActor* Actor, UInputComponent* InputComponent)
 {
-    UFunction* InputActionFunc = FindFuncByClass(Actor->GetClass(), "TriggerAnimNotify");
+    UFunction* InputActionFunc = FindFuncByClass("TriggerAnimNotify");
     if (!InputActionFunc)
         return;
     // 这个感觉没有必要，在蓝图添加一个接口，然后Overriden就可以了
@@ -369,6 +369,15 @@ void FCInputReplace::ReplaceAnimInstance(AActor* Actor, UInputComponent* InputCo
     //            ULuaFunction::Override(AnimNotifyFunc, Class, LuaFuncName);
     //    }
     //}
+}
+
+void FCInputReplace::OverridenTriggerAnimNotify(UObject* BindObject, const char* LuaFuncName, int64 InScriptIns)
+{
+    UFunction* InputActionFunc = FindFuncByClass("TriggerAnimNotify");
+    if (!InputActionFunc)
+        return;
+    lua_State* L = GetScriptContext()->m_LuaState;
+    FCDynamicDelegateManager::GetIns().OverridenLuaFunction(BindObject, BindObject, L, InScriptIns, InputActionFunc, LuaFuncName, false);
 }
 
 bool FCInputReplace::IsHaveLuaFunction(AActor* Actor, const FName &FuncName)

@@ -1,7 +1,8 @@
-﻿#include "FCRefObjCache.h"
+#include "FCRefObjCache.h"
 #include "FCDynamicClassDesc.h"
 #include "FCGetObj.h"
 #include "FCSetArg.h"
+#include "FCObjectManager.h"
 
 FCRefObjCache::FCRefObjCache():m_fPassTime(0)
 	, m_UnitReleaseCount(1)
@@ -94,9 +95,19 @@ void  FCRefObjCache::PushBindLuaValue(lua_State* L, int64 ObjID, const char* Cla
 		return;
 	}
 
+    // 如果存在绑定的脚本，就直接返回对应的table吧
+    int64 ScriptIns = -1;
+    if(FFCObjectdManager::GetSingleIns()->GetBindScriptIns(ObjID, ScriptIns))
+    {
+        lua_rawgeti(L, LUA_REGISTRYINDEX, ScriptIns);
+        return ;
+    }
+
     // 如果是内部的类，比如TArray这种，就不要再注册了
     if(!IsWrapClassName(ClassName))
+    {
         GlbRegisterClass(L, ClassName);
+    }
 
 	FRefCacheInfo* CacheInfo = m_InvalidList.front_ptr();
 	if (CacheInfo)

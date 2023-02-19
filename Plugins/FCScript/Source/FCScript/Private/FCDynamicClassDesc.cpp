@@ -323,6 +323,27 @@ FCDynamicField* FCDynamicClassDesc::RegisterFieldByCString(UStruct* Struct, cons
     {
         return m_Super->RegisterFieldByCString(m_Super->m_Struct, InFieldName);
     }
+    else
+    {
+        // 处理全局的
+        if(m_ScriptStruct)
+        {
+            if(strcmp(InFieldName, "Copy") == 0)
+            {
+                FCDynamicWrapLibFunction* FCProperty = GetScriptContext()->m_CopyWrapFunc;
+                const char* FieldName = FCProperty->Name;
+                m_Fileds[FieldName] = FCProperty;
+                return FCProperty;
+            }
+            else if (strcmp(InFieldName, "CopyFrom") == 0)
+            {
+                FCDynamicWrapLibFunction* FCProperty = GetScriptContext()->m_CopyFromWrapFunc;
+                const char* FieldName = FCProperty->Name;
+                m_Fileds[FieldName] = FCProperty;
+                return FCProperty;
+            }
+        }
+    }
     return nullptr;
 }
 
@@ -692,6 +713,16 @@ void FCScriptContext::Init()
         m_ManualObjectReference = new FCObjectReferencer();
         m_ManualObjectReference->SetName("FUnLua_ManualReference");
     }
+    if(!m_CopyWrapFunc)
+    {
+        m_CopyWrapFunc = new FCDynamicWrapLibFunction(ScriptStruct_Copy_wrap, nullptr);
+        m_CopyWrapFunc->Name = "Copy";
+    }
+    if(!m_CopyFromWrapFunc)
+    {
+        m_CopyFromWrapFunc = new FCDynamicWrapLibFunction(ScriptStruct_CopyFrom_wrap, nullptr);
+        m_CopyFromWrapFunc->Name = "CopyFrom";
+    }
 }
 
 void FCScriptContext::Clear()
@@ -718,6 +749,16 @@ void FCScriptContext::Clear()
         m_ManualObjectReference->Clear();
         delete m_ManualObjectReference;
         m_ManualObjectReference = nullptr;
+    }
+    if(m_CopyWrapFunc)
+    {
+        delete m_CopyWrapFunc;
+        m_CopyWrapFunc = nullptr;
+    }
+    if(m_CopyFromWrapFunc)
+    {
+        delete m_CopyFromWrapFunc;
+        m_CopyFromWrapFunc = nullptr;
     }
 }
 

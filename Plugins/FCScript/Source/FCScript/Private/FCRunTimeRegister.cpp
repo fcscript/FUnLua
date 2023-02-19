@@ -134,6 +134,75 @@ int ScriptStruct_CopyFrom(lua_State* L)
     return 0;
 }
 
+int ScriptStruct_Copy_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    // A:Copy(B) 有参数，就修改B, 并返回B
+    // A:Copy() 没有参数，就返回一个新的
+    // 必要的话，检查一下来源的类型
+    FCObjRef* A = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
+    FCObjRef* B = (FCObjRef*)FCScript::GetObjRefPtr(L, 2);
+    if (A && A->IsValid())
+    {
+        FCDynamicClassDesc* ClassDesc = A->ClassDesc;
+        UScriptStruct* ScriptStruct = ClassDesc->m_ScriptStruct; // 确认不会为空
+        if (B && B->IsValid())
+        {
+            if (A->ClassDesc == B->ClassDesc)
+            {
+                ScriptStruct->CopyScriptStruct(B->GetThisAddr(), A->GetThisAddr());
+                lua_pushvalue(L, 2);
+                return 1;
+            }
+            ReportLuaError(L, "unsame class, failed to copy struct");
+            return 0;
+        }
+        else
+        {
+            // 构建一个默认的，再拷贝, 这个地方不安全，理论上需要释放所有引用的子对象
+            int64 ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
+            B = FCGetObj::GetIns()->FindValue(ObjID);
+            ScriptStruct->CopyScriptStruct(A->GetThisAddr(), B->GetThisAddr());
+            FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int ScriptStruct_CopyFrom_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    // Struct.CopyFrom(A, B) 有参数，就修改A, 并返回A
+    // Struct.CopyFrom(A)    没有参数，就相当于重置A
+    // 必要的话，检查一下来源的类型
+    FCObjRef* A = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
+    FCObjRef* B = (FCObjRef*)FCScript::GetObjRefPtr(L, 2);
+    if (A && A->IsValid())
+    {
+        FCDynamicClassDesc* ClassDesc = A->ClassDesc;
+        UScriptStruct* ScriptStruct = ClassDesc->m_ScriptStruct; // 确认不会为空
+        if (B && B->IsValid())
+        {
+            if (A->ClassDesc == B->ClassDesc)
+            {
+                ScriptStruct->CopyScriptStruct(A->GetThisAddr(), B->GetThisAddr());
+                lua_pushvalue(L, 2);
+                return 1;
+            }
+            ReportLuaError(L, "unsame class, failed to copy struct");
+            return 0;
+        }
+        else
+        {
+            // 构建一个默认的，再拷贝, 这个地方不安全，理论上需要释放所有引用的子对象
+            ScriptStruct->DestroyStruct(A->GetPropertyAddr(), 1);
+            ScriptStruct->InitializeStruct(A->GetPropertyAddr(), 1);
+            lua_pushvalue(L, 1);
+            return 1;
+        }
+    }
+    return 0;
+}
+
 int ScriptStruct_Compare(lua_State* L)
 {
     // Compare(A, B)
@@ -418,15 +487,15 @@ bool GlbReigterClassEx(lua_State* L, FCDynamicClassDesc* ClassDesc, const char* 
     {
         lua_pushlightuserdata(L, ClassDesc);                // FClassDesc这里写入table的C类型
 
-        lua_pushstring(L, "Copy");                          // Key
-        lua_pushvalue(L, -2);                               // FClassDesc
-        lua_pushcclosure(L, ScriptStruct_Copy, 1);          // closure
-        lua_rawset(L, -4);
+        //lua_pushstring(L, "Copy");                          // Key
+        //lua_pushvalue(L, -2);                               // FClassDesc
+        //lua_pushcclosure(L, ScriptStruct_Copy, 1);          // closure
+        //lua_rawset(L, -4);
 
-        lua_pushstring(L, "CopyFrom");
-        lua_pushvalue(L, -2);
-        lua_pushcclosure(L, ScriptStruct_CopyFrom, 1);
-        lua_rawset(L, -4);
+        //lua_pushstring(L, "CopyFrom");
+        //lua_pushvalue(L, -2);
+        //lua_pushcclosure(L, ScriptStruct_CopyFrom, 1);
+        //lua_rawset(L, -4);
 
         lua_pushstring(L, "__eq");                          // Key
         lua_pushvalue(L, -2);                               // FClassDesc
@@ -457,14 +526,14 @@ bool GlbReigterClassEx(lua_State* L, FCDynamicClassDesc* ClassDesc, const char* 
             //lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
             //lua_rawset(L, -3);
 
-            lua_pushstring(L, "StaticClass");               // Key
-            lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
-            lua_pushcclosure(L, Class_StaticClass, 1);      // closure
-            lua_rawset(L, -3);
+            //lua_pushstring(L, "StaticClass");               // Key
+            //lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
+            //lua_pushcclosure(L, Class_StaticClass, 1);      // closure
+            //lua_rawset(L, -3);
 
-            lua_pushstring(L, "Cast");                      // Key
-            lua_pushcfunction(L, Class_Cast);               // C function
-            lua_rawset(L, -3);
+            //lua_pushstring(L, "Cast");                      // Key
+            //lua_pushcfunction(L, Class_Cast);               // C function
+            //lua_rawset(L, -3);
 
             lua_pushstring(L, "__eq");                      // Key
             lua_pushcfunction(L, UObject_Identical);        // C function
@@ -481,6 +550,52 @@ bool GlbReigterClassEx(lua_State* L, FCDynamicClassDesc* ClassDesc, const char* 
             lua_rawset(L, -3);
         }
     }
+    ClassDesc->OnLibOpen(L);
+
+    lua_pushvalue(L, -1);                                   // set metatable to self
+    lua_setmetatable(L, -2);
+
+    SetTableForClass(L, ClassName);
+    return true;
+}
+
+bool GlbRegisterBindScriptMetatable(lua_State* L, FCDynamicClassDesc* ClassDesc, const char* ClassName)
+{
+    int32 Type = luaL_getmetatable(L, ClassName);
+    lua_pop(L, 1);
+    if (Type == LUA_TTABLE)
+    {
+        return true;
+    }
+    luaL_newmetatable(L, ClassName);                  // 1, will be used as meta table later (lua_setmetatable)
+    if (ClassDesc->m_Super)
+    {
+        const char* InSuperClassName = ClassDesc->m_SuperName;
+        lua_pushstring(L, "ParentClass");                   // 2
+        Type = luaL_getmetatable(L, InSuperClassName);
+        if (Type != LUA_TTABLE)
+        {
+            printf("Invalid super class, className:%s, SupperClassName:%s", ClassName, InSuperClassName);
+        }
+        lua_rawset(L, -3);
+    }
+
+    lua_pushstring(L, "__index");                           // 2  对不存在的索引(成员变量)访问时触发
+    lua_pushcfunction(L, OtherScript_Index);                      // 3
+    lua_rawset(L, -3);
+
+    lua_pushstring(L, "__newindex");                        // 2  对不存在的索引(成员变量)赋值时触发
+    lua_pushcfunction(L, OtherScript_NewIndex);                   // 3
+    lua_rawset(L, -3);
+
+    lua_pushstring(L, "__eq");                      // Key
+    lua_pushcfunction(L, UObject_Identical);        // C function
+    lua_rawset(L, -3);
+
+    lua_pushstring(L, "__gc");                      // Key
+    lua_pushcfunction(L, UObject_Delete);           // C function
+    lua_rawset(L, -3);
+
     ClassDesc->OnLibOpen(L);
 
     lua_pushvalue(L, -1);                                   // set metatable to self
@@ -627,15 +742,12 @@ int BindScript_GetBPObject(lua_State* L)
     return 1;
 }
 
-int BindScript_Index(lua_State* L)
+int DoScript_Index(lua_State* L, FCObjRef* ObjRef)
 {
-    // (table, key)
-    int64 ObjID = (int64)lua_touserdata(L, lua_upvalueindex(1));
-    FCDynamicClassDesc * ClassDesc = (FCDynamicClassDesc*)lua_touserdata(L, lua_upvalueindex(2));
-    FCObjRef* ObjRef = FCGetObj::GetIns()->FindValue(ObjID);
     const char* FieldName = lua_tostring(L, 2);
     if (ObjRef && ObjRef->IsValid())
     {
+        FCDynamicClassDesc* ClassDesc = ObjRef->ClassDesc;
         FCDynamicField* Field = ClassDesc->FindFieldByName(FieldName);
         if (Field)
         {
@@ -644,22 +756,22 @@ int BindScript_Index(lua_State* L)
     }
     int Ret = lua_rawget(L, 1);
     int Type = lua_type(L, -1);
-    if(Type > LUA_TNIL)
+    if (Type > LUA_TNIL)
     {
-        return Ret;
+        return 1;
     }
 
     lua_pushvalue(L, 1);
-    while(true)
+    while (true)
     {
         lua_pushstring(L, "Super");
         lua_rawget(L, -2);
         Type = lua_type(L, -1);
-        if(Type == LUA_TTABLE)
+        if (Type == LUA_TTABLE)
         {
             lua_getfield(L, -1, FieldName);
             int ChildType = lua_type(L, -1);
-            if(ChildType > LUA_TNIL)
+            if (ChildType > LUA_TNIL)
             {
                 return 1;
             }
@@ -674,14 +786,26 @@ int BindScript_Index(lua_State* L)
     return 1;
 }
 
-int BindScript_NewIndex(lua_State* L)
+int BindScript_Index(lua_State* L)
 {
+    // (table, key)
     int64 ObjID = (int64)lua_touserdata(L, lua_upvalueindex(1));
-    FCDynamicClassDesc* ClassDesc = (FCDynamicClassDesc*)lua_touserdata(L, lua_upvalueindex(2));
-    const char* FieldName = lua_tostring(L, 2);
     FCObjRef* ObjRef = FCGetObj::GetIns()->FindValue(ObjID);
+    return DoScript_Index(L, ObjRef);
+}
+
+int OtherScript_Index(lua_State* L)
+{
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
+    return DoScript_Index(L, ObjRef);
+}
+
+int DoScript_NewIndex(lua_State* L, FCObjRef* ObjRef)
+{
+    const char* FieldName = lua_tostring(L, 2);
     if (ObjRef && ObjRef->IsValid())
     {
+        FCDynamicClassDesc* ClassDesc = ObjRef->ClassDesc;
         FCDynamicField* Field = ClassDesc->FindFieldByName(FieldName);
         if (Field)
         {
@@ -690,6 +814,19 @@ int BindScript_NewIndex(lua_State* L)
     }
     lua_rawset(L, 1);
     return 0;
+}
+
+int BindScript_NewIndex(lua_State* L)
+{
+    int64 ObjID = (int64)lua_touserdata(L, lua_upvalueindex(1));
+    FCObjRef* ObjRef = FCGetObj::GetIns()->FindValue(ObjID);
+    return DoScript_NewIndex(L, ObjRef);
+}
+
+int OtherScript_NewIndex(lua_State* L)
+{
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
+    return DoScript_NewIndex(L, ObjRef);
 }
 
 int BindScript_Equal(lua_State* L)

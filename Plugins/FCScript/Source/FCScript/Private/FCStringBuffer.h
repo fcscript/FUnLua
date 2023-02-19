@@ -97,6 +97,28 @@ public:
             mBuffer[mSize] = 0;
         }
     }
+    void PushInt64(int64 Value)
+    {
+        if(Value < 0)
+        {
+            PushChar('-');
+            Value = -Value;
+        }
+        char   Temp[64];
+        int Count = 0;
+        do
+        {
+            Temp[Count++] = (Value % 10) + '0';
+            Value /= 10;
+        }while(Value > 0);
+        
+        Reserve(mSize + Count + 1);
+        for(int i = Count - 1; i>= 0; --i)
+        {
+            mBuffer[mSize++] = Temp[i];
+        }
+        mBuffer[mSize] = 0;
+    }
     const char* ReadValue(const char *InStr, char chEnd)
     {        
         Empty();
@@ -131,6 +153,11 @@ public:
             mBuffer[mSize++] = *InStr;
         }
         mBuffer[mSize] = 0;
+        return *this;
+    }
+    FCStringBuffer& operator << (int64 Value)
+    {
+        PushInt64(Value);
         return *this;
     }
 };

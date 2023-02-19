@@ -28,6 +28,7 @@ void FCUEUtilWrap::Register(lua_State* L)
         ClassDesc->RegisterWrapLibAttrib("Overridden", DoOverridden_wrap, nullptr);
         //ClassDesc->RegisterWrapLibAttrib("ClassDesc", DoGetClassDesc_wrap, nullptr);
         ClassDesc->RegisterWrapLibFunction("StaticClass", DoGetStaticClass_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("Cast", DoCast_wrap, nullptr);
         ClassDesc->RegisterWrapLibFunction("AddGCRef", DoAddGCRef_wrap, nullptr);
         ClassDesc->RegisterWrapLibFunction("ReleaseGCRef", DoReleaseGCRef_wrap, nullptr);
     }
@@ -256,6 +257,11 @@ int FCUEUtilWrap::DoGetClassDesc_wrap(lua_State* L, void* ObjRefPtr, UObject* Th
     }
     lua_pushnil(L);
     return 1;
+}
+
+int FCUEUtilWrap::DoCast_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    return Class_Cast(L);
 }
 
 int FCUEUtilWrap::DoGetStaticClass_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)

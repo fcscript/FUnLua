@@ -2,6 +2,7 @@
 #include "FCDynamicClassDesc.h"
 #include "FCRunTimeRegister.h"
 #include "../LuaCore/CallLua.h"
+#include "../LuaCore/LuaContext.h"
 
 void FCUnLuaWrap::Register(lua_State* L)
 {
@@ -125,11 +126,17 @@ int FCUnLuaWrap::Class_wrap(lua_State* L)
             int RetType = lua_type(L, SuperTable[0]);
             if(LUA_TTABLE == RetType)
             {
-                lua_pushstring(L, "Super");             // ²»Òª½Å±¾²ãĞŞ¸ÄÕâ¸ö±äÁ¿
+                lua_pushstring(L, "Super");             // ä¸è¦è„šæœ¬å±‚ä¿®æ”¹è¿™ä¸ªå˜é‡
                 lua_pushvalue(L, SuperTable[0]);
                 lua_rawset(L, nTableIdx);
                 RetCount = 0;
             }
+        }
+        else
+        {
+            FCStringBuffer128 ErrorTips;
+            ErrorTips << "UnLua.Class failed, invalid class path:" << super_name;
+            ReportLuaError(L, ErrorTips.GetString());
         }
         if(RetCount != 0)
         {

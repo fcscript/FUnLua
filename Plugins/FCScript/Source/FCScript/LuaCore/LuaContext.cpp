@@ -55,6 +55,10 @@ FLuaValue   DepthCloneTable(lua_State* L, int SrcIdx, FTableFlagList& TableFlags
     while (lua_next(L, -2))
     {
         lua_pushvalue(L, -2);
+        #if UE_BUILD_DEBUG
+        int nMemberType1 = lua_type(L, -1);
+        const char *FieldName = lua_tostring(L, -1);
+        #endif
         //int nMemberType1 = lua_type(L, -1);
         int nMemberType2 = lua_type(L, -2);
         lua_pushvalue(L, -2);

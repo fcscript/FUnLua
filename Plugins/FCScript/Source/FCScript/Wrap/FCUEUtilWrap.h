@@ -22,6 +22,7 @@ public:
     static int DoOverridden_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
     static int DoGetClassDesc_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
     static int DoGetStaticClass_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+    static int DoCast_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
     static int DoAddGCRef_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
     static int DoReleaseGCRef_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
     static int DoSpawActor_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);

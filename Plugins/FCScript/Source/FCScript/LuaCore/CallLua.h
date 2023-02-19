@@ -164,6 +164,13 @@ bool CallTableVoidFunction(lua_State* L, int TableIdx, const char* FuncName, T&&
     lua_pushstring(L, FuncName);
     lua_gettable(L, -2);
 
+    bool bFunction = lua_isfunction(L, -1);
+    if(!bFunction)
+    {
+        lua_pop(L, lua_gettop(L) - StartIdx);
+        return false;
+    }
+
     int32 MessageHandlerIdx = lua_gettop(L) - 1;
     lua_pushvalue(L, TableIdx); // push self
     int32 NumArgs = PushLuaArgs<false>(L, Forward<T>(Args)...);

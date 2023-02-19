@@ -10,8 +10,9 @@ public:
 public:
     void Clear();
     bool ReplaceInputs(AActor* Actor, class UInputComponent* InputComponent);
+    void OverridenTriggerAnimNotify(UObject* BindObject, const char* LuaFuncName, int64 InScriptIns);
 private:
-    UFunction *FindFuncByClass(const UClass *Class, const char *InFuncName);
+    UFunction *FindFuncByClass(const char *InFuncName);
     void ReplaceActionInputs(AActor* Actor, UInputComponent* InputComponent);
     void ReplaceKeyInputs(AActor* Actor, UInputComponent* InputComponent);
     void ReplaceAxisInputs(AActor* Actor, UInputComponent* InputComponent);

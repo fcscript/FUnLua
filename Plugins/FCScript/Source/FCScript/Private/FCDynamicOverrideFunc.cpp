@@ -5,8 +5,11 @@
 #include "Engine/World.h"
 #include "FCGetObj.h"
 #include "FCRunTimeRegister.h"
+#include "FCInputReplace.h"
 
 #include "../LuaCore/LuaContext.h"
+
+#include "Animation/AnimInstance.h"
 
 
 UFunction  *FirstNative(UObject* Context, FFrame& TheStack, bool &bUnpackParams)
@@ -125,13 +128,13 @@ void UnLuaOverride_Callback(lua_State* L, int Index, void* UserData)
             {                
                 FFCObjectdManager::GetSingleIns()->RegisterOverrideFunc(CallInfo->Object, CallInfo->BindInfo->m_ScriptIns, FuncName);
             }
-            //else if (UnLuaOverride_IsAniNotify(FuncName, Len))  // 这个感觉没有必要，在蓝图添加一个接口，然后Overriden就可以了
-            //{
-            //    if (CallInfo->Object->GetClass()->IsChildOf<UAnimInstance>())
-            //    {
-
-            //    }
-            //}
+            else if (UnLuaOverride_IsAniNotify(FuncName, Len))  // 这个感觉没有必要，在蓝图添加一个接口，然后Overriden就可以了
+            {
+                if (CallInfo->Object->GetClass()->IsChildOf<UAnimInstance>())
+                {
+                    FCInputReplace::GetIns().OverridenTriggerAnimNotify((UObject*)CallInfo->Object, FuncName, CallInfo->BindInfo->m_ScriptIns);
+                }
+            }
         }
 	}
 }
@@ -232,14 +235,12 @@ int64 FCDynamicBindScript(UObject* InObject)
 
 		lua_pushstring(L, "__index");                   // 2  对不存在的索引(成员变量)访问时触发
 		lua_pushlightuserdata(L, (void*)BindInfo->m_ObjRefID);
-		lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
-		lua_pushcclosure(L, BindScript_Index, 2);      // closure
+		lua_pushcclosure(L, BindScript_Index, 1);      // closure
 		lua_rawset(L, -3);
 
 		lua_pushstring(L, "__newindex");                // 2  对不存在的索引(成员变量)赋值时触发
 		lua_pushlightuserdata(L, (void*)BindInfo->m_ObjRefID);
-		lua_pushlightuserdata(L, ClassDesc);            // FClassDesc
-		lua_pushcclosure(L, BindScript_NewIndex, 2);           // 3
+		lua_pushcclosure(L, BindScript_NewIndex, 1);           // 3
 		lua_rawset(L, -3);
 
 		lua_pushstring(L, "__eq");
@@ -267,6 +268,11 @@ int64 FCDynamicBindScript(UObject* InObject)
 		{
 			lua_pop(L, CurTop - StartTop);
 		}
+
+        FFCObjectdManager::GetSingleIns()->OnBindScript(BindInfo->m_ObjRefID, BindInfo->m_ScriptIns);
+
+        // Initialize
+        CallAnyScriptFunc(ScriptContext, BindInfo->m_ScriptIns, "Initialize");
 	}
 	return BindInfo->m_ScriptIns;
 }

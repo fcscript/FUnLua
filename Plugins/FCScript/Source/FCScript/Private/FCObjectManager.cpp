@@ -31,6 +31,7 @@ void  FFCObjectdManager::Clear()
 	m_pCurrentBindClass = nullptr;
 	m_ScriptsClassName = nullptr;
 	m_BindObjects.clear();
+    m_DelegateRefMap.clear();
 
     m_OverrideFunctionScriptInsMap.clear();
     m_OverrideObjectFunctionMap.clear();
@@ -83,10 +84,12 @@ void  FFCObjectdManager::NotifyDeleteUObject(const class UObjectBase* Object, in
 		FCScriptContext  *ScriptContext = GetScriptContext();
 		FBindObjectInfo  &BindInfo = itBind->second;
 		lua_State* L = ScriptContext->m_LuaState;
+        int64 ObjID = BindInfo.m_ObjRefID;
 
 		CallAnyScriptFunc(GetScriptContext(), BindInfo.m_ScriptIns, "ReceiveBeginDestroy");
 
 		luaL_unref(L, LUA_REGISTRYINDEX, BindInfo.m_ScriptIns);
+        m_BindScriptInsMap.erase(m_BindScriptInsMap.find(ObjID));
 		BindInfo.m_ScriptIns = 0;
 		m_BindObjects.erase(itBind);
 
