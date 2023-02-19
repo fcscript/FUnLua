@@ -27,6 +27,7 @@ public:
 	void OnPostWorldCleanup(UWorld *World, bool bSessionEnded, bool bCleanupResources);
 	void OnPreWorldInitialization(UWorld *World, const UWorld::InitializationValues);
 	void OnPostWorldInitialization(UWorld *World, const UWorld::InitializationValues);
+    void OnInitGameContext();
 	void OnPostEngineInit();
 	void OnPreExit();
 	void OnAsyncLoadingFlushUpdate();

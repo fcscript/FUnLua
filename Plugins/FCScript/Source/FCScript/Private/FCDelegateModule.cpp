@@ -70,21 +70,29 @@ void FFCDelegateModule::OnPostWorldInitialization(UWorld *World, const UWorld::I
 {
 	if(bStartInit && !Ticker)
 	{
-		if(GEngine->GameViewport)
-		{
-			GameInstance = GEngine->GameViewport->GetGameInstance();
-			if(GameInstance)
-			{
-				Ticker = NewObject<UFCTicker>(GameInstance);
-				Ticker->AddToRoot();
+        OnInitGameContext();
+	}
+}
+
+void FFCDelegateModule::OnInitGameContext()
+{
+    if(!GameInstance)
+    {
+        if (GEngine->GameViewport)
+        {
+            GameInstance = GEngine->GameViewport->GetGameInstance();
+            if (GameInstance && !Ticker)
+            {
+                Ticker = NewObject<UFCTicker>(GameInstance);
+                Ticker->AddToRoot();
                 GetScriptContext()->m_Ticker = Ticker;
 
                 DelegateObject = NewObject<UFCDelegateObject>(GameInstance);
                 DelegateObject->AddToRoot();
                 GetScriptContext()->m_DelegateObject = DelegateObject;
-			}
-		}
-	}
+            }
+        }
+    }
 }
 
 void FFCDelegateModule::OnPostEngineInit()
@@ -203,20 +211,7 @@ void FFCDelegateModule::BeginPIE(bool bIsSimulating)
 
 void FFCDelegateModule::PostPIEStarted(bool bIsSimulating)
 {
-	if(GEngine->GameViewport)
-	{
-		GameInstance = GEngine->GameViewport->GetGameInstance();
-		if(GameInstance && !Ticker)
-		{
-			Ticker = NewObject<UFCTicker>(GameInstance);
-			Ticker->AddToRoot();
-            GetScriptContext()->m_Ticker = Ticker;
-
-            DelegateObject = NewObject<UFCDelegateObject>(GameInstance);
-            DelegateObject->AddToRoot();
-            GetScriptContext()->m_DelegateObject = DelegateObject;
-		}
-	}
+    OnInitGameContext();
 }
 
 void FFCDelegateModule::PrePIEEnded(bool bIsSimulating)
@@ -326,6 +321,7 @@ FString FFCDelegateModule::GetScriptPath()
 void FFCDelegateModule::Startup()
 {
 	bStartInit = true;
+    GameInstance = nullptr;
     
 	// 加载脚本吧
 	// 注册事件	
@@ -337,6 +333,7 @@ void FFCDelegateModule::Startup()
 	}
 
     GetContextManger()->Init();
+    OnInitGameContext();
 	FString  ScriptPath = GetScriptPath();
 	LoadFCScript(GetClientScriptContext(), ScriptPath);
 
@@ -344,7 +341,7 @@ void FFCDelegateModule::Startup()
 	FCScriptDelegates::OnLuaStateCreateWrap.Broadcast(L);
 	FCScriptDelegates::OnLuaStateStart.Broadcast(L);
 
-	CallAnyScriptFunc(GetClientScriptContext(), 0, "OnGameStartup");	
+	CallAnyScriptFunc(GetClientScriptContext(), 0, "OnGameStartup");
 }
 
 void FFCDelegateModule::Shutdown()
@@ -452,6 +449,10 @@ void  FFCDelegateModule::TryBindScript(const class UObjectBaseUtility *Object)
             DefaultObject->UObject::ProcessEvent(InterfaceFunc, &ScriptClassName);   // force to invoke UObject::ProcessEvent(...)
             if (ScriptClassName.Len() > 0)
             {
+                if(!GameInstance)
+                {
+                    OnInitGameContext();
+                }
                 // 绑定一个UObject到脚本对象, 脚本的类名不可以为空串
                 FFCObjectdManager::GetSingleIns()->BindScript(Object, ObjClass, ScriptClassName);
             }

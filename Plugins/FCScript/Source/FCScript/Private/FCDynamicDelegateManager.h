@@ -30,6 +30,9 @@ public:
 public:
     // 功能：生成一个Lua函数的委托对象(如果没有Object对象，就是纯Lua函数)
     FCLuaDelegate* MakeLuaDelegate(UObject* Object, UObject* Outer, lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty);
+    FCLuaDelegate* MakeDelegateByTableParam(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty);
+    FCLuaDelegate* MakeDelegate(lua_State* L, const FCDelegateInfo* InDelegateInfo, const FCDynamicPropertyBase* DynamicProperty);
+
     UObject* OverridenLuaFunction(UObject* Object, UObject* Outer, lua_State* L, int ScriptIns, UFunction* ActionFunc, const FName& FuncName, bool bNoneCallByZeroParam);
     // 功能：通过函数地址一个委托对象
     void   DeleteLuaDelegateByFuncAddr(const void* LuaFuncAddr);

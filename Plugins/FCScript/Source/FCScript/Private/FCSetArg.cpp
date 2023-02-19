@@ -63,6 +63,10 @@ int64 FC_GetArgObjID(lua_State* L, int Index)
     }
     else if (LUA_TTABLE == Type)
     {
+        if (Index < 0)
+        {
+            Index = Index + lua_gettop(L) + 1;
+        }
         lua_pushstring(L, "__ObjectRefID");
         lua_rawget(L, Index);
         //lua_getfield(L, Index, "__ObjectRefID");

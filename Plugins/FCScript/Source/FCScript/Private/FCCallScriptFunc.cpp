@@ -591,7 +591,11 @@ void  ReadScriptUObject(lua_State* L, int ValueIdx, const FCDynamicPropertyBase 
 {
     FObjectProperty* ObjectProperty = (FObjectProperty*)DynamicProperty->Property;
 	UObject *SrcObj = FCScript::GetUObject(L, ValueIdx);
-    UClass* InClass = SrcObj ? SrcObj->GetClass() : UObject::StaticClass();
+    UClass* InClass = Cast<UClass>(SrcObj);
+    if(!InClass)
+    {
+        InClass = SrcObj ? SrcObj->GetClass() : UObject::StaticClass();
+    }
     UClass* Class = ObjectProperty->PropertyClass;
     if (Class == InClass || InClass->IsChildOf(Class))
     {
@@ -600,7 +604,10 @@ void  ReadScriptUObject(lua_State* L, int ValueIdx, const FCDynamicPropertyBase 
     else
     {
         *((UObject**)ValueAddr) = nullptr;
-        ReportLuaError(L, "invalid object param, cast to nullptr");
+        if(SrcObj)
+        {
+            ReportLuaError(L, "invalid object param, cast to nullptr");
+        }
     }
 }
 
@@ -892,20 +899,28 @@ void ReadScriptDelegate(lua_State* L, int ValueIdx, const FCDynamicPropertyBase*
 // 这个还是不要支持了，因为不好追踪生命周期, 只能传入UObject，按该绑定的对象的生命周期来
     FScriptDelegate* Delegate = (FScriptDelegate*)ValueAddr;
     int Type = lua_type(L, ValueIdx);
+    FCLuaDelegate* LuaDelegate = nullptr;
     if (LUA_TFUNCTION == Type)
     {
         const void *FuncAddr = lua_topointer(L, ValueIdx);  // 单纯的绑定一个函数，无法确认名字，但可以用函数地址做函数名, 如果该对象释放，则这个函数也释放
-        FCLuaDelegate *LuaDelegate = FCDynamicDelegateManager::GetIns().MakeLuaDelegate(nullptr, nullptr, L, ValueIdx, DynamicProperty);
-        *Delegate = LuaDelegate->Delegate;
+        LuaDelegate = FCDynamicDelegateManager::GetIns().MakeLuaDelegate(nullptr, nullptr, L, ValueIdx, DynamicProperty);
+    }
+    else if(LUA_TTABLE == Type)
+    {
+         // { self, func } 这种形式
+        LuaDelegate = FCDynamicDelegateManager::GetIns().MakeDelegateByTableParam(L, ValueIdx, DynamicProperty);
     }
     else
     {
         FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
         if(ObjRef && ObjRef->RefType == EFCObjRefType::LuaDelegate)
         {
-            FCDelegateInfo* LuaDelegate = (FCDelegateInfo*)ObjRef->GetPropertyAddr();
+            FCDelegateInfo* DelegateInfo = (FCDelegateInfo*)ObjRef->GetPropertyAddr();
+            LuaDelegate = FCDynamicDelegateManager::GetIns().MakeDelegate(L, DelegateInfo, DynamicProperty);
         }
     }
+    if (LuaDelegate)
+        *Delegate = LuaDelegate->Delegate;
 }
 
 void ReadScriptMulticastDelegate(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)

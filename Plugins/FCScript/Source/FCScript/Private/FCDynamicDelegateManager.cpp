@@ -6,6 +6,7 @@
 #include "FCDynamicOverrideFunc.h"
 #include "FCLuaFunction.h"
 #include "FCTemplateType.h"
+#include "FCGetArg.h"
 
 FCDynamicDelegateManager & FCDynamicDelegateManager::GetIns()
 {
@@ -45,6 +46,72 @@ FCLuaDelegate* FCDynamicDelegateManager::MakeLuaDelegate(UObject* Object, UObjec
 
     AddBindLuaFunction(Delegate, Object, LuaFuncAddr);
     return Delegate;
+}
+FCLuaDelegate* FCDynamicDelegateManager::MakeDelegateByTableParam(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty)
+{
+    // { self, func } 这种形式
+    lua_rawgeti(L, ValueIdx, 1);
+    int FirstType = lua_type(L, -1);
+    lua_rawgeti(L, ValueIdx, 2);
+    int SecondType = lua_type(L, -1);
+    if (LUA_TTABLE == FirstType && LUA_TFUNCTION == SecondType)
+    {
+        FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, -2);
+        const void* LuaFuncAddr = lua_topointer(L, -1);
+
+        // 这个地方感觉不应该用函数地址限制，因为可能存在一对多的情况
+        CAdr2DelegateMap::iterator itDelegate = m_FuncAdr2DelegateMap.find(LuaFuncAddr);
+        if (itDelegate != m_FuncAdr2DelegateMap.end())
+        {
+            lua_pop(L, 2);
+            return itDelegate->second;
+        }
+        UObject* Outer = GetScriptContext()->m_DelegateObject;
+        UObject* Object = Outer;
+        if (ObjRef && ObjRef->IsValid())
+        {
+            Object = ObjRef->GetUObject();
+            if (!Object)
+                Object = Outer;
+            Outer = Outer ? Outer : Object;
+        }
+        if(!Outer)
+        {
+            return nullptr;
+        }
+        FCLuaDelegate* Delegate = new FCLuaDelegate();
+        Delegate->FunctionAddr = LuaFuncAddr;       
+
+        int CallbackRef = luaL_ref(L, LUA_REGISTRYINDEX);  // 将这个参数添加到全局引用表
+        Delegate->FunctionRef = CallbackRef;
+        Delegate->ParamCount = 1;
+        Delegate->CallbackParams[0] = luaL_ref(L, LUA_REGISTRYINDEX);  // 将这个参数添加到全局引用表
+
+        Delegate->Object = Object;
+        Delegate->Outer = Outer;
+        MakeScriptDelegate(Delegate, LuaFuncAddr, Outer, DynamicProperty);
+
+        Delegate->DynamicProperty = GetDynamicProperty(DynamicProperty->Property);
+        Delegate->DynamicFunc = GetDynamicFunction(Delegate->Function);
+
+        AddBindLuaFunction(Delegate, Object, LuaFuncAddr);
+        return Delegate;
+    }
+    else
+    {
+        lua_pop(L, 2);
+    }
+    return nullptr;
+}
+
+FCLuaDelegate* FCDynamicDelegateManager::MakeDelegate(lua_State* L, const FCDelegateInfo* InDelegateInfo, const FCDynamicPropertyBase* DynamicProperty)
+{
+    if(!InDelegateInfo)
+    {
+        return nullptr;
+    }
+
+    return nullptr;
 }
 
 UObject* FCDynamicDelegateManager::OverridenLuaFunction(UObject* Object, UObject* Outer, lua_State* L, int ScriptIns, UFunction* ActionFunc, const FName& FuncName, bool bNoneCallByZeroParam)
