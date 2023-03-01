@@ -60,7 +60,7 @@ int FCLinearColorWrap::LibOpen_wrap(lua_State* L)
 int FCLinearColorWrap::Set_wrap(lua_State* L)
 {
     int NumParams = lua_gettop(L);
-    FLinearColor* A = (FLinearColor*)VectorBase_GetAddr(L, 1);
+    FLinearColor* A = (FLinearColor*)VectorBase_GetAddr(L, 1, "FLinearColor");
     if (A)
     {
         if(NumParams > 1)

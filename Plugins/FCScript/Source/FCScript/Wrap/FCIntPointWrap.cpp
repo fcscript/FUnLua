@@ -54,7 +54,7 @@ int FCIntPointWrap::LibOpen_wrap(lua_State* L)
 int FCIntPointWrap::Set_wrap(lua_State* L)
 {
     int NumParams = lua_gettop(L);
-    FIntPoint* A = (FIntPoint*)VectorBase_GetAddr(L, 1);
+    FIntPoint* A = (FIntPoint*)VectorBase_GetAddr(L, 1, "FIntPoint");
     if (A)
     {
         A->X = lua_tointeger(L, 2);
@@ -164,10 +164,10 @@ int FCIntPointWrap::double_div_wrap(lua_State* L)
 
 int FCIntPointWrap::tostring_wrap(lua_State* L)
 {
-    FColor* A = (FColor*)VectorBase_GetAddr(L, 1);
+    FIntPoint* A = (FIntPoint*)VectorBase_GetAddr(L, 1, "FIntPoint");
     if (A)
     {
-        FString  Str = FString::Printf(TEXT("%p(R=%d,G=%d,B=%d,A=%d)"), A, A->R, A->G, A->B, A->A);
+        FString  Str = FString::Printf(TEXT("%p(X=%d,Y=%d)"), A, A->X, A->Y);
         lua_pushstring(L, TCHAR_TO_UTF8(*Str));
     }
     else

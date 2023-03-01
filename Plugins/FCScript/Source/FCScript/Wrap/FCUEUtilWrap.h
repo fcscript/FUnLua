@@ -26,6 +26,7 @@ public:
     static int DoAddGCRef_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
     static int DoReleaseGCRef_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
     static int DoSpawActor_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+    static int DoLoad_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
 
 	static int NewObject_wrap(lua_State* L);
     static int SpawActor_wrap(lua_State* L);

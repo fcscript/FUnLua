@@ -48,6 +48,7 @@ enum FCPropertyType
 	FCPROPERTY_Set,             // TSet -- FSetProperty
 	FCPROPERTY_DelegateProperty, // CPT_Delegate
 	FCPROPERTY_MulticastDelegateProperty, // CPT_MulticastDelegate
+    FCPROPERTY_MulticastSparseDelegateProperty, // CPT_SparseMulticastDelegate
 	FCPROPERTY_ObjectPropertyBase, // 
 };
 

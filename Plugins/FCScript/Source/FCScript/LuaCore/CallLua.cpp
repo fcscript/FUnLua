@@ -124,6 +124,16 @@ int  LuaPushValue(lua_State* L, const FLuaValue& value, bool bCopy)
     return 0;
 }
 
+int  LuaPushValue(lua_State* L, const FLuaTableRef& value, bool bCopy)
+{
+    if(value.IsValid())
+    {
+        lua_rawgeti(L, LUA_REGISTRYINDEX, value.TableRef);
+        return 1;
+    }
+    return 0;
+}
+
 UObject* LuaGetUObject(lua_State* L, int Idx)
 {
     return FCScript::GetUObject(L, Idx);

@@ -31,12 +31,13 @@ void FCUEUtilWrap::Register(lua_State* L)
         ClassDesc->RegisterWrapLibFunction("Cast", DoCast_wrap, nullptr);
         ClassDesc->RegisterWrapLibFunction("AddGCRef", DoAddGCRef_wrap, nullptr);
         ClassDesc->RegisterWrapLibFunction("ReleaseGCRef", DoReleaseGCRef_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("Load", DoLoad_wrap, nullptr);
     }
-    ClassDesc = GetScriptContext()->RegisterUClass("UWorld");
-    if(ClassDesc)
-    {
-        ClassDesc->RegisterWrapLibFunction("SpawnActor", DoSpawActor_wrap, nullptr);
-    }
+    //ClassDesc = GetScriptContext()->RegisterUClass("UWorld");
+    //if(ClassDesc)
+    //{
+    //    ClassDesc->RegisterWrapLibFunction("SpawnActor", DoSpawActor_wrap, nullptr);
+    //}
 
     lua_register(L, "NewObject", NewObject_wrap);
     lua_register(L, "SpawActor", SpawActor_wrap);
@@ -304,6 +305,11 @@ int FCUEUtilWrap::DoSpawActor_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisO
     return SpawActor_wrap(L);
 }
 
+int FCUEUtilWrap::DoLoad_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    return LoadObject_wrap(L);
+}
+
 FCDynamicClassDesc *UEUtil_FindClassDesc(const char *ClassName)
 {
     if(!ClassName)
@@ -450,15 +456,31 @@ int FCUEUtilWrap::SpawActor_wrap(lua_State* L)
 
     FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUStruct(Class);
     const char* ModuleName = NumParams > 6 ? lua_tostring(L, 7) : nullptr;
+
+    int32 InitializerTableRef = LUA_NOREF;
+    if (NumParams > 7 && lua_type(L, 8) == LUA_TTABLE)
+    {
+        lua_pushvalue(L, 8);
+        InitializerTableRef = luaL_ref(L, LUA_REGISTRYINDEX);
+    }
+
     AActor* NewActor = World->SpawnActor(Class, &Transform, SpawnParameters);
     if(!NewActor)
     {
+        if (InitializerTableRef != LUA_NOREF)
+        {
+            luaL_unref(L, LUA_REGISTRYINDEX, InitializerTableRef);
+        }
         lua_pushnil(L);
         return 1;
     }
     if (ModuleName && ModuleName[0] != 0)
     {
-        FFCObjectdManager::GetSingleIns()->CallBindScript(NewActor, ModuleName);
+        FFCObjectdManager::GetSingleIns()->CallBindScript(NewActor, ModuleName, InitializerTableRef);
+    }
+    else if (InitializerTableRef != LUA_NOREF)
+    {
+        luaL_unref(L, LUA_REGISTRYINDEX, InitializerTableRef);
     }
     // 增加引用GC计数吧, 这个其实可以PushUObject里面做
     GetScriptContext()->m_ManualObjectReference->Add(NewActor);

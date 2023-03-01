@@ -56,7 +56,7 @@ int FCIntVectorWrap::LibOpen_wrap(lua_State* L)
 int FCIntVectorWrap::Set_wrap(lua_State* L)
 {
     int NumParams = lua_gettop(L);
-    FIntVector* A = (FIntVector*)VectorBase_GetAddr(L, 1);
+    FIntVector* A = (FIntVector*)VectorBase_GetAddr(L, 1, "FIntVector");
     if (A)
     {
         A->X = lua_tointeger(L, 2);
@@ -127,7 +127,7 @@ int FCIntVectorWrap::double_div_wrap(lua_State* L)
 
 int FCIntVectorWrap::tostring_wrap(lua_State* L)
 {
-    FIntVector* A = (FIntVector*)VectorBase_GetAddr(L, 1);
+    FIntVector* A = (FIntVector*)VectorBase_GetAddr(L, 1, "FIntVector");
     if (A)
     {
         FString  Str = FString::Printf(TEXT("%p(X=%d,Y=%d,Z=%d)"), A, A->X, A->Y, A->Z);

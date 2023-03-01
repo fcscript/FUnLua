@@ -17,11 +17,14 @@ int FCDelegateWrap::RegisterDelegate(lua_State* L)
     {
         { "AddListener", AddListener_wrap },
         { "Add", AddListener_wrap },
+        { "Bind", AddListener_wrap },
         { "RemoveListener", RemoveListener_wrap },
         { "Remove", RemoveListener_wrap },
+        { "Unbind", RemoveListener_wrap },
         { "ClearLinstener", ClearLinstener_wrap },
         { "Clear", ClearLinstener_wrap },
         { "Invoke", Invoke_wrap },
+        { "Execute", Invoke_wrap },
         { "__gc", FCExportedClass::obj_release },
         { "__eq", FCExportedClass::obj_equal },
         { nullptr, nullptr }

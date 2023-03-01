@@ -576,3 +576,51 @@ int Vector_ToOrientationQuat_Wrap(lua_State* L)
 	FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
 	return 1;
 }
+
+#define DEFIND_CLASS_UOBJECT_VALUE(ClassName, Property)  \
+int GetWrap_##ClassName##Property(lua_State* L) \
+{ \
+    ClassName* A = (ClassName*)VectorBase_GetAddr(L, 1, #ClassName);\
+    FCScript::SetArgValue(L, (UObject*)A->Property);\
+    return 1; \
+}\
+int SetWrap_##ClassName##Property(lua_State* L) \
+{ \
+    ClassName* A = (ClassName*)VectorBase_GetAddr(L, 1, #ClassName);\
+    A->Property = FCScript::CastArgValue_UObject(L, 3, A->Property); \
+    return 0; \
+}
+
+#define DEFINED_CLASS_VALUE(ClassName, Property)  \
+int GetWrap_##ClassName##Property(lua_State* L) \
+{ \
+    ClassName* A = (ClassName*)VectorBase_GetAddr(L, 1, #ClassName);\
+    FCScript::SetArgValue(L, A->Property);\
+    return 1; \
+}\
+int SetWrap_##ClassName##Property(lua_State* L) \
+{ \
+    ClassName* A = (ClassName*)VectorBase_GetAddr(L, 1, #ClassName);\
+    FCScript::GetArgValue(L, 3, A->Property); \
+    return 0; \
+}
+
+#define DEFINED_CLASS_BIT_VALUE(ClassName, Property)  \
+int GetBitWrap_##ClassName##Property(lua_State* L) \
+{ \
+    ClassName* A = (ClassName*)VectorBase_GetAddr(L, 1, #ClassName);\
+    bool V = A->Property;\
+    FCScript::SetArgValue(L, V);\
+    return 1; \
+}\
+int SetBitWrap_##ClassName##Property(lua_State* L) \
+{ \
+    ClassName* A = (ClassName*)VectorBase_GetAddr(L, 1, #ClassName);\
+    bool V = false; \
+    FCScript::GetArgValue(L, 3, V); \
+    A->Property = V; \
+    return 0; \
+}
+
+#define  CLASS_VALUE_FUNC(ClassName, Property) { #Property, GetWrap_##ClassName##Property, SetWrap_##ClassName##Property }
+#define  CLASS_BIT_VALUE_FUNC(ClassName, Property) { #Property, GetBitWrap_##ClassName##Property, SetBitWrap_##ClassName##Property }

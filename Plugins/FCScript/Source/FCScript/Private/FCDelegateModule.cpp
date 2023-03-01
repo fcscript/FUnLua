@@ -413,10 +413,10 @@ UFunction* FFCDelegateModule::GetScriptNameFunction(UClass* ObjClass)
     UFunction* InterfaceFunc = ObjClass->FindFunctionByName(mName_GetScriptClassName);
 
     // 做UnLua升级是可以这样
-#ifdef COMPATIBLE_UNLUA
+//#ifdef COMPATIBLE_UNLUA
     if (!InterfaceFunc)
         InterfaceFunc = ObjClass->FindFunctionByName(mName_GetModuleName); // 兼容UnLua
-#endif
+//#endif
     mScriptNameCS.Lock();
     mScriptNameMap[ObjClass] = InterfaceFunc;
     mScriptNameCS.Unlock();

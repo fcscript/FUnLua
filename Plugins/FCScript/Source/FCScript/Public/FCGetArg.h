@@ -3,6 +3,10 @@
 #include "UObject/UnrealType.h"
 #include "UObject/ObjectMacros.h"
 #include "CoreUObject.h"
+#include "GameFramework/Actor.h"
+#include "GameFramework/Pawn.h"
+#include "GameFramework/Character.h"
+#include "GameFramework/PlayerController.h"
 
 #include "../LuaCore/LuaHeader.h"
 
@@ -15,72 +19,92 @@ FCSCRIPT_API UObject* FC_GetArgValue_UStructOrUObject(lua_State* L, int Index);
 FCSCRIPT_API void *FC_GetArgRefObjPtr(lua_State* L, int Index);
 FCSCRIPT_API int64 FC_GetArgObjID(lua_State* L, int Index);
 
+FORCEINLINE bool FC_Get_IsUObject(const UObject*) { return true; }
+FORCEINLINE bool FC_Get_IsUObject(void*) { return false; }
+
 namespace FCScript
 {
 	template<class _Ty>
-	FORCEINLINE void GetArgValue(lua_State* L, int Index, _Ty & Value)
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, _Ty & Value)
 	{
-		Value = _Ty(); // default(_Ty);
+		//Value = _Ty(); // default(_Ty);
+        Value = (_Ty)lua_tointeger(L, Index);  // default is enum
     }
     template<class _Ty>
     FORCEINLINE void GetArgValue(lua_State* L, int Index, _Ty*& Value)
     {
-		Value = (_Ty *)FC_GetCppObjectPtr(L, Index);
+        if(FC_Set_IsUObject(Value))
+            Value = (_Ty *)FC_GetArgValue_Object(L, Index);
+        else
+            Value = (_Ty*)FC_GetCppObjectPtr(L, Index);
     }
     template<class _Ty>
     FORCEINLINE void GetArgValue(lua_State* L, int Index, const _Ty*& Value)
     {
-        Value = (const Ty*)FC_GetCppObjectPtr(L, Index);
+        if (FC_Set_IsUObject(Value))
+            Value = (_Ty*)FC_GetArgValue_Object(L, Index);
+        else
+            Value = (_Ty*)FC_GetCppObjectPtr(L, Index);
     }
 
-	FORCEINLINE void GetArgValue(lua_State* L, int Index, int8 & Value)
+    template<class _Ty>
+    FORCEINLINE _Ty *CastArgValue_UObject(lua_State* L, int Index, _Ty*Value)
+    {
+        return Cast<_Ty>(FC_GetArgValue_Object(L, Index));
+    }
+
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, int8 & Value)
 	{
         Value = (int8)lua_tointeger(L, Index);
 	}
-	FORCEINLINE void GetArgValue(lua_State* L, int Index, bool & Value)
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, uint8& Value)
+    {
+        Value = (uint8)lua_tointeger(L, Index);
+    }
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, bool & Value)
 	{
         Value = lua_toboolean(L, Index) != 0;
 	}
-	FORCEINLINE void GetArgValue(lua_State* L, int Index, char & Value)
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, char & Value)
 	{
         Value = (char)lua_tointeger(L, Index);
 	}
-	FORCEINLINE void GetArgValue(lua_State* L, int Index, int16 & Value)
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, int16 & Value)
 	{
         Value = (int16)lua_tointeger(L, Index);
 	}
-	FORCEINLINE void GetArgValue(lua_State* L, int Index, uint16 & Value)
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, uint16 & Value)
 	{
         Value = (uint16)lua_tointeger(L, Index);
 	}
-	FORCEINLINE void GetArgValue(lua_State* L, int Index, int & Value)
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, int & Value)
 	{
         Value = (int)lua_tointeger(L, Index);
 	}
-	FORCEINLINE void GetArgValue(lua_State* L, int Index, uint32 & Value)
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, uint32 & Value)
 	{
         Value = (uint32)lua_tointeger(L, Index);
 	}
-	FORCEINLINE void GetArgValue(lua_State* L, int Index, int64 & Value)
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, int64 & Value)
 	{
         Value = lua_tointeger(L, Index);
 	}
-	FORCEINLINE void GetArgValue(lua_State* L, int Index, float & Value)
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, float & Value)
 	{
         Value = (float)lua_tonumber(L, Index);
 	}
-	FORCEINLINE void GetArgValue(lua_State* L, int Index, double & Value)
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, double & Value)
 	{
         Value = lua_tonumber(L, Index);
 	}
-	FORCEINLINE void GetArgValue(lua_State* L, int Index, FString & Value)
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, FString & Value)
 	{
         const char *str = lua_tostring(L, Index);
         if(!str)
             str = "";
         Value = UTF8_TO_TCHAR(str);
 	}
-	FORCEINLINE void GetArgValue(lua_State* L, int Index, FName & Value)
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, FName & Value)
 	{
         const char* str = lua_tostring(L, Index);
         if (!str)
@@ -138,6 +162,22 @@ namespace FCScript
     FORCEINLINE void GetArgValue(lua_State* L, int Index, UObject*& Value)
     {
         Value = FC_GetArgValue_Object(L, Index);
+    }
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, AActor*& Value)
+    {
+        Value = Cast<AActor>(FC_GetArgValue_Object(L, Index));
+    }
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, APawn*& Value)
+    {
+        Value = Cast<APawn>(FC_GetArgValue_Object(L, Index));
+    }
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, ACharacter*& Value)
+    {
+        Value = Cast<ACharacter>(FC_GetArgValue_Object(L, Index));
+    }
+    FORCEINLINE void GetArgValue(lua_State* L, int Index, APlayerController*& Value)
+    {
+        Value = Cast<APlayerController>(FC_GetArgValue_Object(L, Index));
     }
     FORCEINLINE UObject* GetUObject(lua_State* L, int Index)
     {

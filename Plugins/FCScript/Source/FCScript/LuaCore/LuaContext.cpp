@@ -329,3 +329,78 @@ int Global_Print(lua_State* L)
     //}
     return 0;
 }
+
+bool RawGetLuaFunctionBase(lua_State* L, int TableIdx, const char* InFuncName)
+{
+    int StartIdx = lua_gettop(L);
+    lua_pushstring(L, InFuncName);
+    int Ret = lua_rawget(L, TableIdx);
+    int Type = lua_type(L, -1);
+    if (Type > LUA_TNIL)
+    {
+        return Type == LUA_TFUNCTION;
+    }
+    int CurIdx = lua_gettop(L);
+    lua_pop(L, 1);
+    lua_pushvalue(L, TableIdx);
+    while (true)
+    {
+        lua_pushstring(L, "Super");
+        lua_rawget(L, -2);
+        Type = lua_type(L, -1);
+        if (Type == LUA_TTABLE)
+        {
+            lua_pushstring(L, InFuncName);
+            lua_rawget(L, -2);
+            int ChildType = lua_type(L, -1);
+            if (ChildType > LUA_TNIL)
+            {
+                return ChildType == LUA_TFUNCTION;
+            }
+            lua_pop(L, 1);
+        }
+        else
+        {
+            break;
+        }
+    }
+    lua_pop(L, 1);
+    lua_pushnil(L);
+    return false;
+}
+
+void AutoGetTableFunc(lua_State* L, int StartIdx, bool bValidFunc)
+{
+    int RefFuncIdx = LUA_NOREF;
+    int CurTop = lua_gettop(L);
+    if (bValidFunc)
+    {
+        RefFuncIdx = luaL_ref(L, LUA_REGISTRYINDEX);  // 将这个参数添加到全局引用表    
+        lua_pop(L, CurTop - StartIdx - 1);
+        lua_rawgeti(L, LUA_REGISTRYINDEX, RefFuncIdx);
+        luaL_unref(L, LUA_REGISTRYINDEX, RefFuncIdx);
+    }
+    else
+    {
+        lua_pop(L, CurTop - StartIdx);
+        lua_pushnil(L);
+    }
+}
+
+bool RawGetLuaFucntionByScriptIns(lua_State* L, int ScriptIns, const char* InFuncName)
+{
+    int StartIdx = lua_gettop(L);
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ScriptIns);
+    int TableIdx = lua_gettop(L);
+    bool bSuc = RawGetLuaFunctionBase(L, TableIdx, InFuncName);
+    AutoGetTableFunc(L, StartIdx, bSuc);
+    return bSuc;
+}
+
+bool RawGetLuaFunctionByTable(lua_State* L, int TableIdx, const char* InFuncName)
+{
+    int StartIdx = lua_gettop(L);
+    bool bSuc = RawGetLuaFunctionBase(L, TableIdx, InFuncName);
+    AutoGetTableFunc(L, StartIdx, bSuc);
+    return bSuc;
+}

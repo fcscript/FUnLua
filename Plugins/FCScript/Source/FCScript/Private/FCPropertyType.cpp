@@ -57,7 +57,7 @@ void  InitPropertyTable()
 	gPropertyTypeMap[FMulticastDelegateProperty::StaticClass()] = FCPROPERTY_MulticastDelegateProperty;
 	#if OLD_UE_ENGINE == 0
 	gPropertyTypeMap[FMulticastInlineDelegateProperty::StaticClass()] = FCPROPERTY_MulticastDelegateProperty;
-	gPropertyTypeMap[FMulticastSparseDelegateProperty::StaticClass()] = FCPROPERTY_MulticastDelegateProperty;
+	gPropertyTypeMap[FMulticastSparseDelegateProperty::StaticClass()] = FCPROPERTY_MulticastSparseDelegateProperty;
 	#endif
 
 	gGraphyTypeMap["Vector2"] = FCPROPERTY_Vector2;
@@ -112,6 +112,7 @@ void  InitProperyNameTable()
 
 #if OLD_UE_ENGINE == 0
 	gPropertyClassNameMap[FCPROPERTY_MulticastDelegateProperty] = "MulticastDelegateEvent";
+    gPropertyClassNameMap[FCPROPERTY_MulticastSparseDelegateProperty] = "MulticastSparseDelegateEvent";
 #endif
 }
 

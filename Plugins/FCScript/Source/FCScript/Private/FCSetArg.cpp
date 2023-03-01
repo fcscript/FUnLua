@@ -20,22 +20,6 @@ void FC_SetArgValue_ByName(lua_State* L, const void *ValueAddr, const char *Clas
     }
 }
 
-void* FC_GetArgValue_CppPtr(lua_State* L, int Index)
-{
-    int64 PtrID = (int64)lua_touserdata(L, Index);
-    FCObjRef *ObjRef = FCGetObj::GetIns()->FindValue(PtrID);
-    if(ObjRef && ObjRef->RefType == EFCObjRefType::CppPtr)
-    {
-        return ObjRef->GetThisAddr();
-    }
-    return nullptr;
-}
-
-void* FC_GetCppObjectPtr(lua_State* L, int Index)
-{
-    return FC_GetArgValue_CppPtr(L, Index);
-}
-
 void  FC_GetArgValue_ByName(lua_State* L, int Index, void* ValueAddr, const char* ClassName)
 {
     FCDynamicProperty* DynamicProperty = GetCppDynamicProperty(ClassName);
@@ -74,6 +58,22 @@ int64 FC_GetArgObjID(lua_State* L, int Index)
         lua_pop(L, 1);
     }
     return ObjID;
+}
+
+void* FC_GetArgValue_CppPtr(lua_State* L, int Index)
+{
+    int64 ObjID = FC_GetArgObjID(L, Index);
+    FCObjRef* ObjRef = FCGetObj::GetIns()->FindValue(ObjID);
+    if (ObjRef && ObjRef->RefType == EFCObjRefType::CppPtr)
+    {
+        return ObjRef->GetThisAddr();
+    }
+    return nullptr;
+}
+
+void* FC_GetCppObjectPtr(lua_State* L, int Index)
+{
+    return FC_GetArgValue_CppPtr(L, Index);
 }
 
 void* FC_GetArgRefObjPtr(lua_State* L, int Index)

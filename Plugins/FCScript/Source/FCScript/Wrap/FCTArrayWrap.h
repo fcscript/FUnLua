@@ -16,9 +16,13 @@ public:
 	static int SetNumb_wrap(lua_State* L);
 	static int GetAt_wrap(lua_State* L);
 	static int SetAt_wrap(lua_State* L);
+    static int GetRef_wrap(lua_State* L);
 	static int GetIndex_wrap(lua_State* L);
 	static int SetIndex_wrap(lua_State* L);
 	static int Swap_wrap(lua_State* L);
+    static int Shuffle_wrap(lua_State* L);
+    static int LastIndex_wrap(lua_State* L);
+    static int IsValidIndex_wrap(lua_State* L);
 	static int Contains_wrap(lua_State* L);
 	static int Add_wrap(lua_State* L);
 	static int AddUnique_wrap(lua_State* L);

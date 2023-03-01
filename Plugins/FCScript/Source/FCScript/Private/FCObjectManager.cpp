@@ -53,18 +53,19 @@ void  FFCObjectdManager::BindToScript(const class UObjectBaseUtility* Object, UC
 	ScriptClassName = GetConstName(ScriptClassName);
     FCObjectUseFlag::GetIns().Ref(Object);
 	FBindObjectInfo &Info = m_BindObjects[Object];
-	Info.Set(Object, Object->GetLinkerIndex(), ScriptClassName);
+	Info.Set(Object, Object->GetLinkerIndex(), ScriptClassName, LUA_NOREF);
 	RegisterReceiveBeginPlayFunction((UObject*)Object, Class);
 }
 
-void  FFCObjectdManager::CallBindScript(UObject *InObject, const char *ScriptClassName)
+void  FFCObjectdManager::CallBindScript(UObject *InObject, const char *ScriptClassName, int InitializerTableRef)
 {
     ScriptClassName = GetConstName(ScriptClassName);
     FCObjectUseFlag::GetIns().Ref(InObject);
     FBindObjectInfo &Info = m_BindObjects[InObject];
-    Info.Set(InObject, InObject->GetLinkerIndex(), ScriptClassName);
+    Info.Set(InObject, InObject->GetLinkerIndex(), ScriptClassName, InitializerTableRef);
     Info.m_ScriptIns = FCDynamicBindScript(InObject);
     FCScriptContext  *ScriptContext = GetScriptContext();
+    CallAnyScriptFunc(ScriptContext, Info.m_ScriptIns, "UserConstructionScript");
     CallAnyScriptFunc(ScriptContext, Info.m_ScriptIns, "ReceiveBeginPlay");
 }
 
@@ -340,6 +341,15 @@ void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynam
 		FScriptDelegate& ScriptDelegate = (*(FScriptDelegate*)ValueAddr);
 		ScriptDelegate.BindUFunction(InObject, Func->GetFName());
 	}
+    else if(FCPROPERTY_MulticastSparseDelegateProperty == InDynamicProperty->Type)
+    {
+        FMulticastSparseDelegateProperty * DelegateProperty = (FMulticastSparseDelegateProperty*)InDynamicProperty->Property;
+        FSparseDelegate & ScriptDelegate = (*(FSparseDelegate*)ValueAddr);
+
+        FScriptDelegate DynamicDelegate;
+        DynamicDelegate.BindUFunction(InObject, Func->GetFName());
+        ScriptDelegate.__Internal_AddUnique(InObject, FName(DynamicFunc->GetFieldName()), DynamicDelegate);
+    }
 }
 
 void  FFCObjectdManager::RemoveScriptDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty, const void* InFuncAddr)
@@ -524,6 +534,11 @@ void  FFCObjectdManager::RemoveObjectDelegate(UObject *InObject, const FCDynamic
 		FScriptDelegate& ScriptDelegate = (*(FScriptDelegate*)ValueAddr);
 		ScriptDelegate.Clear();
 	}
+    else if(FCPROPERTY_MulticastSparseDelegateProperty == InDynamicProperty->Type)
+    {
+        FSparseDelegate& ScriptDelegate = (*(FSparseDelegate*)ValueAddr);
+        ScriptDelegate.__Internal_Clear(InObject, FName(InDynamicProperty->GetFieldName()));
+    }
 }
 
 void  FFCObjectdManager::RemoveOverrideRefByObject(const class UObjectBase *Object)

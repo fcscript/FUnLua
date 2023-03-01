@@ -8,6 +8,7 @@ enum EFCObjRefType
 	NewUObject,     // new UObject对象
 	NewUStruct,     // new UStrucct对象
 	NewProperty,    // new Property对象
+    NewCppStruct,   // new Cpp class
 	RefProperty,    // UObject的属性引用
     RefFunction,    // 引用Function
 	RefStructValue, // 普通的Struct变量引用
@@ -154,6 +155,7 @@ public:
 	FCObjRef*  PushUObjectNoneRef(UObject* Obj);
 	int64  PushNewObject(FCDynamicClassDesc* ClassDesc, const FName& Name, UObject* Outer);
 	int64  PushNewStruct(FCDynamicClassDesc* ClassDesc);
+    int64  PushCppStruct(FCDynamicClassDesc* ClassDesc, void *pValueAddr);
 	// 功能：压入一个UObject的属性(生成周期随父对象)的引用
 	int64  PushProperty(UObject *Parent, const FCDynamicProperty *DynamicProperty, void *pValueAddr);
     int64  PushTempRefProperty(const FCDynamicProperty* DynamicProperty, void* pValueAddr);

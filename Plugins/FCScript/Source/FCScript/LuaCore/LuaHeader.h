@@ -41,3 +41,20 @@ struct FLuaRetValues
     }
 };
 
+struct FLuaTableRef
+{
+    int  TableRef;
+    FLuaTableRef():TableRef(LUA_NOREF){}
+    FLuaTableRef(int InTableRef) :TableRef(InTableRef) {}
+    bool IsValid() const
+    {
+        return TableRef != LUA_NOREF;
+    }
+};
+
+
+#ifdef UE_BUILD_DEBUG
+    #define  DEVELOPMENT_INLINE
+#else
+    #define  DEVELOPMENT_INLINE   FORCEINLINE
+#endif

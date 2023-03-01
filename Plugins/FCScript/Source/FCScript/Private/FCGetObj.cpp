@@ -139,6 +139,23 @@ int64  FCGetObj::PushNewStruct(FCDynamicClassDesc* ClassDesc)
 	return ObjRef->PtrIndex;
 }
 
+int64  FCGetObj::PushCppStruct(FCDynamicClassDesc* ClassDesc, void* pValueAddr)
+{
+    FCObjRef* ObjRef = NewObjRef();
+    ObjRef->Ref = 1;
+    ObjRef->RefType = EFCObjRefType::NewCppStruct;
+    ObjRef->Parent = nullptr;
+    ObjRef->ClassDesc = ClassDesc;
+    ObjRef->PtrIndex = ++m_nObjID;
+    ObjRef->ThisObjAddr = (uint8*)pValueAddr;
+    ObjRef->DynamicProperty = nullptr;
+
+    ObjRefKey  ObjKey(nullptr, pValueAddr);
+    m_ObjMap[ObjKey] = ObjRef;
+    m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
+    return ObjRef->PtrIndex;    
+}
+
 int64  FCGetObj::PushProperty(UObject *Parent, const FCDynamicProperty *DynamicProperty, void *pValueAddr)
 {
 	if(!Parent)

@@ -102,15 +102,26 @@ int FCUnLuaWrap::Class_wrap(lua_State* L)
     lua_createtable(L, 0, 0);
     int nTableIdx = lua_gettop(L);
 
-    lua_getglobal(L, LUA_GNAME);
-    lua_pushstring(L, "__index");
-    lua_rawget(L, -2);
-    lua_rawset(L, nTableIdx);
+    //lua_getglobal(L, LUA_GNAME);
+    //lua_pushstring(L, "__index");
+    //lua_rawget(L, -2);
+    //lua_rawset(L, nTableIdx);
 
-    lua_getglobal(L, LUA_GNAME);
-    lua_pushstring(L, "__newindex");
-    lua_rawget(L, -2);
-    lua_rawset(L, nTableIdx);
+    //lua_getglobal(L, LUA_GNAME);
+    //lua_pushstring(L, "__newindex");
+    //lua_rawget(L, -2);
+    //lua_rawset(L, nTableIdx);
+
+    lua_pushstring(L, "__index");                           // 2  对不存在的索引(成员变量)访问时触发
+    lua_pushcfunction(L, OtherScript_Index);                      // 3
+    lua_rawset(L, -3);
+
+    lua_pushstring(L, "__newindex");                        // 2  对不存在的索引(成员变量)赋值时触发
+    lua_pushcfunction(L, OtherScript_NewIndex);                   // 3
+    lua_rawset(L, -3);
+
+    lua_pushvalue(L, -1);                           // set metatable to self
+    lua_setmetatable(L, -2);
 
     if(super_name)
     {
@@ -126,9 +137,19 @@ int FCUnLuaWrap::Class_wrap(lua_State* L)
             int RetType = lua_type(L, SuperTable[0]);
             if(LUA_TTABLE == RetType)
             {
-                lua_pushstring(L, "Super");             // 不要脚本层修改这个变量
-                lua_pushvalue(L, SuperTable[0]);
-                lua_rawset(L, nTableIdx);
+                FLuaValue CloneValue = CloneLuaTable(L, SuperTable[0]);
+                if(CloneValue.bValid)
+                {
+                    lua_pushstring(L, "Super");             // 不要脚本层修改这个变量
+                    lua_pushvalue(L, CloneValue.ValueIdx);
+                    lua_rawset(L, nTableIdx);
+                }
+                else
+                {
+                    FCStringBuffer128 ErrorTips;
+                    ErrorTips << "UnLua.Class.Super failed, failed clone parent class:" << super_name;
+                    ReportLuaError(L, ErrorTips.GetString());
+                }
                 RetCount = 0;
             }
         }

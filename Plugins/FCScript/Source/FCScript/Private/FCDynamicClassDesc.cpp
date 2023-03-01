@@ -504,9 +504,11 @@ void FDynamicEnum::OnRegisterEnum(UEnum* InEnum)
     int32 NumEntries = InEnum->NumEnums();
     EnumValue.resize(NumEntries);
     FString Name;
+    FString DisplayName;
     for (int32 i = 0; i < NumEntries; ++i)
     {
-        Name = InEnum->GetDisplayNameTextByIndex(i).ToString();
+        DisplayName = InEnum->GetDisplayNameTextByIndex(i).ToString();
+        Name = InEnum->GetNameStringByIndex(i);
         EnumValue[i].Name = TCHAR_TO_UTF8(*Name);
         EnumValue[i].Value = InEnum->GetValueByIndex(i);
         m_NameToValue[EnumValue[i].Name.c_str()] = EnumValue[i].Value;
@@ -560,6 +562,22 @@ void FCScriptContext::ResumeThread(int ThreadRef)
             luaL_unref(L, LUA_REGISTRYINDEX, ThreadRef);    // remove the reference if the coroutine finishes its execution
         }
     }
+}
+
+FCDynamicClassDesc* FCScriptContext::RegisterCppClass(const char* UEClassName)
+{
+    CDynamicClassNameMap::iterator itClass = m_ClassFinder.find(UEClassName);
+    if (itClass != m_ClassFinder.end())
+    {
+        return itClass->second;
+    }
+    UEClassName = GetConstName(UEClassName);
+
+    FCDynamicClassDesc* ScriptClassDesc = new FCDynamicClassDesc();
+    ScriptClassDesc->m_UEClassName = UEClassName;
+    m_ClassNameMap[UEClassName] = ScriptClassDesc;
+    m_ClassFinder[UEClassName] = ScriptClassDesc;
+    return ScriptClassDesc;
 }
 
 FCDynamicClassDesc*  FCScriptContext::RegisterUClass(const char *UEClassName)

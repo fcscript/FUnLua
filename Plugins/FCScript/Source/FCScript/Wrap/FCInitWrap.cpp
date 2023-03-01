@@ -24,6 +24,8 @@
 #include "FCDataTableWrap.h"
 #include "FCUnLuaLib.h"
 #include "FCUELibWrap.h"
+#include "FCWorldWrap.h"
+#include "FCActorSpawnParametersWrap.h"
 
 
 void FCInitWrap::Register(lua_State* L)
@@ -55,5 +57,7 @@ void FCInitWrap::Register(lua_State* L)
 
     FCUnLuaWrap::Register(L);
     FCUELibWrap::Register(L);
+    FCActorSpawnParametersWrap::Register(L);
+    FCWorldWrap::Register(L);
 }
 

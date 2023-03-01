@@ -8,19 +8,21 @@ struct FBindObjectInfo
 	int32 Index;
 	int64    m_ScriptIns;
 	int64    m_ObjRefID;
+    int      m_InitializerTableRef;
 	const char*  m_ScriptName;
-	FBindObjectInfo() :Object(nullptr), Index(0), m_ScriptIns(0), m_ObjRefID(0), m_ScriptName(nullptr)
+	FBindObjectInfo() :Object(nullptr), Index(0), m_ScriptIns(0), m_ObjRefID(0), m_InitializerTableRef(LUA_NOREF), m_ScriptName(nullptr)
 	{
 	}
-	FBindObjectInfo(const UObjectBaseUtility *InObject, int32 InIndex, const char *InScriptName) :Object(InObject), Index(InIndex), m_ScriptIns(0), m_ObjRefID(0), m_ScriptName(InScriptName)
+	FBindObjectInfo(const UObjectBaseUtility *InObject, int32 InIndex, const char *InScriptName, int InitializerTableRef = LUA_NOREF) :Object(InObject), Index(InIndex), m_ScriptIns(0), m_ObjRefID(0), m_InitializerTableRef(InitializerTableRef), m_ScriptName(InScriptName)
 	{
 	}
-	void  Set(const UObjectBaseUtility *InObject, int32 InIndex, const char *InScriptName)
+	void  Set(const UObjectBaseUtility *InObject, int32 InIndex, const char *InScriptName, int InitializerTableRef)
 	{
 		Object = InObject;
 		Index = InIndex;
 		m_ScriptIns = 0;
 		m_ScriptName = InScriptName;
+        m_InitializerTableRef = InitializerTableRef;
 	}
 };
 
@@ -61,7 +63,7 @@ public:
 
 	void  BindScript(const class UObjectBaseUtility* Object, UClass* Class, const FString& ScriptClassName);
 	void  BindToScript(const class UObjectBaseUtility* Object, UClass* Class, const char *ScriptClassName);
-    void  CallBindScript(UObject *InObject, const char *ScriptClassName);
+    void  CallBindScript(UObject *InObject, const char *ScriptClassName, int InitializerTableRef = LUA_NOREF);
 	void  DynamicBind(const class UObjectBaseUtility *Object, UClass *Class);
 
 	// 功能：对象释放事件

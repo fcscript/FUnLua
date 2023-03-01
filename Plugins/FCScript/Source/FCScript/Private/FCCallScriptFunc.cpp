@@ -158,6 +158,12 @@ void  PushScriptStruct(lua_State* L, const FCDynamicPropertyBase *DynamicPropert
 	}
 }
 
+void PushScriptEnum(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    FClassProperty* StructProperty = (FClassProperty*)DynamicProperty->Property;
+    FCScript::SetArgValue(L, *ValueAddr);
+}
+
 // 将UE对象写入脚本对象
 void  PushClassProperty(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
@@ -299,6 +305,11 @@ void  PushScriptDelegate(lua_State* L, const FCDynamicPropertyBase *DynamicPrope
 	FCScript::PushBindObjRef(L, ObjID, DynamicProperty->GetClassName());
 }
 
+void PushScriptSpareDelegate(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    return PushScriptDelegate(L, DynamicProperty, ValueAddr, ThisObj, ObjRefPtr);
+}
+
 void  PushScriptTArray(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
 	FArrayProperty* ArrayProperty = (FArrayProperty*)DynamicProperty->Property;
@@ -436,6 +447,9 @@ LPPushScriptValueFunc  InitDynamicPropertyWriteFunc(FCPropertyType Flag)
 		case FCPROPERTY_Vector4:
             WriteFunc = PushScriptStruct;
 			break;
+        case FCPROPERTY_Enum:
+            WriteFunc = PushScriptEnum;
+            break;
         case FCPROPERTY_ClassProperty:
             WriteFunc = PushClassProperty;
             break;
@@ -452,6 +466,9 @@ LPPushScriptValueFunc  InitDynamicPropertyWriteFunc(FCPropertyType Flag)
 		case FCPROPERTY_MulticastDelegateProperty:
             WriteFunc = PushScriptDelegate;
 			break;
+        case FCPROPERTY_MulticastSparseDelegateProperty:
+            WriteFunc = PushScriptSpareDelegate;
+            break;
 		default:
 			break;
 	}
@@ -548,6 +565,11 @@ void  ReadScriptFVector4D(lua_State* L, int ValueIdx, const FCDynamicPropertyBas
     {
         *((FVector4*)ValueAddr) = *((const FVector4*)ObjRef->GetPropertyAddr());
     }
+}
+void ReadScriptEnum(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    int Value = lua_tointeger(L, ValueIdx);
+    *ValueAddr = (uint8)Value;
 }
 // 将脚本对象写入到UE对象
 void  ReadScriptStruct(lua_State* L, int ValueIdx, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
@@ -927,6 +949,10 @@ void ReadScriptMulticastDelegate(lua_State* L, int ValueIdx, const FCDynamicProp
 {
     int iii = 0;    
 }
+void ReadScriptMulticastSparseDelegate(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
+{
+    int iiii = 0;
+}
 
 LPOuterScriptValueFunc  InitDynamicPropertyReadFunc(FCPropertyType Flag)
 {
@@ -996,6 +1022,9 @@ LPOuterScriptValueFunc  InitDynamicPropertyReadFunc(FCPropertyType Flag)
         case FCPROPERTY_Vector4:
             ReadScriptFunc = ReadScriptFVector4D;
             break;
+        case FCPROPERTY_Enum:
+            ReadScriptFunc = ReadScriptEnum;
+            break;
         case FCPROPERTY_ClassProperty:
             ReadScriptFunc = ReadClassProperty;
             break;
@@ -1013,6 +1042,9 @@ LPOuterScriptValueFunc  InitDynamicPropertyReadFunc(FCPropertyType Flag)
             break;
         case FCPROPERTY_MulticastDelegateProperty:
             ReadScriptFunc = ReadScriptMulticastDelegate;
+            break;
+        case FCPROPERTY_MulticastSparseDelegateProperty:
+            ReadScriptFunc = ReadScriptMulticastSparseDelegate;
             break;
 		default:
 			break;
@@ -1363,9 +1395,11 @@ bool  FCCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 ScriptIn
     lua_pushcfunction(L, ReportLuaCallError);
 	if (ScriptIns > 0)
 	{
-		lua_rawgeti(L, LUA_REGISTRYINDEX, ScriptIns);
-		lua_pushstring(L, ScriptFuncName);
-		lua_gettable(L, -2);
+		//lua_rawgeti(L, LUA_REGISTRYINDEX, ScriptIns);
+		//lua_pushstring(L, ScriptFuncName);
+		//lua_gettable(L, -2);
+
+        RawGetLuaFucntionByScriptIns(L, ScriptIns, ScriptFuncName);
 	}
 	else
 	{

@@ -42,6 +42,7 @@ int  LuaPushValue(lua_State* L, const FVector2D& value, bool bCopy);
 int  LuaPushValue(lua_State* L, const FVector4& value, bool bCopy);
 int  LuaPushValue(lua_State* L, const UObject* value, bool bCopy);
 int  LuaPushValue(lua_State* L, const FLuaValue& value, bool bCopy);
+int  LuaPushValue(lua_State* L, const FLuaTableRef& value, bool bCopy);
 
 template <class _Ty>
 int  LuaPushValue(lua_State* L, const TArray<_Ty> &Array, bool bCopy)
@@ -117,6 +118,9 @@ bool CallGlobalVoidLua(lua_State* L, const char* FuncName, T&&... Args)
     return Code == LUA_OK;
 }
 
+bool RawGetLuaFucntionByScriptIns(lua_State* L, int ScriptIns, const char* InFuncName);
+bool RawGetLuaFunctionByTable(lua_State* L, int TableIdx, const char* InFuncName);
+
 // 调用Table的成员函数，有返回值的那种
 template <typename... T>
 FLuaRetValues CallTableFunction(lua_State* L, int TableIdx, const char* FuncName, T&&... Args)
@@ -127,8 +131,11 @@ FLuaRetValues CallTableFunction(lua_State* L, int TableIdx, const char* FuncName
     }
     int StartIdx = lua_gettop(L);
     //lua_pushcfunction(L, ReportLuaCallError);
-    lua_pushstring(L, FuncName);
-    lua_gettable(L, -2);
+
+    RawGetLuaFunctionByTable(L, TableIdx, FuncName);
+
+    //lua_pushstring(L, FuncName);
+    //lua_gettable(L, -2);
 
     int32 MessageHandlerIdx = lua_gettop(L) - 1;
     lua_pushvalue(L, TableIdx); // push self
@@ -161,8 +168,10 @@ bool CallTableVoidFunction(lua_State* L, int TableIdx, const char* FuncName, T&&
     }
     int StartIdx = lua_gettop(L);
     //lua_pushcfunction(L, ReportLuaCallError);
-    lua_pushstring(L, FuncName);
-    lua_gettable(L, -2);
+
+    RawGetLuaFunctionByTable(L, TableIdx, FuncName);
+    //lua_pushstring(L, FuncName);
+    //lua_gettable(L, -2);
 
     bool bFunction = lua_isfunction(L, -1);
     if(!bFunction)

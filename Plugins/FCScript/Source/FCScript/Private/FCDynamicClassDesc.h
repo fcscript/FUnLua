@@ -72,6 +72,11 @@ struct FCDynamicPropertyBase : public FCDynamicField
 			FDelegateProperty* DelegateProperty = (FDelegateProperty*)Property;
 			return DelegateProperty->SignatureFunction;
 		}
+        else if(FCPROPERTY_MulticastSparseDelegateProperty == Type)
+        {
+            FMulticastSparseDelegateProperty * DelagateProperty = (FMulticastSparseDelegateProperty*)Property;
+            return DelagateProperty->SignatureFunction;
+        }
 		return nullptr;
 	}
     virtual int GetMemSize() const { return sizeof(FCDynamicPropertyBase); }
@@ -454,6 +459,7 @@ struct FCScriptContext
     int  QueryLuaRef(lua_State* L);
     void ResumeThread(int ThreadRef);
 	
+    FCDynamicClassDesc*  RegisterCppClass(const char* UEClassName);
 	FCDynamicClassDesc*  RegisterUClass(const char *UEClassName);
 	FCDynamicClassDesc*  RegisterUStruct(UStruct *Struct);
     FCDynamicClassDesc*  RegisterByProperty(FProperty *Property);

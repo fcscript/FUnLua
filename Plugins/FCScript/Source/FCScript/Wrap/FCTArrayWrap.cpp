@@ -35,12 +35,12 @@ int FCTArrayWrap::LibOpen_wrap(lua_State* L)
 		{ "Resize", SetNumb_wrap },
 		//{ "GetData", TArray_GetData },
 		{ "Get", GetIndex_wrap },
-		//{ "GetRef", TArray_GetRef },
+		{ "GetRef", GetRef_wrap },
 		{ "Set", SetIndex_wrap },
 		{ "Swap", Swap_wrap },
-		//{ "Shuffle", TArray_Shuffle },
-		//{ "LastIndex", TArray_LastIndex },
-		//{ "IsValidIndex", TArray_IsValidIndex },
+		{ "Shuffle", Shuffle_wrap },
+		{ "LastIndex", LastIndex_wrap },
+		{ "IsValidIndex", IsValidIndex_wrap },
 		{ "Contains", Contains_wrap },
 		{ "Append", Add_wrap },
 		{ "ToTable", ToList_wrap },
@@ -244,6 +244,15 @@ int FCTArrayWrap::SetAt_wrap(lua_State* L)
 	return 0;
 }
 
+int FCTArrayWrap::GetRef_wrap(lua_State* L)
+{
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
+    FCTArrayHelper  Helper(ObjRef);
+    int Index = lua_tointeger(L, 2) - 1; // lua 从 1开始
+    Helper.GetRef(L, Index, ObjRef);
+    return 1;
+}
+
 // value = array[key]
 int FCTArrayWrap::GetIndex_wrap(lua_State* L)
 {
@@ -279,6 +288,36 @@ int FCTArrayWrap::Swap_wrap(lua_State* L)
 		}
 	}
 	return 0;
+}
+
+int FCTArrayWrap::Shuffle_wrap(lua_State* L)
+{
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
+    FCTArrayHelper  Helper(ObjRef);
+    if(Helper.IsValid())
+    {
+        Helper.Shuffle();
+    }
+    return 0;
+}
+
+int FCTArrayWrap::LastIndex_wrap(lua_State* L)
+{
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
+    FCTArrayHelper  Helper(ObjRef);
+    int Index = Helper.Num() - 1;
+    lua_pushinteger(L, Index);
+    return 1;
+}
+
+int FCTArrayWrap::IsValidIndex_wrap(lua_State* L)
+{
+    FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
+    FCTArrayHelper  Helper(ObjRef);
+    int32 Index = lua_tointeger(L, 2);
+    --Index;
+    lua_pushboolean(L, Index >= 0 && Index < Helper.Num());
+    return 1;
 }
 
 int  TArrayWrap_Add(lua_State* L, FCObjRef* ObjRef, int Idx)

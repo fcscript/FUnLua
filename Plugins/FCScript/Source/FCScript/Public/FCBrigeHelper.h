@@ -267,6 +267,79 @@ struct TFCExportProperty : public FCExportProperty
 	}
 };
 
+// 成员属性
+template <typename ClassType, typename T>
+struct TFCExportStaticProperty : public FCExportProperty
+{
+    T *StaticValue;
+    TFCExportStaticProperty(const char* InName, T *InValue, int InAim, const char* InClassName) :FCExportProperty(InName, 0, InAim, InClassName)
+        , StaticValue(InValue)
+    {
+    }
+    virtual int Read(lua_State* L, char* ThisAddr, void* ClassDesc) const
+    {
+        ClassType* ThisObj = (ClassType*)FCExportedClass::GetThisPtr(L, ClassName);
+        if (ThisObj)
+        {
+            FCScript::SetArgValue(L, *StaticValue);
+        }
+        else
+        {
+            lua_pushnil(L);
+        }
+        return 1;
+    }
+    // (t, key, value)
+    // t[key] = value
+    virtual int Write(lua_State* L, char* ThisAddr, void* ClassDesc) const
+    {
+        ClassType* ThisObj = (ClassType*)FCExportedClass::GetThisPtr(L, ClassName);
+        if (ThisObj)
+        {
+            FCScript::GetArgValue(L, 3, *StaticValue);
+        }
+        return 0;
+    }
+};
+
+template <typename ClassType, typename T>
+struct TFCExportBitFieldBoolProperty : public FCExportProperty
+{
+    uint8  Mask;
+    TFCExportBitFieldBoolProperty(const char* InName, int InOffset, uint8 InMask, const char* InClassName) :FCExportProperty(InName, InOffset, 1, InClassName)
+        , Mask(InMask)
+    {
+    }
+    virtual int Read(lua_State* L, char* ThisAddr, void* ClassDesc) const
+    {
+        if (ThisObj)
+        {
+            uint8* Property = (uint8*)(ThisAddr + Offset);
+            bool V = !!(*((uint8*)Property) & Mask);
+            FCScript::SetArgValue(L, V);
+        }
+        else
+        {
+            FCScript::SetArgValue(L, false);
+        }
+        return 1;
+    }
+    // (t, key, value)
+    // t[key] = value
+    virtual int Write(lua_State* L, char* ThisAddr, void* ClassDesc) const
+    {
+        ClassType* ThisObj = (ClassType*)FCExportedClass::GetThisPtr(L, ClassName);
+        if (ThisObj)
+        {
+            T* Property = (T*)(ThisAddr + Offset);
+            bool V = false;
+            FCScript::GetArgValue(L, 3, V);
+            *Property = ((*Property) & ~Mask) | (V ? Mask : 0);
+        }
+        return 0;
+    }
+};
+
 // 成员函数
 template <typename ClassType, typename RetType, typename... ArgType>
 struct TFCExportedMemberFunction : public FCExportFunction
@@ -333,6 +406,25 @@ struct TFCExportedClass : public FCExportedClass
 	{
 		AddClassAttrib(new TFCExportProperty<ClassType, T>(InName, InOffset, N, ClassName));
 	}
+    template <typename T> void AddStaticProperty(const char* InName, int InOffset, T ClassType::* Property)
+    {
+        AddClassAttrib(new TFCExportStaticProperty<ClassType, T>(InName, Property, 1, ClassName));
+    }
+    template <typename T, int N> void AddStaticProperty(const char* InName, T(ClassType::* Property)[N])
+    {
+        AddClassAttrib(new TFCExportStaticProperty<ClassType, T>(InName, Property, N, ClassName));
+    }
+    template <typename T, int N> void AddBitFieldBoolProperty(const char* InName, uint8 *Buffer)
+    {
+        for (uint32 Offset = 0; Offset < sizeof(ClassType); ++Offset)
+        {
+            if (uint8 Mask = Buffer[Offset])
+            {
+                AddClassAttrib(new TFCExportBitFieldBoolProperty<ClassType, uint8>(InName, Offset, Mask, ClassName));
+                break;
+            }
+        }
+    }
 
 	template <typename RetType, typename... ArgType> void AddMemberFunction(const char* InName, RetType(ClassType::* InFunc)(ArgType...))
 	{
@@ -360,6 +452,16 @@ struct TFCExportedClass : public FCExportedClass
 
 #define ADD_PROPERTY(Property) \
             this->AddMemberProperty(#Property, GetClassPropertyOffset(Property), &ClassType::Property);
+
+#define ADD_STATIC_PROPERTY(Property) \
+            this->AddStaticProperty(#Property, &ClassType::Property);
+
+#define ADD_BITFIELD_BOOL_PROPERTY(Property) \
+            { \
+                uint8 Buffer[sizeof(ClassType)] = {0}; \
+                ((ClassType*)Buffer)->Property = 1; \
+                bool bSuccess = this->AddBitFieldBoolProperty(#Property, Buffer); \
+            }
 
 #define ADD_STATIC_FUNCTION_EX(FuncName, RetType, Func) \
 			this->AddStaticFunction(FuncName, &ClassType::Func);

@@ -137,6 +137,26 @@ void UnLuaOverride_Callback(lua_State* L, int Index, void* UserData)
             }
         }
 	}
+    else if(LUA_TTABLE == ValueType)
+    {
+        const char* FieldName = lua_tostring(L, -1);
+        if(strcmp(FieldName, "Super") == 0)
+        {
+            int StartTop = lua_gettop(L);
+            int TableIdx = -2 + lua_gettop(L) + 1;
+
+            lua_pushstring(L, "__ObjectRefID");
+            lua_pushinteger(L, CallInfo->BindInfo->m_ObjRefID);
+            lua_rawset(L, TableIdx);
+
+            LoopTable(L, TableIdx, UnLuaOverride_Callback, CallInfo);
+            int CurTop = lua_gettop(L);
+            if(CurTop > StartTop)
+            {
+                lua_pop(L, CurTop - StartTop);
+            }
+        }
+    }
 }
 
 void FCDynamicOverrideBeginBeginPlay(UObject* Context, FFrame& TheStack, RESULT_DECL)
@@ -272,7 +292,18 @@ int64 FCDynamicBindScript(UObject* InObject)
         FFCObjectdManager::GetSingleIns()->OnBindScript(BindInfo->m_ObjRefID, BindInfo->m_ScriptIns);
 
         // Initialize
-        CallAnyScriptFunc(ScriptContext, BindInfo->m_ScriptIns, "Initialize");
+        if(BindInfo->m_InitializerTableRef != LUA_NOREF)
+        {
+            FLuaTableRef  InitParam(BindInfo->m_InitializerTableRef);
+            CallAnyScriptFunc(ScriptContext, BindInfo->m_ScriptIns, "Initialize", InitParam);
+
+            luaL_unref(L, LUA_REGISTRYINDEX, BindInfo->m_InitializerTableRef);
+            BindInfo->m_InitializerTableRef = LUA_NOREF;
+        }
+        else
+        {
+            CallAnyScriptFunc(ScriptContext, BindInfo->m_ScriptIns, "Initialize");
+        }
 	}
 	return BindInfo->m_ScriptIns;
 }

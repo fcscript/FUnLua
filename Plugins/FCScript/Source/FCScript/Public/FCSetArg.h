@@ -14,27 +14,41 @@ FCSCRIPT_API void FC_PushBindLuaValue(lua_State* L, int64 ObjID, const char *Cla
 FCSCRIPT_API bool GlbRegisterClass(lua_State* L, const char* ClassName);
 FCSCRIPT_API void FC_PushArray(lua_State* L, const void *ArrayData, int ArrayLen, const char *InnerType);
 
+FORCEINLINE bool FC_Set_IsUObject(const UObject *){ return true; }
+FORCEINLINE bool FC_Set_IsUObject(void*) { return false; }
+
 namespace FCScript
 {
 	template<class _Ty>
-	FORCEINLINE void SetArgValue(lua_State* L, _Ty)
+    FORCEINLINE void SetArgValue(lua_State* L, _Ty value)
 	{
-        lua_pushnil(L);
+        //lua_pushnil(L);
+        lua_pushinteger(L, (int)value); // default is enum
     }
     template<class _Ty>
-    inline void SetArgValue(lua_State* L, _Ty* value)
+    FORCEINLINE void SetArgValue(lua_State* L, _Ty* value)
     {
-		FC_SetArgValue_CppPtr(L, value);
+        if(FC_Set_IsUObject(value))
+            FC_SetArgValue_Object(L, (const UObject *)value);
+        else
+            FC_SetArgValue_CppPtr(L, value);
     }
     template<class _Ty>
-    inline void SetArgValue(lua_State* L, const _Ty* value)
+    FORCEINLINE void SetArgValue(lua_State* L, const _Ty* value)
     {
-        FC_SetArgValue_CppPtr(L, value);
+        if (FC_Set_IsUObject(value))
+            FC_SetArgValue_Object(L, value);
+        else
+            FC_SetArgValue_CppPtr(L, value);
     }
-	FORCEINLINE void SetArgValue(lua_State* L, int8 value)
+    FORCEINLINE void SetArgValue(lua_State* L, int8 value)
 	{
         lua_pushinteger(L, value);
 	}
+    FORCEINLINE void SetArgValue(lua_State* L, uint8 value)
+    {
+        lua_pushinteger(L, value);
+    }
 	FORCEINLINE void SetArgValue(lua_State* L, bool value)
 	{
         lua_pushboolean(L, value);
@@ -137,10 +151,14 @@ namespace FCScript
         FC_PushArray(L, Array.GetData(), Array.Num(), InnerName);
     }
 
-	FORCEINLINE void SetArgValue(lua_State* L, const UObject*& value)
+	FORCEINLINE void SetArgValue(lua_State* L, const UObject* value)
 	{
 		FC_SetArgValue_Object(L, value);
 	}
+    FORCEINLINE void SetArgValue(lua_State* L, UObject* value)
+    {
+        FC_SetArgValue_Object(L, value);
+    }
 	FORCEINLINE void PushUObject(lua_State* L, const UObject* value)
 	{
 		FC_SetArgValue_Object(L, value);

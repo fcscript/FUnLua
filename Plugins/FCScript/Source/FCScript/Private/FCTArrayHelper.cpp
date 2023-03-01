@@ -31,3 +31,19 @@ void  FCTArrayHelper::Copy(const FScriptArray* OtherArray)
 {
     ArrayProperty->CopyValuesInternal(ScriptArray, OtherArray, ArrayProperty->ArrayDim);
 }
+
+void  FCTArrayHelper::Shuffle()
+{
+    if(!ScriptArray)
+        return ;
+
+    int32 LastIndex = Num() - 1;
+    for (int32 i = 0; i <= LastIndex; ++i)
+    {
+        int32 Index = FMath::RandRange(i, LastIndex);
+        if (i != Index)
+        {
+            ScriptArray->SwapMemory(i, Index, ElementSize);
+        }
+    }
+}
