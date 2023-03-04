@@ -485,12 +485,56 @@ void Vector_DoubleOperator(_Ty& V, _Ty& A, _Ty& B, const OperatorDiv &)
 	V = A / B;
 }
 
+template <class _Ty>
+void Vector_DoubleFloat(_Ty& V, _Ty& A, float B, const OperatorAdd&)
+{
+    //V = A + B;
+}
+template <class _Ty>
+void Vector_DoubleFloat(_Ty& V, _Ty& A, float B, const OperatorSub&)
+{
+    //V = A - B;
+}
+template <class _Ty>
+void Vector_DoubleFloat(_Ty& V, _Ty& A, float B, const OperatorMul&)
+{
+    V = A * B;
+}
+template <class _Ty>
+void Vector_DoubleFloat(_Ty& V, _Ty& A, float B, const OperatorDiv&)
+{
+    V = A / B;
+}
+
+template <class _Ty, class _TyOperatroType>
+int Vector_Double_Operator_Base_Wrap(lua_State* L, const char* ClassName, const _TyOperatroType& opType)
+{
+    _Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
+    _Ty* B = (_Ty*)VectorBase_GetAddr(L, 2, ClassName);
+    FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUClass(ClassName);
+    int64 ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
+    _Ty* V = (_Ty*)FCGetObj::GetIns()->GetPropertyAddr(ObjID);
+    if (A)
+    {
+        if (B)
+        {
+            Vector_DoubleOperator(*V, *A, *B, opType);
+        }
+        else
+        {
+            float Arg2 = lua_tonumber(L, 2);
+            Vector_DoubleFloat(*V, *A, Arg2, opType);
+        }
+    }
+    FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
+    return 1;
+}
+
 template <class _Ty, class _TyOperatroType>
 int Vector_Double_Operator_Wrap(lua_State* L, const char* ClassName, const _TyOperatroType &opType)
 {
 	_Ty* A = (_Ty*)VectorBase_GetAddr(L, 1, ClassName);
 	_Ty* B = (_Ty*)VectorBase_GetAddr(L, 2, ClassName);
-
 	FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUClass(ClassName);
 	int64 ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
 	_Ty* V = (_Ty*)FCGetObj::GetIns()->GetPropertyAddr(ObjID);

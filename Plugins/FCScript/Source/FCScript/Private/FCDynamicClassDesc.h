@@ -408,6 +408,7 @@ struct FDynamicEnum
     struct SDynamicEnumValue
     {
         std::string   Name;
+        std::string   DisplayName;
         int           Value;
     };
     std::vector<SDynamicEnumValue>  EnumValue;

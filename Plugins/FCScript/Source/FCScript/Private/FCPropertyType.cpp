@@ -66,6 +66,11 @@ void  InitPropertyTable()
     gGraphyTypeMap["Vector2D"] = FCPROPERTY_Vector2;
     gGraphyTypeMap["Vector4D"] = FCPROPERTY_Vector4;
     gGraphyTypeMap["Vector"] = FCPROPERTY_Vector3;
+
+    gGraphyTypeMap["Vector_NetQuantize"] = FCPROPERTY_Vector3;
+    gGraphyTypeMap["Vector_NetQuantizeNormal"] = FCPROPERTY_Vector3;
+    gGraphyTypeMap["Vector_NetQuantize10"] = FCPROPERTY_Vector3;
+    gGraphyTypeMap["FVector_NetQuantize100"] = FCPROPERTY_Vector3;
 }
 
 void  InitProperyNameTable()

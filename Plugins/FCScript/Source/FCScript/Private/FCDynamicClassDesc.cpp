@@ -507,11 +507,14 @@ void FDynamicEnum::OnRegisterEnum(UEnum* InEnum)
     FString DisplayName;
     for (int32 i = 0; i < NumEntries; ++i)
     {
+        SDynamicEnumValue &Value = EnumValue[i];
         DisplayName = InEnum->GetDisplayNameTextByIndex(i).ToString();
         Name = InEnum->GetNameStringByIndex(i);
-        EnumValue[i].Name = TCHAR_TO_UTF8(*Name);
-        EnumValue[i].Value = InEnum->GetValueByIndex(i);
-        m_NameToValue[EnumValue[i].Name.c_str()] = EnumValue[i].Value;
+        Value.Name = TCHAR_TO_UTF8(*Name);
+        Value.DisplayName = TCHAR_TO_UTF8(*DisplayName);
+        Value.Value = InEnum->GetValueByIndex(i);
+        m_NameToValue[Value.Name.c_str()] = Value.Value;
+        m_NameToValue[Value.DisplayName.c_str()] = Value.Value;
     }
 }
 

@@ -71,22 +71,22 @@ int FCVector3Wrap::LibOpen_wrap(lua_State* L)
 
 int FCVector3Wrap::double_add_wrap(lua_State* L)
 {
-    return Vector_Double_Operator_Wrap<FVector2D>(L, "FVector", OperatorAdd());
+    return Vector_Double_Operator_Base_Wrap<FVector2D>(L, "FVector", OperatorAdd());
 }
 
 int FCVector3Wrap::double_sub_wrap(lua_State* L)
 {
-    return Vector_Double_Operator_Wrap<FVector2D>(L, "FVector", OperatorSub());
+    return Vector_Double_Operator_Base_Wrap<FVector2D>(L, "FVector", OperatorSub());
 }
 
 int FCVector3Wrap::double_mul_wrap(lua_State* L)
 {
-    return Vector_Double_Operator_Wrap<FVector2D>(L, "FVector", OperatorMul());
+    return Vector_Double_Operator_Base_Wrap<FVector2D>(L, "FVector", OperatorMul());
 }
 
 int FCVector3Wrap::double_div_wrap(lua_State* L)
 {
-    return Vector_Double_Operator_Wrap<FVector2D>(L, "FVector", OperatorDiv());
+    return Vector_Double_Operator_Base_Wrap<FVector2D>(L, "FVector", OperatorDiv());
 }
 
 int FCVector3Wrap::num_wrap(lua_State* L)
