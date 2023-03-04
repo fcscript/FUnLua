@@ -31,6 +31,7 @@ void  FFCObjectdManager::Clear()
 	m_pCurrentBindClass = nullptr;
 	m_ScriptsClassName = nullptr;
 	m_BindObjects.clear();
+    m_BindScriptInsMap.clear();
     m_DelegateRefMap.clear();
 
     m_OverrideFunctionScriptInsMap.clear();
