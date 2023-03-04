@@ -402,6 +402,32 @@ int Vector_SetW(lua_State* L)
     return 0;
 }
 
+template <class _Ty, class _TyMember, int MemberOffset>
+int Vector_GetMember(lua_State* L)
+{
+    const char* ClassName = FCScript::ExtractTypeName(_Ty());
+    unsigned char* A = (unsigned char*)VectorBase_GetAddr(L, 1, ClassName);
+    _TyMember  V;
+    if(A)
+    {
+        V = *((_TyMember *)(A + MemberOffset));
+    }
+    FCScript::SetArgValue(L, V);
+    return 1;
+}
+template <class _Ty, class _TyMember, int MemberOffset>
+int Vector_SetMember(lua_State* L)
+{
+    // Class.Member = value
+    const char* ClassName = FCScript::ExtractTypeName(_Ty());
+    unsigned char* A = (unsigned char*)VectorBase_GetAddr(L, 1, ClassName);    
+    if(A)
+    {
+        _TyMember *V = (_TyMember *)(A + MemberOffset);
+        FCScript::GetArgValue(L, 2, *V);
+    }
+    return 0;
+}
 
 template <class _Ty, int MemberIndex>
 int Vector_GetFloat(lua_State* L)

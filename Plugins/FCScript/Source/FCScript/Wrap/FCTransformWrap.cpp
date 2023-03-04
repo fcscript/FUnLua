@@ -36,8 +36,15 @@ int FCTransformWrap::LibOpen_wrap(lua_State* L)
 
         { nullptr, nullptr }
     };
+    const int ROTATION_OFFSET = 0;
+    const int Translation_OFFSET = sizeof(FQuat);
+    const int Scale3D_OFFSET = sizeof(FQuat) + sizeof(FVector);
+
     const LuaRegAttrib LibAttrib[] =
     {
+        { "Rotation", Vector_GetMember<FTransform, FQuat, 0>, Vector_SetMember<FTransform, FQuat, 0> },
+        { "Translation", Vector_GetMember<FTransform, FVector, Translation_OFFSET>, Vector_SetMember<FTransform, FVector, Translation_OFFSET> },
+        { "Scale3D", Vector_GetMember<FTransform, FVector, Scale3D_OFFSET>, Vector_SetMember<FTransform, FVector, Scale3D_OFFSET> },
         { nullptr, nullptr, nullptr }
     };
     const LuaRegFunc LibTable[] =
@@ -213,7 +220,7 @@ int FCTransformWrap::tostring_wrap(lua_State* L)
     FTransform* A = (FTransform*)VectorBase_GetAddr(L, 1);
     if (A)
     {
-        FString  Str = FString::Printf(TEXT("%p(FTransform)"), A);
+        FString  Str = A->ToString();
         lua_pushstring(L, TCHAR_TO_UTF8(*Str));
     }
     else

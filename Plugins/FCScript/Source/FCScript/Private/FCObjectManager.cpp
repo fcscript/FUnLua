@@ -348,7 +348,7 @@ void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynam
 
         FScriptDelegate DynamicDelegate;
         DynamicDelegate.BindUFunction(InObject, Func->GetFName());
-        ScriptDelegate.__Internal_AddUnique(InObject, FName(DynamicFunc->GetFieldName()), DynamicDelegate);
+        ScriptDelegate.__Internal_AddUnique(InObject, Func->GetFName(), DynamicDelegate);
     }
 }
 
@@ -400,7 +400,7 @@ void  FFCObjectdManager::RemoveScriptDelegate(UObject *InObject, const FCDynamic
 	
 	if(nDelegateCount == 0)
 	{
-		RemoveObjectDelegate(InObject, InDynamicProperty);
+		RemoveObjectDelegate(InObject, InDynamicProperty, DynamicFunc->Function);
 	}
 }
 
@@ -443,7 +443,7 @@ void  FFCObjectdManager::ClearScriptDelegate(UObject* InObject, const FCDynamicP
 		}
 	}
 	RemoveDelegateFromClass(DynamicFunc, InObject->GetClass());
-	RemoveObjectDelegate(InObject, InDynamicProperty);
+    RemoveObjectDelegate(InObject, InDynamicProperty, DynamicFunc->Function);
 }
 
 void  FFCObjectdManager::ClearObjectDelegate(const class UObjectBase *Object)
@@ -462,7 +462,7 @@ void  FFCObjectdManager::ClearObjectDelegate(const class UObjectBase *Object)
 			UFunction* Func = Info.DynamicFunc->Function;
 			int Ref = m_DelegateRefMap[Func] - 1;
 			m_DelegateRefMap[Func] = Ref;			
-			RemoveObjectDelegate(InObject, Info.DynamicProperty);
+			RemoveObjectDelegate(InObject, Info.DynamicProperty, Func);
 
 			// 释放lua的引入变量
 			for (int iParam = 0; iParam < Info.ParamCount; ++iParam)
@@ -520,7 +520,7 @@ void  FFCObjectdManager::RemoveDelegateFromClass(FCDynamicOverrideFunction *InDy
 	InClass->RemoveFunctionFromFunctionMap(Function);
 }
 
-void  FFCObjectdManager::RemoveObjectDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty)
+void  FFCObjectdManager::RemoveObjectDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty, const UFunction* InFunc)
 {	
 	uint8* ObjAddr = (uint8 *)InObject;
 	uint8* ValueAddr = ObjAddr + InDynamicProperty->Offset_Internal;
@@ -537,7 +537,7 @@ void  FFCObjectdManager::RemoveObjectDelegate(UObject *InObject, const FCDynamic
     else if(FCPROPERTY_MulticastSparseDelegateProperty == InDynamicProperty->Type)
     {
         FSparseDelegate& ScriptDelegate = (*(FSparseDelegate*)ValueAddr);
-        ScriptDelegate.__Internal_Clear(InObject, FName(InDynamicProperty->GetFieldName()));
+        ScriptDelegate.__Internal_Clear(InObject, InFunc->GetFName());
     }
 }
 

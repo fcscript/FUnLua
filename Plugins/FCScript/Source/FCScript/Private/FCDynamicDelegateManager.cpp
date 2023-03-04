@@ -7,6 +7,7 @@
 #include "FCLuaFunction.h"
 #include "FCTemplateType.h"
 #include "FCGetArg.h"
+#include "../LuaCore/LuaContext.h"
 
 FCDynamicDelegateManager & FCDynamicDelegateManager::GetIns()
 {
@@ -58,12 +59,18 @@ FCLuaDelegate* FCDynamicDelegateManager::MakeDelegateByTableParam(lua_State* L, 
     {
         FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, -2);
         const void* LuaFuncAddr = lua_topointer(L, -1);
+        const void* LuaTableAddr = lua_topointer(L, -2);
 
         // 这个地方感觉不应该用函数地址限制，因为可能存在一对多的情况
         CAdr2DelegateMap::iterator itDelegate = m_FuncAdr2DelegateMap.find(LuaFuncAddr);
         if (itDelegate != m_FuncAdr2DelegateMap.end())
         {
             lua_pop(L, 2);
+            if(itDelegate->second->ParamsValudAddr[0] != LuaTableAddr)
+            {
+                UE_DEBUG_BREAK();
+                int iiii = 0;
+            }
             return itDelegate->second;
         }
         UObject* Outer = GetScriptContext()->m_DelegateObject;
@@ -86,6 +93,7 @@ FCLuaDelegate* FCDynamicDelegateManager::MakeDelegateByTableParam(lua_State* L, 
         Delegate->FunctionRef = CallbackRef;
         Delegate->ParamCount = 1;
         Delegate->CallbackParams[0] = luaL_ref(L, LUA_REGISTRYINDEX);  // 将这个参数添加到全局引用表
+        Delegate->ParamsValudAddr[0] = LuaTableAddr;
 
         Delegate->Object = Object;
         Delegate->Outer = Outer;
@@ -100,6 +108,7 @@ FCLuaDelegate* FCDynamicDelegateManager::MakeDelegateByTableParam(lua_State* L, 
     else
     {
         lua_pop(L, 2);
+        ReportLuaError(L, "invalid delegate param");
     }
     return nullptr;
 }

@@ -232,7 +232,8 @@ struct FCDelegateInfo
     int           FunctionRef;  // lua 引用的函数
     int           ParamCount;  // lua 回调参数个数
     int           CallbackParams[CallbackParamMax];  // 回调参数，最多4个
-	FCDelegateInfo():DynamicFunc(nullptr), DynamicProperty(nullptr), FunctionRef(0), ParamCount(0){}
+    const void*   ParamsValudAddr[CallbackParamMax];
+	FCDelegateInfo():DynamicFunc(nullptr), DynamicProperty(nullptr), FunctionAddr(nullptr), FunctionRef(0), ParamCount(0){}
 	FCDelegateInfo(const FCDynamicOverrideFunction *InDynamicFunc, const FCDynamicProperty *InDynamicProperty, const void *InFunctionAddr, int InFunctionRef, const int *InCallbackParams, int InCallbackParamCount)
 		: DynamicFunc((FCDynamicOverrideFunction*)InDynamicFunc)
 		, DynamicProperty((FCDynamicProperty*)InDynamicProperty)
@@ -243,6 +244,7 @@ struct FCDelegateInfo
         for(int i = 0; i< CallbackParamMax && i< InCallbackParamCount; ++i)
         {
             CallbackParams[i] = InCallbackParams[i];
+            ParamsValudAddr[i] = nullptr;
         }
 	}
 	bool operator == (const FCDelegateInfo &Other) const

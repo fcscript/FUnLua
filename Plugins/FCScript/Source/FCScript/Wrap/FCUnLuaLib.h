@@ -1,7 +1,7 @@
 #pragma once
 #include "FCBrigeHelper.h"
 
-// UnLua¼æÈÝ
+// UnLuaå…¼å®¹
 
 
 class FCUnLuaWrap
@@ -17,5 +17,6 @@ public:
     static int Ref_wrap(lua_State* L);
     static int Unref_wrap(lua_State* L);
     static int Class_wrap(lua_State* L);
+    static int DebugBreak_wrap(lua_State* L);
     static void RegisterGlobalIndex(lua_State* L);
 };

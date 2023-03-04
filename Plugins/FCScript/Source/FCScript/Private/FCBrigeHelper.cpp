@@ -1,4 +1,4 @@
-﻿#include "FCBrigeHelper.h"
+#include "FCBrigeHelper.h"
 #include "FCGetObj.h"
 #include "../LuaCore/LuaContext.h"
 
@@ -14,6 +14,16 @@ char* GetExportClassIns(int64 ObjID)
         return (char*)ObjRef->GetThisAddr();
     }
     return nullptr;
+}
+
+int FCExportInvalidItem::Read(lua_State* L, char* ThisAddr, void* ClassDesc) const
+{
+    FCStringBuffer128 ErrorTips;
+    ErrorTips << "Wrap Class, invalid member, class name:" << this->ClassName << ", member name:" << this->Name;
+    ReportLuaError(L, ErrorTips.GetString());
+
+    lua_pushnil(L);
+    return 1;
 }
 
 FCExportedClass* FCExportedClass::FindExportedClass(const char* InClassName)
@@ -40,12 +50,12 @@ void FCExportedClass::RegisterAll(lua_State* L)
 	}
 }
 
-void FCExportedClass::UnRegisterAll(lua_State* L)
+void FCExportedClass::UnRegisterAll()
 {
 	FCExportedClass* ClassPtr = s_pExportedIns;
 	while (ClassPtr)
 	{
-		ClassPtr->UnRegister(L);
+		ClassPtr->UnRegister();
 		ClassPtr = ClassPtr->NextClass;
 	}
 }
@@ -58,6 +68,7 @@ int FCExportedClass::RegisterLibClass(lua_State* L, const char* InClassName, con
     {
         return 0;
     }
+    SetWrapClassName(InClassName);
     luaL_newmetatable(L, InClassName);
 
     lua_pushstring(L, "__index");
@@ -83,6 +94,7 @@ int FCExportedClass::RegisterLibClass(lua_State* L, const char* InClassName, con
 
 int FCExportedClass::RegisterLibClass(lua_State* L, const char* InClassName, const LuaRegFunc* Funcs, const LuaRegAttrib* Attribs, const LuaRegFunc* TableFuncs)
 {
+    SetWrapClassName(InClassName);
     const LuaRegFunc *RegFunc = Funcs;
     while (RegFunc != nullptr && RegFunc->Func != nullptr)
     {
@@ -142,6 +154,7 @@ void FCExportedClass::Register(lua_State* L)
     {
         return;
     }
+    SetWrapClassName(ClassName);
     luaL_newmetatable(L, ClassName);             // 1, will be used as meta table later (lua_setmetatable)
 
     lua_pushlightuserdata(L, this);              // 这里写入table的C类型
@@ -169,13 +182,16 @@ void FCExportedClass::Register(lua_State* L)
     SetTableForClass(L, ClassName);
 }
 
-void FCExportedClass::UnRegister(lua_State* L)
+void FCExportedClass::UnRegister()
 {
 	ReleaseList(Propertys);
 	ReleaseList(Functions);
 	Propertys = nullptr;
 	Functions = nullptr;
+    ChildItmes.clear();
     ReleaseList(InvalidItems);
+    InvalidItems = nullptr;
+    bCustomRegistered = false;
 }
 
 int  FCExportedClass::DoLibIndex(lua_State* L)

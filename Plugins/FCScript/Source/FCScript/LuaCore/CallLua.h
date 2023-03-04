@@ -130,7 +130,7 @@ FLuaRetValues CallTableFunction(lua_State* L, int TableIdx, const char* FuncName
         return FLuaRetValues();
     }
     int StartIdx = lua_gettop(L);
-    //lua_pushcfunction(L, ReportLuaCallError);
+    lua_pushcfunction(L, ReportLuaCallError);
 
     RawGetLuaFunctionByTable(L, TableIdx, FuncName);
 
@@ -167,7 +167,7 @@ bool CallTableVoidFunction(lua_State* L, int TableIdx, const char* FuncName, T&&
         return false;
     }
     int StartIdx = lua_gettop(L);
-    //lua_pushcfunction(L, ReportLuaCallError);
+    lua_pushcfunction(L, ReportLuaCallError);
 
     RawGetLuaFunctionByTable(L, TableIdx, FuncName);
     //lua_pushstring(L, FuncName);

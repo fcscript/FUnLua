@@ -80,9 +80,8 @@ int FCActorSpawnParametersWrap::obj_Delete(lua_State* L)
     if(ObjRef)
     {
         FActorSpawnParameters* Value = (FActorSpawnParameters *)ObjRef->GetPropertyAddr();
-        delete Value;
-        ObjRef->ThisObjAddr = nullptr;
         FCGetObj::GetIns()->DeleteValue(ObjRef->PtrIndex);
+        delete Value;
     }
     return 0;
 }

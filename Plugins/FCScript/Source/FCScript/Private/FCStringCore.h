@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <vector>
 #include <string>
@@ -134,3 +134,9 @@ void  ReleasePtrMap(_TyPtrMap &PtrMap)
         }
 	}
 }
+
+#ifdef UE_BUILD_DEBUG
+    #define  FC_ASSERT(exp)  if(exp) { UE_DEBUG_BREAK(); }
+#else
+    #define  FC_ASSERT(exp)  
+#endif

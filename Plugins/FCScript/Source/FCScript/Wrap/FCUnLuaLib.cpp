@@ -1,6 +1,7 @@
 #include "FCUnLuaLib.h"
 #include "FCDynamicClassDesc.h"
 #include "FCRunTimeRegister.h"
+#include "GenericPlatform/GenericPlatformMisc.h"
 #include "../LuaCore/CallLua.h"
 #include "../LuaCore/LuaContext.h"
 
@@ -28,6 +29,7 @@ int FCUnLuaWrap::LibOpen_wrap(lua_State* L)
         {"Ref", Ref_wrap},
         {"Unref", Unref_wrap},
         {"Class", Class_wrap},
+        {"DebugBreak", DebugBreak_wrap},
         {NULL, NULL}
     };
     const char* ClassName = lua_tostring(L, 1);
@@ -172,6 +174,28 @@ int FCUnLuaWrap::Class_wrap(lua_State* L)
     return 1;
 }
 
+int  FCUnLuaWrap::DebugBreak_wrap(lua_State* L)
+{
+    // 条件成立就
+    int  ParamCount = lua_gettop(L);
+    if(ParamCount > 0)
+    {
+        for( int i = 0; i<ParamCount; ++i)
+        {
+            int bValue = lua_toboolean(L, i+1);
+            if (!bValue)
+            {
+                UE_DEBUG_BREAK();
+                break;
+            }
+        }
+    }
+    else
+    {
+        UE_DEBUG_BREAK();
+    }
+    return 0;
+}
 void FCUnLuaWrap::RegisterGlobalIndex(lua_State* L)
 {
     static const char* Chunk = R"(

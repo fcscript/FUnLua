@@ -249,7 +249,7 @@ int FCRotatorWrap::tostring_wrap(lua_State* L)
     FRotator* A = (FRotator*)VectorBase_GetAddr(L, 1);
     if (A)
     {
-        FString  Str = FString::Printf(TEXT("%p(Pitch=%f,Yaw=%f,Z=%f,Roll=%f)"), A, A->Pitch, A->Yaw, A->Roll);
+        FString  Str = FString::Printf(TEXT("%p(P=%f,Y=%f,R=%f)"), A, A->Pitch, A->Yaw, A->Roll);
         lua_pushstring(L, TCHAR_TO_UTF8(*Str));
     }
     else

@@ -17,6 +17,7 @@
 #include "FCDefaultParam.h"
 #include "FCDynamicDelegateManager.h"
 #include "FCInputReplace.h"
+#include "FCBrigeHelper.h"
 
 #include "Interfaces/IPluginManager.h"
 
@@ -362,6 +363,7 @@ void FFCDelegateModule::Shutdown()
     ClearAllDefaultValue();
 	FFCObjectdManager::GetSingleIns()->Clear();
     FCInputReplace::GetIns().Clear();
+    FCExportedClass::UnRegisterAll();
     if(L)
     {
         lua_gc(L, LUA_GCCOLLECT, 0);

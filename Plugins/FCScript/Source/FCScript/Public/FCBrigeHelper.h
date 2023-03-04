@@ -31,11 +31,7 @@ struct FCExportInvalidItem : public FCExportedItem
     {
         Name = SelfName.c_str();
     }
-    virtual int Read(lua_State* L, char* ThisAddr, void* ClassDesc) const
-    {
-        lua_pushnil(L);
-        return 1;
-    }
+    virtual int Read(lua_State* L, char* ThisAddr, void* ClassDesc) const;
 };
 
 struct FCExportProperty : public FCExportedItem
@@ -122,7 +118,7 @@ struct FCSCRIPT_API FCExportedClass
 	}
 	static FCExportedClass* FindExportedClass(const char* InClassName);
 	static void RegisterAll(lua_State* L);
-	static void UnRegisterAll(lua_State* L);
+	static void UnRegisterAll();
     static int RegisterLibClass(lua_State* L, const char* InClassName, const LuaRegFunc* Funcs);
     int RegisterLibClass(lua_State* L, const char *InClassName, const LuaRegFunc* Funcs, const LuaRegAttrib* Attribs, const LuaRegFunc* TableFuncs);
 	static void* GetThisPtr(lua_State* L, const char* InClassName);
@@ -141,7 +137,7 @@ struct FCSCRIPT_API FCExportedClass
 	virtual void InitFunctionList() {}
 
 	void Register(lua_State* L);
-	void UnRegister(lua_State* L);
+	void UnRegister();
 
     int  DoLibIndex(lua_State* L);
     int  DoLibNewIndex(lua_State* L);
@@ -157,15 +153,21 @@ struct FCSCRIPT_API FCExportedClass
 	{
 		if(InName && InFuncCallback)
 		{
-			FCExportLibFunction *Func = new FCExportLibFunction(InName, ClassName, InFuncCallback);
-            AddClassFunction(Func);
-		}
+            if(!IsValidItem(InName))
+            {
+                FCExportLibFunction* Func = new FCExportLibFunction(InName, ClassName, InFuncCallback);
+                AddClassFunction(Func);
+            }
+        }
 	}
     // 添加一个属性方法(get + set)
     void AddLibAttrib(const char *InName, exportlib_custom_call_back InGetFunc, exportlib_custom_call_back InSetFunc)
     {
-		FCExportLibAttrib*Func = new FCExportLibAttrib(InName, ClassName, InGetFunc, InSetFunc);
-        AddClassFunction(Func);
+        if (!IsValidItem(InName))
+        {
+            FCExportLibAttrib* Func = new FCExportLibAttrib(InName, ClassName, InGetFunc, InSetFunc);
+            AddClassFunction(Func);
+        }
     }
 	void AddFunctionLibs(const LuaRegFunc *lib, int InFuncCount)
 	{
@@ -178,6 +180,7 @@ struct FCSCRIPT_API FCExportedClass
 	{
 		Func->Next = Functions;
 		Functions = Func;
+        ChildItmes[Func->Name] = Func;
 	}
 	const FCExportProperty* FindClassProperty(const char* InPropertyName) const
 	{
@@ -187,6 +190,12 @@ struct FCSCRIPT_API FCExportedClass
 	{
 		return FindChildFromList(Functions, InFuncName);
 	}
+
+    bool IsValidItem(const char * InChildName) const
+    {
+        CExportedItemMap::const_iterator itChild = ChildItmes.find(InChildName);
+        return itChild != ChildItmes.end();
+    }
 
 	const FCExportedItem  *GetChildItem(const char *InChildName)
 	{

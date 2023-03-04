@@ -773,6 +773,7 @@ int DoScript_Index(lua_State* L, FCObjRef* ObjRef)
             int ChildType = lua_type(L, -1);
             if (ChildType > LUA_TNIL)
             {
+                //lua_remove(L, -2);
                 return 1;
             }
             lua_pop(L, 1);

@@ -35,6 +35,11 @@ void FCGetObj::Clear()
 		ObjRef->Ref = 1;
         ReleaseObjRef(ObjRef);
 	}	
+    if(m_ObjMap.size() > 0)
+    {
+        FC_ASSERT(true)
+        m_ObjMap.clear();
+    }
 	m_nObjID = 0;
 }
 
@@ -74,6 +79,7 @@ FCObjRef* FCGetObj::PushUObjectNoneRef(UObject* Obj)
 	ObjRef->ClassDesc = ClassDesc;
 	ObjRef->PtrIndex = ++m_nObjID;
 	ObjRef->ThisObjAddr = (uint8 *)Obj;
+    ObjRef->DynamicProperty = GetDynamicPropertyByCppType(FCPROPERTY_ObjectProperty, "UObject", sizeof(UObject*));
 	m_ObjMap[ObjKey] = ObjRef;
 	m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
 
@@ -531,6 +537,7 @@ void  FCGetObj::DestroyObjRef(FCObjRef *ObjRef)
 		ObjRefKey ObjKey = ObjRef->GetRefKey();
 		m_ObjMap.erase(ObjKey);
 		m_IntPtrMap.erase(ObjRef->PtrIndex);
+        FC_ASSERT(m_ObjMap.size() != m_IntPtrMap.size())
 
 		switch(ObjRef->RefType)
 		{

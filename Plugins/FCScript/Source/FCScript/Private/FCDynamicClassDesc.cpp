@@ -644,8 +644,7 @@ FCDynamicClassDesc*  FCScriptContext::RegisterUStruct(UStruct *Struct)
 	}
 	FCScriptContext *ScriptContext = GetScriptContext();
 
-	FString   UEClassName(TEXT("U"));
-	UEClassName += Struct->GetName();
+	FString   UEClassName = Struct->GetName();
 	FCDynamicClassDesc *ScriptClassDesc = new FCDynamicClassDesc();
 	ScriptClassDesc->m_UEClassName = TCHAR_TO_UTF8(*UEClassName);
     ScriptClassDesc->m_UEClassName = GetConstName(ScriptClassDesc->m_UEClassName);
@@ -656,7 +655,6 @@ FCDynamicClassDesc*  FCScriptContext::RegisterUStruct(UStruct *Struct)
 	m_StructMap[Struct] = ScriptClassDesc;
 
 	m_ClassFinder[ClassName] = ScriptClassDesc;
-	m_ClassFinder[ClassName + 1] = ScriptClassDesc;
 	return ScriptClassDesc;
 }
 

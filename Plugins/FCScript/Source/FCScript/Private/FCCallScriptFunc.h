@@ -62,7 +62,6 @@ bool  CallAnyScriptFunc(FCScriptContext* Context, int64 ScriptIns, const char *S
 	if(L)
 	{
         int StartTop = lua_gettop(L);
-        lua_pushcfunction(L, ReportLuaCallError);
 		lua_rawgeti(L, LUA_REGISTRYINDEX, ScriptIns);
 		int TabldIdx = lua_gettop(L);
         bool bSuc = CallTableVoidFunction(L, TabldIdx, ScriptFuncName, Args...);
