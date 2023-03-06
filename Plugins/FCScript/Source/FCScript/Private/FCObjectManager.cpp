@@ -201,6 +201,8 @@ FCDynamicOverrideFunction * FFCObjectdManager::ToOverrideFunction(UObject *InObj
         DynamicFunc->m_NativeBytecodeIndex = InNativeBytecodeIndex;
         DynamicFunc->m_NativeScript = InFunction->Script;
         DynamicFunc->LuaFunctionMame = DynamicFunc->Name;
+        //DynamicFunc->m_OverideName = FName(DynamicFunc->Name);
+        DynamicFunc->m_OverideName = DynamicFunc->Function->GetFName();
 
         m_OverrideFunctionMap[InFunction] = DynamicFunc;
     }
@@ -307,6 +309,8 @@ void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynam
 	{
 		return ;
 	}
+    FName  FuncName(InDynamicProperty->GetFieldName());
+    Func = FindOrDumpFunction(Func, InObject->GetClass(), FuncName, FCDynamicOverrideDelegate);
 
 	FCDynamicOverrideFunction *DynamicFunc = this->ToOverrideFunction(InObject, Func, FCDynamicOverrideDelegate, EX_CallFCDelegate);
 
@@ -325,13 +329,14 @@ void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynam
 		AddDelegateToClass(DynamicFunc, InObject->GetClass());
 	}
 	
+    FuncName = DynamicFunc->m_OverideName;
 	uint8* ObjAddr = (uint8 *)InObject;
 	uint8* ValueAddr = ObjAddr + InDynamicProperty->Offset_Internal;
 	if(InDynamicProperty->Type == FCPropertyType::FCPROPERTY_MulticastDelegateProperty)
 	{
 		FMulticastDelegateProperty* DelegateProperty = (FMulticastDelegateProperty*)InDynamicProperty->Property;		
 		FScriptDelegate DynamicDelegate;
-		DynamicDelegate.BindUFunction(InObject, Func->GetFName());
+		DynamicDelegate.BindUFunction(InObject, FuncName);
 
 		FMulticastScriptDelegate& MulticastDelegate = (*(FMulticastScriptDelegate*)ValueAddr);
 		MulticastDelegate.AddUnique(MoveTemp(DynamicDelegate));
@@ -340,7 +345,7 @@ void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynam
 	{
 		FDelegateProperty* DelegateProperty = (FDelegateProperty*)InDynamicProperty->Property;
 		FScriptDelegate& ScriptDelegate = (*(FScriptDelegate*)ValueAddr);
-		ScriptDelegate.BindUFunction(InObject, Func->GetFName());
+		ScriptDelegate.BindUFunction(InObject, FuncName);
 	}
     else if(FCPROPERTY_MulticastSparseDelegateProperty == InDynamicProperty->Type)
     {
@@ -348,8 +353,8 @@ void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynam
         FSparseDelegate & ScriptDelegate = (*(FSparseDelegate*)ValueAddr);
 
         FScriptDelegate DynamicDelegate;
-        DynamicDelegate.BindUFunction(InObject, Func->GetFName());
-        ScriptDelegate.__Internal_AddUnique(InObject, Func->GetFName(), DynamicDelegate);
+        DynamicDelegate.BindUFunction(InObject, FuncName);
+        ScriptDelegate.__Internal_AddUnique(InObject, FuncName, DynamicDelegate);
     }
 }
 
@@ -401,7 +406,7 @@ void  FFCObjectdManager::RemoveScriptDelegate(UObject *InObject, const FCDynamic
 	
 	if(nDelegateCount == 0)
 	{
-		RemoveObjectDelegate(InObject, InDynamicProperty, DynamicFunc->Function);
+		RemoveObjectDelegate(InObject, InDynamicProperty, DynamicFunc);
 	}
 }
 
@@ -444,7 +449,7 @@ void  FFCObjectdManager::ClearScriptDelegate(UObject* InObject, const FCDynamicP
 		}
 	}
 	RemoveDelegateFromClass(DynamicFunc, InObject->GetClass());
-    RemoveObjectDelegate(InObject, InDynamicProperty, DynamicFunc->Function);
+    RemoveObjectDelegate(InObject, InDynamicProperty, DynamicFunc);
 }
 
 void  FFCObjectdManager::ClearObjectDelegate(const class UObjectBase *Object)
@@ -463,7 +468,7 @@ void  FFCObjectdManager::ClearObjectDelegate(const class UObjectBase *Object)
 			UFunction* Func = Info.DynamicFunc->Function;
 			int Ref = m_DelegateRefMap[Func] - 1;
 			m_DelegateRefMap[Func] = Ref;			
-			RemoveObjectDelegate(InObject, Info.DynamicProperty, Func);
+			RemoveObjectDelegate(InObject, Info.DynamicProperty, Info.DynamicFunc);
 
 			// 释放lua的引入变量
 			for (int iParam = 0; iParam < Info.ParamCount; ++iParam)
@@ -508,9 +513,12 @@ void  FFCObjectdManager::AddDelegateToClass(FCDynamicOverrideFunction *InDynamic
         Function->Script.Add(EX_CallFCDelegate);
         Function->Script.Add(EX_Return);
         Function->Script.Add(EX_Nothing);
-    }
-			
-	InClass->AddFunctionToFunctionMap(Function, Function->GetFName());
+    }			
+    FC_ASSERT(InDynamicFunc->m_BindClass != nullptr);
+    InDynamicFunc->m_BindClass = InClass;
+    //FC_ASSERT(InClass->FindFunctionByName(Function->GetFName()) != nullptr);
+
+	//InClass->AddFunctionToFunctionMap(Function, Function->GetFName());
 }
 
 void  FFCObjectdManager::RemoveDelegateFromClass(FCDynamicOverrideFunction *InDynamicFunc, UClass *InClass)
@@ -521,7 +529,7 @@ void  FFCObjectdManager::RemoveDelegateFromClass(FCDynamicOverrideFunction *InDy
 	InClass->RemoveFunctionFromFunctionMap(Function);
 }
 
-void  FFCObjectdManager::RemoveObjectDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty, const UFunction* InFunc)
+void  FFCObjectdManager::RemoveObjectDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty, const FCDynamicOverrideFunction* InDynamicFunc)
 {	
 	uint8* ObjAddr = (uint8 *)InObject;
 	uint8* ValueAddr = ObjAddr + InDynamicProperty->Offset_Internal;
@@ -537,8 +545,9 @@ void  FFCObjectdManager::RemoveObjectDelegate(UObject *InObject, const FCDynamic
 	}
     else if(FCPROPERTY_MulticastSparseDelegateProperty == InDynamicProperty->Type)
     {
+        FMulticastSparseDelegateProperty* DelegateProperty = (FMulticastSparseDelegateProperty*)InDynamicProperty->Property;
         FSparseDelegate& ScriptDelegate = (*(FSparseDelegate*)ValueAddr);
-        ScriptDelegate.__Internal_Clear(InObject, InFunc->GetFName());
+        ScriptDelegate.__Internal_Clear(InObject, InDynamicFunc->m_OverideName);
     }
 }
 
@@ -580,6 +589,11 @@ void  FFCObjectdManager::ClearAllDynamicFunction()
             UFunction* NativeFunction = DynamicFunc->Function;
             NativeFunction->Script = DynamicFunc->m_NativeScript;
             NativeFunction->SetNativeFunc(DynamicFunc->OleNativeFuncPtr);
+
+            if(DynamicFunc->m_BindClass)
+            {   
+                RemoveDelegateFromClass(DynamicFunc, DynamicFunc->m_BindClass);
+            }
         }
 	}
 	ReleasePtrMap(m_OverrideFunctionMap);

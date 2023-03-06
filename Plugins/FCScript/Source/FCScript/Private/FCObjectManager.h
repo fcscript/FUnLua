@@ -129,7 +129,7 @@ protected:
 	void  ClearAllDynamicFunction();
 	void  AddDelegateToClass(FCDynamicOverrideFunction *InDynamicFunc, UClass *InClass);
 	void  RemoveDelegateFromClass(FCDynamicOverrideFunction *InDynamicFunc, UClass *InClass);
-	void  RemoveObjectDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty, const UFunction *InFunc);
+	void  RemoveObjectDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty, const FCDynamicOverrideFunction *InDynamicFunc);
     void  RemoveOverrideRefByObject(const class UObjectBase *Object);
 protected:
 	struct FDynmicBindClassInfo

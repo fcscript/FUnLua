@@ -163,7 +163,9 @@ struct FCDynamicOverrideFunction : public FCDynamicFunction
 	bool             m_bLockCall;
     bool             m_bNeedRestoreNative;
 	TArray<uint8>    m_NativeScript;
-	FCDynamicOverrideFunction() : OleNativeFuncPtr(nullptr), CurOverrideFuncPtr(nullptr), LuaFunctionMame(nullptr), m_NativeBytecodeIndex(0), m_bLockCall(false), m_bNeedRestoreNative(false)
+    FName            m_OverideName;
+    UClass           *m_BindClass;
+	FCDynamicOverrideFunction() : OleNativeFuncPtr(nullptr), CurOverrideFuncPtr(nullptr), LuaFunctionMame(nullptr), m_NativeBytecodeIndex(0), m_bLockCall(false), m_bNeedRestoreNative(false), m_BindClass(nullptr)
 	{
 	}
     const char *GetLuaFunctionName() const
@@ -459,7 +461,7 @@ struct FCScriptContext
 	{
 	}
 
-    int  QueryLuaRef(lua_State* L);
+    int  QueryLuaRef(lua_State* Thread);
     void ResumeThread(int ThreadRef);
 	
     FCDynamicClassDesc*  RegisterCppClass(const char* UEClassName);

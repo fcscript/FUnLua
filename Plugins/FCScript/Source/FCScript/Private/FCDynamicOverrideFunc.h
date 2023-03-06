@@ -12,6 +12,8 @@ enum
 
 UFunction* FirstNative(UObject* Context, FFrame& TheStack, bool& bUnpackParams);
 
+UFunction* FindOrDumpFunction(UFunction* SrcFunction, UClass* OuterClass, const FName& NewFuncName, FNativeFuncPtr InFunc);
+
 // 动态覆盖普通的函数
 void FCDynamicOverrideNative(UObject* Context, FFrame& TheStack, RESULT_DECL);
 

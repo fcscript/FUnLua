@@ -8,6 +8,7 @@
 
 void  FCDynamicProperty::InitProperty(const FProperty *InProperty, const char* InName)
 {
+    Type = GetScriptPropertyType(InProperty);
     if(!InName)
     {
         Name = TCHAR_TO_UTF8(*(InProperty->GetName()));
@@ -22,7 +23,6 @@ void  FCDynamicProperty::InitProperty(const FProperty *InProperty, const char* I
 	Property = InProperty;
 	bOuter = InProperty->HasAnyPropertyFlags(CPF_OutParm);
 
-	Type = GetScriptPropertyType(Property);
     ClassName = GetScriptPropertyClassName(Type, InProperty);
 
     m_WriteScriptFunc = InitDynamicPropertyWriteFunc(Type);
@@ -48,6 +48,7 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
 {
     Name = TCHAR_TO_UTF8(*(InFunction->GetName()));
     Name = GetConstName(Name);
+
 	Function = InFunction;
 	ParmsSize = InFunction->ParmsSize;
 	m_Property.resize(InFunction->NumParms);
@@ -525,22 +526,22 @@ const char* GetUEClassName(const char* InName)
 	return Name;
 }
 
-int  FCScriptContext::QueryLuaRef(lua_State* L)
+int  FCScriptContext::QueryLuaRef(lua_State* Thread)
 {
-    ThreadToRefMap::iterator itRef = m_ThreadToRef.find(L);
+    ThreadToRefMap::iterator itRef = m_ThreadToRef.find(Thread);
     int32 ThreadRef = 0;
     if (itRef == m_ThreadToRef.end())
     {
-        int32 Value = lua_pushthread(L);
+        int32 Value = lua_pushthread(Thread);
         if (Value == 1)
         {
-            lua_pop(L, 1);
+            lua_pop(Thread, 1);
             UE_LOG(LogFCScript, Warning, TEXT("%s: Can't call latent action in main lua thread!"), ANSI_TO_TCHAR(__FUNCTION__));
             return 0;
         }
-        ThreadRef = luaL_ref(L, LUA_REGISTRYINDEX);
-        m_ThreadToRef[L] = ThreadRef;
-        m_RefToThread[ThreadRef] = L;
+        ThreadRef = luaL_ref(Thread, LUA_REGISTRYINDEX);
+        m_ThreadToRef[Thread] = ThreadRef;
+        m_RefToThread[ThreadRef] = Thread;
     }
     else
     {
@@ -557,8 +558,13 @@ void FCScriptContext::ResumeThread(int ThreadRef)
         lua_State* L = m_LuaState;
 
         lua_State* Thread = itThread->second;
-        int32 State = lua_resume(Thread, L, 0, nullptr);
-        if (State == LUA_OK)
+#if 504 == LUA_VERSION_NUM
+        int NResults = 0;
+        int32 Status = lua_resume(Thread, L, 0, &NResults);
+#else
+        int32 Status = lua_resume(Thread, L, 0);
+#endif
+        if (Status == LUA_OK)
         {
             m_ThreadToRef.erase(Thread);
             m_RefToThread.erase(itThread);

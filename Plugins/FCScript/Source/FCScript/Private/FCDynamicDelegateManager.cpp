@@ -422,38 +422,7 @@ void FCDynamicDelegateManager::MakeScriptDelegate(FCLuaDelegate* Delegate, const
 
 UFunction* FCDynamicDelegateManager::MakeReplaceFunction(UFunction* SrcFunction, UClass* OuterClass, const FName& NewFuncName, FNativeFuncPtr InFunc)
 {
-    UFunction* LuaFunction = OuterClass->FindFunctionByName(NewFuncName);
-    if(!LuaFunction)
-    {
-        FObjectDuplicationParameters DuplicationParams(SrcFunction, OuterClass);
-        DuplicationParams.InternalFlagMask &= ~EInternalObjectFlags::Native;
-        DuplicationParams.DestName = NewFuncName;
-        DuplicationParams.DestClass = UFCLuaFunction::StaticClass();
-        LuaFunction = static_cast<UFunction*>(StaticDuplicateObjectEx(DuplicationParams));
-        LuaFunction->FunctionFlags |= FUNC_Native;
-        LuaFunction->ClearInternalFlags(EInternalObjectFlags::Native);
-        LuaFunction->SetNativeFunc(InFunc);
-
-        LuaFunction->SetSuperStruct(SrcFunction->GetSuperStruct());
-
-        if (!FPlatformProperties::RequiresCookedData())
-            UMetaData::CopyMetadata(SrcFunction, LuaFunction);
-
-        LuaFunction->StaticLink(true);
-
-        OuterClass->AddFunctionToFunctionMap(LuaFunction, NewFuncName);
-    }
-
-    // 如果当前函数与来源的函数参数不一样，修复一下
-    if (LuaFunction->NumParms != SrcFunction->NumParms)
-    {
-        LuaFunction->NumParms = SrcFunction->NumParms;
-        LuaFunction->ParmsSize = SrcFunction->ParmsSize;
-        LuaFunction->ReturnValueOffset = SrcFunction->ReturnValueOffset;
-        LuaFunction->RPCId = SrcFunction->RPCId;
-        LuaFunction->RPCResponseId = SrcFunction->RPCResponseId;
-    }
-    return LuaFunction;
+    return FindOrDumpFunction(SrcFunction, OuterClass, NewFuncName, InFunc);
 }
 
 void FCDynamicDelegate_CallLua(UObject* Context, FFrame& TheStack, RESULT_DECL)
