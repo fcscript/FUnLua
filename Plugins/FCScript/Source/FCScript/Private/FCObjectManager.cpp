@@ -334,7 +334,7 @@ void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynam
     FName  FuncName(InDynamicProperty->GetFieldName());
     Func = FindOrDumpFunction(Func, InObject->GetClass(), FuncName);
 
-	FCDynamicOverrideFunction *DynamicFunc = this->ToOverrideFunction(InObject, Func, FCDynamicOverrideDelegate, EX_CallFCDelegate, InDynamicProperty->GetFieldName());
+	FCDynamicOverrideFunction *DynamicFunc = this->ToOverrideFunction(InObject, Func, FCDynamicOverrideDelegate, EX_CallFCDelegate);
 
 	FCDynamicDelegateList  &DelegateList = m_ObjectDelegateMap[InObject];
     FCObjectUseFlag::GetIns().Ref(InObject);
