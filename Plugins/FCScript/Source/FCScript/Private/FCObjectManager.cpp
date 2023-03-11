@@ -86,6 +86,11 @@ void  FFCObjectdManager::NotifyDeleteUObject(const class UObjectBase* Object, in
     {
         int iiii = 0;
     }
+    AController* Controller = Cast<AController>((UObject*)Object);
+    if(Controller)
+    {
+        int iii = 0;
+    }
 #endif
 	CBindObjectInfoMap::iterator itBind = m_BindObjects.find(Object);
 	if(itBind != m_BindObjects.end())
@@ -331,7 +336,9 @@ void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynam
 	{
 		return ;
 	}
-    FName  FuncName(InDynamicProperty->GetFieldName());
+    FCStringBuffer128  NameBuffer;
+    NameBuffer << "__lua_Delegate__" << InDynamicProperty->GetFieldName();  // 增加一个前缀，以免与变量重名
+    FName  FuncName(NameBuffer.GetString());
     Func = FindOrDumpFunction(Func, InObject->GetClass(), FuncName);
 
 	FCDynamicOverrideFunction *DynamicFunc = this->ToOverrideFunction(InObject, Func, FCDynamicOverrideDelegate, EX_CallFCDelegate);
@@ -376,7 +383,8 @@ void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynam
 
         FScriptDelegate DynamicDelegate;
         DynamicDelegate.BindUFunction(InObject, FuncName);
-        ScriptDelegate.__Internal_AddUnique(InObject, FuncName, DynamicDelegate);
+        FName  FieldName(InDynamicProperty->GetFieldName());
+        ScriptDelegate.__Internal_AddUnique(InObject, FieldName, DynamicDelegate);  // 这个必须是对象自身+属性名(名字不可以变)
     }
 }
 
@@ -413,7 +421,7 @@ void  FFCObjectdManager::RemoveScriptDelegate(UObject *InObject, const FCDynamic
 	if(0 == Ref)
 	{
 		// 释放引用吧
-		RemoveDelegateFromClass(DynamicFunc, InObject->GetClass());
+		RemoveDelegateFromClass(DynamicFunc, DynamicFunc->m_BindClass ? DynamicFunc->m_BindClass : InObject->GetClass());
 	}
 
 	// 统计一下数量
@@ -465,12 +473,12 @@ void  FFCObjectdManager::ClearScriptDelegate(UObject* InObject, const FCDynamicP
 			if (0 == Ref)
 			{
 				// 释放引用吧
-				RemoveDelegateFromClass(DynamicFunc, InObject->GetClass());
+				RemoveDelegateFromClass(DynamicFunc, DynamicFunc->m_BindClass ? DynamicFunc->m_BindClass : InObject->GetClass());
 			}
 			DelegateList.Delegates.erase(DelegateList.Delegates.begin() + i);
 		}
 	}
-	RemoveDelegateFromClass(DynamicFunc, InObject->GetClass());
+	RemoveDelegateFromClass(DynamicFunc, DynamicFunc->m_BindClass ? DynamicFunc->m_BindClass : InObject->GetClass());
     RemoveObjectDelegate(InObject, InDynamicProperty, DynamicFunc);
 }
 
@@ -510,7 +518,7 @@ void  FFCObjectdManager::ClearObjectDelegate(const class UObjectBase *Object)
                     Func->Script = Info.DynamicFunc->m_NativeScript;
                     Func->SetNativeFunc(Info.DynamicFunc->OleNativeFuncPtr);
 
-                    RemoveDelegateFromClass(Info.DynamicFunc, Class);
+                    RemoveDelegateFromClass(Info.DynamicFunc, Info.DynamicFunc->m_BindClass ? Info.DynamicFunc->m_BindClass : InObject->GetClass());
                 }
 
                 // 不要立即释放，因为可能还有地方引用这个，在Clear时延迟释放吧
@@ -581,7 +589,7 @@ void  FFCObjectdManager::RemoveObjectDelegate(UObject *InObject, const FCDynamic
     {
         FMulticastSparseDelegateProperty* DelegateProperty = (FMulticastSparseDelegateProperty*)InDynamicProperty->Property;
         FSparseDelegate& ScriptDelegate = (*(FSparseDelegate*)ValueAddr);
-        ScriptDelegate.__Internal_Clear(InObject, InDynamicFunc->m_OverideName);
+        ScriptDelegate.__Internal_Clear(InObject, InDynamicFunc->m_OverideName);  // 这个是会自动删除的，其实这个是不需要的
     }
 }
 
