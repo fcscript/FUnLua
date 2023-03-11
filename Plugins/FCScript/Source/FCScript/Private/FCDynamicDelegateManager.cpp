@@ -422,7 +422,9 @@ void FCDynamicDelegateManager::MakeScriptDelegate(FCLuaDelegate* Delegate, const
 
 UFunction* FCDynamicDelegateManager::MakeReplaceFunction(UFunction* SrcFunction, UClass* OuterClass, const FName& NewFuncName, FNativeFuncPtr InFunc)
 {
-    return FindOrDumpFunction(SrcFunction, OuterClass, NewFuncName, InFunc);
+    UFunction *DumpFunc = FindOrDumpFunction(SrcFunction, OuterClass, NewFuncName);
+    DumpFunc->SetNativeFunc(InFunc);
+    return DumpFunc;
 }
 
 void FCDynamicDelegate_CallLua(UObject* Context, FFrame& TheStack, RESULT_DECL)

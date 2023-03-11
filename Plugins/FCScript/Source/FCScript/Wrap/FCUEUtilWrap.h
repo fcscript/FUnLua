@@ -28,6 +28,17 @@ public:
     static int DoSpawActor_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
     static int DoLoad_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
 
+    static int DoIsA_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+    static int DoFindObject_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+    static int DoFindObjectFast_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+    static int DoLoadObject_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+    static int DoGetCurrentLevel_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+    static int DoGetFullName_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+    static int DoGetPathName_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+    static int DoAddReferencedObject_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+    static int DoRemoveReferencedObject_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+    static int DoIsValid_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject);
+
 	static int NewObject_wrap(lua_State* L);
     static int SpawActor_wrap(lua_State* L);
     static int LoadObject_wrap(lua_State* L);

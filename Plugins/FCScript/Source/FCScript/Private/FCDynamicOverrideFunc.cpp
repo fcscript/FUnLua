@@ -33,7 +33,7 @@ UFunction  *FirstNative(UObject* Context, FFrame& TheStack, bool &bUnpackParams)
 	return Func;
 }
 
-UFunction* FindOrDumpFunction(UFunction* SrcFunction, UClass* OuterClass, const FName& NewFuncName, FNativeFuncPtr InFunc)
+UFunction* FindOrDumpFunction(UFunction* SrcFunction, UClass* OuterClass, const FName& NewFuncName)
 {
     UFunction* LuaFunction = OuterClass->FindFunctionByName(NewFuncName);
     if (!LuaFunction)
@@ -47,7 +47,7 @@ UFunction* FindOrDumpFunction(UFunction* SrcFunction, UClass* OuterClass, const 
         LuaFunction = static_cast<UFunction*>(StaticDuplicateObjectEx(DuplicationParams));
         LuaFunction->FunctionFlags |= FUNC_Native;
         LuaFunction->ClearInternalFlags(EInternalObjectFlags::Native);
-        LuaFunction->SetNativeFunc(InFunc);
+        //LuaFunction->SetNativeFunc(InFunc);
 
         LuaFunction->SetSuperStruct(SrcFunction->GetSuperStruct());
 

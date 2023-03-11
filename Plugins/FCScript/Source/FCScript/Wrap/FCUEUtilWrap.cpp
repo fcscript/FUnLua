@@ -32,6 +32,16 @@ void FCUEUtilWrap::Register(lua_State* L)
         ClassDesc->RegisterWrapLibFunction("AddGCRef", DoAddGCRef_wrap, nullptr);
         ClassDesc->RegisterWrapLibFunction("ReleaseGCRef", DoReleaseGCRef_wrap, nullptr);
         ClassDesc->RegisterWrapLibFunction("Load", DoLoad_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("IsA", DoIsA_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("FindObject", DoFindObject_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("FindObjectFast", DoFindObjectFast_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("LoadObject", DoLoadObject_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("GetCurrentLevel", DoGetCurrentLevel_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("GetFullName", DoGetFullName_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("GetPathName", DoGetPathName_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("AddReferencedObject", DoAddReferencedObject_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("RemoveReferencedObject", DoRemoveReferencedObject_wrap, nullptr);
+        ClassDesc->RegisterWrapLibFunction("IsValid", DoIsValid_wrap, nullptr);
     }
     //ClassDesc = GetScriptContext()->RegisterUClass("UWorld");
     //if(ClassDesc)
@@ -308,6 +318,116 @@ int FCUEUtilWrap::DoSpawActor_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisO
 int FCUEUtilWrap::DoLoad_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
 {
     return LoadObject_wrap(L);
+}
+
+int FCUEUtilWrap::DoIsA_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    UObject* Object = FCScript::GetUObject(L, 1);
+    UClass* Class = Cast<UClass>(FCScript::GetUStruct(L, 2));
+    bool bResult = Object && Class ? Object->IsA(Class) : false;
+    lua_pushboolean(L, bResult);
+    return 1;
+}
+
+int FCUEUtilWrap::DoFindObject_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    UClass* Class = Cast<UClass>(FCScript::GetUStruct(L, 1));
+    UObject* Package = FCScript::GetUObject(L, 2);
+    FString Name = ANSI_TO_TCHAR(luaL_checkstring(L, 3));
+    bool bExactClass = !!(lua_toboolean(L, 4));
+    if(Class)
+    {
+        UObject* Result = StaticFindObject(Class, Package, *Name, bExactClass);
+        FCScript::PushUObject(L, Result);
+    }
+    else
+    {
+        lua_pushnil(L);
+    }
+    return 1;
+}
+
+int FCUEUtilWrap::DoFindObjectFast_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    UClass* Class = Cast<UClass>(FCScript::GetUStruct(L, 1));
+    UObject* Package = FCScript::GetUObject(L, 2);
+    FString Name = ANSI_TO_TCHAR(luaL_checkstring(L, 3));
+    bool bExactClass = !!(lua_toboolean(L, 4));
+    if (Class)
+    {
+        UObject* Result = StaticFindObjectFast(Class, Package, *Name, bExactClass);
+        FCScript::PushUObject(L, Result);
+    }
+    else
+    {
+        lua_pushnil(L);
+    }
+    return 1;
+}
+
+int FCUEUtilWrap::DoLoadObject_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    return LoadObject_wrap(L);
+}
+
+int FCUEUtilWrap::DoGetCurrentLevel_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    UObject* Object = FCScript::GetUObject(L, 1);
+    AActor* ThisActor = Cast<AActor>(Object);
+    if (!ThisActor)
+    {
+        UActorComponent* ThisComponent = Cast<UActorComponent>(Object);
+        if (ThisComponent)
+        {
+            ThisActor = ThisComponent->GetOwner();
+        }
+    }
+    ULevel* Level = ThisActor ? ThisActor->GetLevel() : nullptr;
+    FCScript::PushUObject(L, Level);
+    return 1;
+}
+
+int FCUEUtilWrap::DoGetFullName_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    UObject* Object = FCScript::GetUObject(L, 1);
+    if(Object)
+        lua_pushstring(L, TCHAR_TO_ANSI(*Object->GetFullName()));
+    else
+        lua_pushnil(L);
+    return 1;
+}
+
+int FCUEUtilWrap::DoGetPathName_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    UObject* Object = FCScript::GetUObject(L, 1);
+    if (Object)
+        lua_pushstring(L, TCHAR_TO_ANSI(*Object->GetPathName()));
+    else
+        lua_pushnil(L);
+    return 1;
+}
+
+int FCUEUtilWrap::DoAddReferencedObject_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    UObject* Object = FCScript::GetUObject(L, 1);
+    if (Object && GetScriptContext() && GetScriptContext()->m_ManualObjectReference)
+        GetScriptContext()->m_ManualObjectReference->Add(Object);
+    return 0;
+}
+
+int FCUEUtilWrap::DoRemoveReferencedObject_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    UObject* Object = FCScript::GetUObject(L, 1);
+    if (Object && GetScriptContext() && GetScriptContext()->m_ManualObjectReference)
+        GetScriptContext()->m_ManualObjectReference->Remove(Object);
+    return 0;
+}
+
+int FCUEUtilWrap::DoIsValid_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
+{
+    UObject* Object = FCScript::GetUObject(L, 1);
+    lua_pushboolean(L, IsValid(Object));
+    return 1;
 }
 
 FCDynamicClassDesc *UEUtil_FindClassDesc(const char *ClassName)

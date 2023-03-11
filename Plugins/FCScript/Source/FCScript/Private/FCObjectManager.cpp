@@ -80,6 +80,13 @@ void  FFCObjectdManager::DynamicBind(const class UObjectBaseUtility *Object, UCl
 
 void  FFCObjectdManager::NotifyDeleteUObject(const class UObjectBase* Object, int32 Index)
 {
+#ifdef UE_BUILD_DEBUG
+    UActorComponent *Component = Cast<UActorComponent>((UObject*)Object);  // 测试发现，Component的释放会到这里来，但UFunction不会
+    if(Component)
+    {
+        int iiii = 0;
+    }
+#endif
 	CBindObjectInfoMap::iterator itBind = m_BindObjects.find(Object);
 	if(itBind != m_BindObjects.end())
 	{
@@ -196,10 +203,17 @@ FCDynamicOverrideFunction * FFCObjectdManager::ToOverrideFunction(UObject *InObj
     {
         DynamicFunc = new FCDynamicOverrideFunction();
         DynamicFunc->InitParam(InFunction);
-        DynamicFunc->OleNativeFuncPtr = InFunction->GetNativeFunc();
+        if(InFunction->GetNativeFunc() != InFuncPtr)
+        {
+            DynamicFunc->OleNativeFuncPtr = InFunction->GetNativeFunc();
+            DynamicFunc->m_NativeScript = InFunction->Script;
+        }
+        else
+        {
+            FC_ASSERT(true);
+        }
         DynamicFunc->CurOverrideFuncPtr = InFuncPtr;
         DynamicFunc->m_NativeBytecodeIndex = InNativeBytecodeIndex;
-        DynamicFunc->m_NativeScript = InFunction->Script;
         DynamicFunc->LuaFunctionMame = DynamicFunc->Name;
         //DynamicFunc->m_OverideName = FName(DynamicFunc->Name);
         DynamicFunc->m_OverideName = DynamicFunc->Function->GetFName();
@@ -211,18 +225,26 @@ FCDynamicOverrideFunction * FFCObjectdManager::ToOverrideFunction(UObject *InObj
     {
         DynamicFunc->m_bNeedRestoreNative = true;
 
-        TArray<uint8> Script;
-        Script.Add(InNativeBytecodeIndex);
-        Script.Add(EX_Return);
-        Script.Add(EX_Nothing);
-        Script.Add(EX_Return);
-        Script.Add(EX_Nothing);
-        Script += DynamicFunc->m_NativeScript;
+        if (InFunction->GetNativeFunc() != InFuncPtr)
+        {
+            TArray<uint8> Script;
+            Script.Add(InNativeBytecodeIndex);
+            Script.Add(EX_Return);
+            Script.Add(EX_Nothing);
+            Script.Add(EX_Return);
+            Script.Add(EX_Nothing);
+            Script += DynamicFunc->m_NativeScript;
 
-        InFunction->Script.Empty();
-        InFunction->Script = Script;
+            InFunction->Script.Empty();
+            InFunction->Script = Script;
 
-        InFunction->SetNativeFunc(InFuncPtr);
+            DynamicFunc->OleNativeFuncPtr = InFunction->GetNativeFunc();
+            InFunction->SetNativeFunc(InFuncPtr);
+        }
+        else
+        {
+            FC_ASSERT(true);
+        }
     }
 
 	return DynamicFunc;
@@ -310,9 +332,9 @@ void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynam
 		return ;
 	}
     FName  FuncName(InDynamicProperty->GetFieldName());
-    Func = FindOrDumpFunction(Func, InObject->GetClass(), FuncName, FCDynamicOverrideDelegate);
+    Func = FindOrDumpFunction(Func, InObject->GetClass(), FuncName);
 
-	FCDynamicOverrideFunction *DynamicFunc = this->ToOverrideFunction(InObject, Func, FCDynamicOverrideDelegate, EX_CallFCDelegate);
+	FCDynamicOverrideFunction *DynamicFunc = this->ToOverrideFunction(InObject, Func, FCDynamicOverrideDelegate, EX_CallFCDelegate, InDynamicProperty->GetFieldName());
 
 	FCDynamicDelegateList  &DelegateList = m_ObjectDelegateMap[InObject];
     FCObjectUseFlag::GetIns().Ref(InObject);
@@ -504,16 +526,17 @@ void  FFCObjectdManager::ClearObjectDelegate(const class UObjectBase *Object)
 void  FFCObjectdManager::AddDelegateToClass(FCDynamicOverrideFunction *InDynamicFunc, UClass *InClass)
 {
 	UFunction  *Function = InDynamicFunc->Function;
-	if(InDynamicFunc->OleNativeFuncPtr != FCDynamicOverrideDelegate)
+	if(Function->GetNativeFunc() != FCDynamicOverrideDelegate)
 	{
 		Function->SetNativeFunc(FCDynamicOverrideDelegate);
+        int nFirstCode = Function->Script.Num() > 1 ? Function->Script[0] : 0;
+        if (nFirstCode != EX_CallFCDelegate)
+        {
+            Function->Script.Add(EX_CallFCDelegate);
+            Function->Script.Add(EX_Return);
+            Function->Script.Add(EX_Nothing);
+        }
 	}
-    if(Function->Script.Num() < 1)
-    {
-        Function->Script.Add(EX_CallFCDelegate);
-        Function->Script.Add(EX_Return);
-        Function->Script.Add(EX_Nothing);
-    }			
     FC_ASSERT(InDynamicFunc->m_BindClass != nullptr);
     InDynamicFunc->m_BindClass = InClass;
     //FC_ASSERT(InClass->FindFunctionByName(Function->GetFName()) != nullptr);
@@ -524,9 +547,20 @@ void  FFCObjectdManager::AddDelegateToClass(FCDynamicOverrideFunction *InDynamic
 void  FFCObjectdManager::RemoveDelegateFromClass(FCDynamicOverrideFunction *InDynamicFunc, UClass *InClass)
 {
 	UFunction  *Function = InDynamicFunc->Function;
-	Function->SetNativeFunc(InDynamicFunc->OleNativeFuncPtr);
-	Function->Script = InDynamicFunc->m_NativeScript;
-	InClass->RemoveFunctionFromFunctionMap(Function);
+    if(InDynamicFunc->OleNativeFuncPtr)
+    {
+	    Function->SetNativeFunc(InDynamicFunc->OleNativeFuncPtr);
+	    Function->Script = InDynamicFunc->m_NativeScript;
+    }
+    else
+    {
+        FC_ASSERT(true);
+    }
+
+	//InClass->RemoveFunctionFromFunctionMap(Function);
+    // 因为m_OverrideFunctionMap还在引用这个Function, 然后InDynamicFunc有可能还在LUA中引用，所以暂时不能从Class中移除不然UFunction会GC掉
+    // 这个数量有限，保留这个不会有太多的内存开销，所以不必从Class中移除
+
 }
 
 void  FFCObjectdManager::RemoveObjectDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty, const FCDynamicOverrideFunction* InDynamicFunc)
@@ -586,13 +620,20 @@ void  FFCObjectdManager::ClearAllDynamicFunction()
         if(DynamicFunc->m_bNeedRestoreNative)
         {
             DynamicFunc->m_bNeedRestoreNative = false;
-            UFunction* NativeFunction = DynamicFunc->Function;
-            NativeFunction->Script = DynamicFunc->m_NativeScript;
-            NativeFunction->SetNativeFunc(DynamicFunc->OleNativeFuncPtr);
+            if(DynamicFunc->OleNativeFuncPtr)
+            {
+                UFunction* NativeFunction = DynamicFunc->Function;
+                NativeFunction->Script = DynamicFunc->m_NativeScript;
+                NativeFunction->SetNativeFunc(DynamicFunc->OleNativeFuncPtr);
+            }
+            else
+            {
+                FC_ASSERT(true);
+            }
 
             if(DynamicFunc->m_BindClass)
             {   
-                RemoveDelegateFromClass(DynamicFunc, DynamicFunc->m_BindClass);
+                DynamicFunc->m_BindClass->RemoveFunctionFromFunctionMap(DynamicFunc->Function);
             }
         }
 	}
