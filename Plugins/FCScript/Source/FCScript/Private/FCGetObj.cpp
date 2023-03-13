@@ -84,6 +84,12 @@ FCObjRef* FCGetObj::PushUObjectNoneRef(UObject* Obj)
 	m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
 
     FCObjectUseFlag::GetIns().Ref(Obj);
+#ifdef UE_BUILD_DEBUG
+    FCStringBuffer128   TempBuffer;
+    FString  ObjName = Obj->GetName();
+    TempBuffer << "UObject:" << TCHAR_TO_UTF8(*ObjName);
+    ObjRef->DebugDesc = GetConstName(TempBuffer.GetString());
+#endif
 	return ObjRef;
 }
 
@@ -119,6 +125,12 @@ int64  FCGetObj::PushNewObject(FCDynamicClassDesc* ClassDesc, const FName& Name,
         m_ObjMap[ObjKey] = ObjRef;
     }
     FCObjectUseFlag::GetIns().Ref(Obj);
+#ifdef UE_BUILD_DEBUG
+    FCStringBuffer128   TempBuffer;
+    FString  ObjName = Obj->GetName();
+    TempBuffer << "UObject:" << TCHAR_TO_UTF8(*ObjName);
+    ObjRef->DebugDesc = GetConstName(TempBuffer.GetString());
+#endif
 
 	return ObjRef->PtrIndex;
 }
@@ -142,6 +154,9 @@ int64  FCGetObj::PushNewStruct(FCDynamicClassDesc* ClassDesc)
 	ObjRefKey  ObjKey(nullptr, pValueAddr);
 	m_ObjMap[ObjKey] = ObjRef;
 	m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
+#ifdef UE_BUILD_DEBUG
+    ObjRef->DebugDesc = ClassDesc->m_UEClassName;
+#endif
 	return ObjRef->PtrIndex;
 }
 
@@ -159,6 +174,9 @@ int64  FCGetObj::PushCppStruct(FCDynamicClassDesc* ClassDesc, void* pValueAddr)
     ObjRefKey  ObjKey(nullptr, pValueAddr);
     m_ObjMap[ObjKey] = ObjRef;
     m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
+#ifdef UE_BUILD_DEBUG
+    ObjRef->DebugDesc = ClassDesc->m_UEClassName;
+#endif
     return ObjRef->PtrIndex;    
 }
 
@@ -221,6 +239,9 @@ int64  FCGetObj::PushChildProperty(FCObjRef* Parent, const FCDynamicProperty* Dy
         ObjRef->Parent = Parent;
         Parent->PushChild(ObjRef);
     }
+#ifdef UE_BUILD_DEBUG
+    ObjRef->DebugDesc = DynamicProperty->DebugDesc;
+#endif
 	return ObjRef->PtrIndex;
 }
 
@@ -259,6 +280,10 @@ int64  FCGetObj::PushStructValue(const FCDynamicProperty *DynamicProperty, void 
 	ObjRef->ThisObjAddr = (uint8* )pValueAddr;
 	m_ObjMap[ObjKey] = ObjRef;
 	m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
+
+#ifdef UE_BUILD_DEBUG
+    ObjRef->DebugDesc = DynamicProperty->DebugDesc;
+#endif
 	return ObjRef->PtrIndex;
 }
 
@@ -286,7 +311,6 @@ int64  FCGetObj::PushNewTMap(const FCDynamicProperty* DynamicProperty, void* pVa
     // 拷贝吧
     FScriptMap* SrcContent = (FScriptMap*)pValueAddr;
     MapProperty->CopyValuesInternal(DesContent, SrcContent, MapProperty->ArrayDim);
-
     return ObjID;
 
 }
@@ -336,6 +360,10 @@ int64  FCGetObj::PushCppPropery(const FCDynamicProperty* DynamicProperty, void* 
     ObjRef->ThisObjAddr = (uint8*)pValueAddr;
     m_ObjMap[ObjKey] = ObjRef;
     m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
+
+#ifdef UE_BUILD_DEBUG
+    ObjRef->DebugDesc = DynamicProperty->DebugDesc;
+#endif
     return ObjRef->PtrIndex;
 }
 
@@ -361,6 +389,10 @@ int64  FCGetObj::PushTemplate(const FCDynamicProperty *DynamicProperty, void *pV
 	ObjRef->ThisObjAddr = (uint8 *)pValueAddr;
 	m_ObjMap[ObjKey] = ObjRef;
 	m_IntPtrMap[ObjRef->PtrIndex] = ObjRef;
+
+#ifdef UE_BUILD_DEBUG
+    ObjRef->DebugDesc = DynamicProperty->DebugDesc;
+#endif
 	return ObjRef->PtrIndex;
 }
 

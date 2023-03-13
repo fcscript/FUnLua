@@ -47,8 +47,14 @@ struct FCObjRef
 	int        Ref;             // 引用计数
 	EFCObjRefType  RefType;
     FCObjRef *Childs; // 使用单链表
+#ifdef UE_BUILD_DEBUG
+    const char* DebugDesc;
+#endif
 	FCObjRef():m_pNext(NULL), Parent(NULL), ClassDesc(NULL), DynamicProperty(NULL), PtrIndex(0), ThisObjAddr(NULL), Ref(0), RefType(RefNone), Childs(nullptr)
 	{
+#ifdef UE_BUILD_DEBUG
+        DebugDesc = nullptr;
+#endif
 	}
     void PushChild(FCObjRef* ChildRef)
     {

@@ -28,6 +28,12 @@ void  FCDynamicProperty::InitProperty(const FProperty *InProperty, const char* I
     m_WriteScriptFunc = InitDynamicPropertyWriteFunc(Type);
     m_ReadScriptFunc = InitDynamicPropertyReadFunc(Type);
     m_CopyScriptValue = InitDynamicPropertyCopyFunc(Type);
+
+#ifdef UE_BUILD_DEBUG
+    FCStringBuffer128   TempBuffer;
+    TempBuffer << ClassName << ':' << Name;
+    DebugDesc = GetConstName(TempBuffer.GetString());
+#endif
 }
 
 void  FCDynamicProperty::InitCppType(FCPropertyType InType, const char* InClassName, int InElementSize)
@@ -42,6 +48,12 @@ void  FCDynamicProperty::InitCppType(FCPropertyType InType, const char* InClassN
     m_WriteScriptFunc = InitDynamicPropertyWriteFunc(Type);
     m_ReadScriptFunc = InitDynamicPropertyReadFunc(Type);
     m_CopyScriptValue = InitDynamicPropertyCopyFunc(Type);
+
+#ifdef UE_BUILD_DEBUG
+    FCStringBuffer128   TempBuffer;
+    TempBuffer << ClassName << ':' << Name << ":CppType";
+    DebugDesc = GetConstName(TempBuffer.GetString());
+#endif
 }
 
 void  FCDynamicFunction::InitParam(UFunction *InFunction)
@@ -61,6 +73,10 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
     OuterParamSize = 0;
 
     TMap<FName, FString>* MetaMap = UMetaData::GetMapForObject(Function);
+
+#ifdef UE_BUILD_DEBUG
+    FCStringBuffer128   TempBuffer;
+#endif
 
     int SrcCount = InFunction->NumParms;
     FCStringBuffer128 DefaultName;
@@ -106,6 +122,13 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
                 FCProperty->DefaultParam = GetDefaultValue(FCProperty, *Result);
             }
         }
+
+#ifdef UE_BUILD_DEBUG
+        TempBuffer.Empty();
+        TempBuffer << Name << ":" << FCProperty->Name;
+        FCProperty->DebugDesc = GetConstName(TempBuffer.GetString());
+#endif
+
 	}
 	if(ReturnPropertyIndex != -1)
 	{
@@ -116,6 +139,11 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
 			ReturnPropertyIndex = RealReturnIndex;
 		}
 	}
+#ifdef UE_BUILD_DEBUG
+    TempBuffer.Empty();
+    TempBuffer << "Function:" << Name;
+    DebugDesc = GetConstName(TempBuffer.GetString());
+#endif
 }
 
 int FCDynamicDelegateList::FindDelegate(const FCDelegateInfo &Info) const

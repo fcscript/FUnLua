@@ -60,7 +60,7 @@ enum FCPropertyType
 #endif
 
 
-
+// 数据类型的声明在UnrealType.h
 #if OLD_UE_ENGINE
 #define CastField Cast
 #define GetPropertyOuter(Property) (Property)->GetOuter()

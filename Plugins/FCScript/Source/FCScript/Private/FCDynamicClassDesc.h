@@ -39,9 +39,15 @@ struct FCDynamicPropertyBase : public FCDynamicField
 	bool              bOuter;     // 是不是输出类型
     bool              bTempNeedRef;  // 临时的上下拷贝参数标记
     bool              bTempRealRef;  // 
+    #ifdef UE_BUILD_DEBUG
+    const char *DebugDesc;
+    #endif
 	
 	FCDynamicPropertyBase() :ElementSize(0), Offset_Internal(0), PropertyIndex(0), Name(nullptr), ClassName(nullptr), Type(FCPropertyType::FCPROPERTY_Unkonw), Property(nullptr), bRef(false), bOuter(false), bTempNeedRef(false), bTempRealRef(false)
 	{
+#ifdef UE_BUILD_DEBUG
+        DebugDesc = nullptr;
+#endif
 	}
 	bool  IsRef() const
 	{
@@ -136,8 +142,14 @@ struct  FCDynamicFunction : public FCDynamicField
 	bool    bDelegate;
 	const char* Name;        // 函数名
 	std::vector<FCDynamicFunctionParam>   m_Property;
+#ifdef UE_BUILD_DEBUG
+    const char* DebugDesc;
+#endif
 	FCDynamicFunction():Function(nullptr), LatentPropertyIndex(-1), ReturnPropertyIndex(-1), ParmsSize(0), ParamCount(0), OuterParamCount(0), OuterParamSize(0), bOverride(false), bOuter(false), bRegister(false), bDelegate(false), Name(nullptr)
 	{
+#ifdef UE_BUILD_DEBUG
+        DebugDesc = nullptr;
+#endif
 	}
 	void  InitParam(UFunction *InFunction);
     bool IsLatentFunction() const 
