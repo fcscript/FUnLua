@@ -4,6 +4,7 @@
 #include "Templates/Casts.h"
 #include "Logging/LogMacros.h"
 #include "Misc/EmbeddedCommunication.h"
+#include "Engine/LevelScriptActor.h"
 
 #include "FCScriptInterface.h"
 #include "FCDynamicClassDesc.h"
@@ -18,6 +19,7 @@
 #include "FCDynamicDelegateManager.h"
 #include "FCInputReplace.h"
 #include "FCBrigeHelper.h"
+#include "FCSafeProperty.h"
 
 #include "Interfaces/IPluginManager.h"
 
@@ -192,6 +194,7 @@ void FFCDelegateModule::PreLoadMap(const FString &MapName)
 void FFCDelegateModule::PostLoadMapWithWorld(UWorld *World)
 {
 	CallAnyScriptFunc(GetClientScriptContext(), 0, "OnPostLoadMapWithWorld", World);
+    OnMapLoaded(World);
 }
 
 void FFCDelegateModule::OnPostGarbageCollect()
@@ -248,7 +251,13 @@ void FFCDelegateModule::NotifyUObjectCreated(const class UObjectBase *InObject, 
 		}
 		if (Actor && Actor->GetLocalRole() >= ROLE_AutonomousProxy)
 		{
-			CandidateInputComponents.AddUnique((UInputComponent*)InObject);
+            FActorInputComponentCache  Node = { Actor,  (UInputComponent*)InObject };
+            for(int i = 0; i< CandidateInputComponents.Num(); ++i)
+            {
+                if(CandidateInputComponents[i].InputComponent == Node.InputComponent)
+                    return ;
+            }
+			CandidateInputComponents.Add(Node);
 			if (!FWorldDelegates::OnWorldTickStart.IsBoundToObject(this))
 			{
 				OnWorldTickStartHandle = FWorldDelegates::OnWorldTickStart.AddRaw(this, &FFCDelegateModule::OnWorldTickStart);
@@ -295,8 +304,14 @@ void FFCDelegateModule::OnUObjectDeleteOnMainThread(const class UObjectBase* InO
 
     if (CandidateInputComponents.Num() > 0)
     {
-        int32 NumRemoved = CandidateInputComponents.Remove((UInputComponent*)InObject);
-        if (NumRemoved > 0 && CandidateInputComponents.Num() < 1)
+        for(int i = CandidateInputComponents.Num() - 1; i >= 0; --i)
+        {
+            if(CandidateInputComponents[i].Object == InObject)
+            {
+                CandidateInputComponents.RemoveAt(i);
+            }
+        }
+        if (CandidateInputComponents.Num() == 0)
         {
             FWorldDelegates::OnWorldTickStart.Remove(OnWorldTickStartHandle);
         }
@@ -388,6 +403,7 @@ void FFCDelegateModule::Shutdown()
 		GUObjectArray.RemoveUObjectDeleteListener(this);
 	}
 	ReleasePropertyTable();
+    ClearAllSafeProperty();
     mScriptNameMap.clear();
 
     CandidateInputComponents.Empty();
@@ -536,8 +552,10 @@ void FFCDelegateModule::OnWorldTickStart(UWorld *World, ELevelTick TickType, flo
 void FFCDelegateModule::OnWorldTickStart(ELevelTick TickType, float DeltaTime)
 #endif
 {
-    for (UInputComponent* InputComponent : CandidateInputComponents)
+    for(int i = 0; i< CandidateInputComponents.Num(); ++i)
     {
+        FActorInputComponentCache &Cache = CandidateInputComponents[i];
+        UInputComponent * InputComponent = Cache.InputComponent;
         if (!InputComponent->IsRegistered())
             continue;
 
@@ -557,4 +575,22 @@ void FFCDelegateModule::OnWorldTickStart(ELevelTick TickType, float DeltaTime)
     FWorldDelegates::OnWorldTickStart.Remove(OnWorldTickStartHandle);
 }
 
+void FFCDelegateModule::OnMapLoaded(UWorld* World)
+{
+    ENetMode NetMode = World->GetNetMode();
+    if (NetMode == NM_DedicatedServer)
+    {
+        return;
+    }
+    const TArray<ULevel*>& Levels = World->GetLevels();
+    for (ULevel* Level : Levels)
+    {
+        // replace input defined in ALevelScriptActor::InputComponent if necessary
+        ALevelScriptActor* LSA = Level->GetLevelScriptActor();
+        if (LSA && LSA->InputEnabled() && LSA->InputComponent)
+        {
+            FCInputReplace::GetIns().ReplaceInputs(LSA, LSA->InputComponent); // try to replace/override input events
+        }
+    }
+}
 //-------------------------------------------------------------

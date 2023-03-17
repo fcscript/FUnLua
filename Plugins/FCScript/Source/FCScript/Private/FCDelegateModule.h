@@ -65,12 +65,19 @@ protected:
 #else
 	void OnWorldTickStart(ELevelTick TickType, float DeltaTime);
 #endif
+    void OnMapLoaded(UWorld* World);
 protected:
 	FDelegateHandle OnActorSpawnedHandle;
 	FDelegateHandle OnWorldTickStartHandle;
 	FDelegateHandle OnPostGarbageCollectHandle;
 
-	TArray<class UInputComponent*> CandidateInputComponents;
+    struct FActorInputComponentCache
+    {
+        UObject  *Object;
+        class UInputComponent*  InputComponent;
+    };
+
+	TArray<FActorInputComponentCache> CandidateInputComponents;
 
 	TArray<FWeakObjectPtr> Candidates;        // binding candidates during async loading
 	FCriticalSection CandidatesCS;      // critical section for accessing 'Candidates'
