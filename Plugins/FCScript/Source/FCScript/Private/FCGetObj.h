@@ -124,7 +124,7 @@ struct FCObjRef
 	{
 		if(EFCObjRefType::RefProperty == RefType || EFCObjRefType::RefStructValue == RefType)
 		{
-			return (FStructProperty *)(DynamicProperty->Property);
+			return DynamicProperty->SafePropertyPtr->CastStructProperty();
 		}
 		return NULL;
 	}

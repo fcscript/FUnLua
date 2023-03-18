@@ -11,6 +11,7 @@
 #include "../LuaCore/LuaHeader.h"
 #include "FCObjectReferencer.h"
 #include "FCObjectUseFlag.h"
+#include "FCSafeProperty.h"
 
 DECLARE_LOG_CATEGORY_EXTERN(LogFCScript, Log, All);
 
@@ -34,7 +35,8 @@ struct FCDynamicPropertyBase : public FCDynamicField
     const char* ClassName;   // 类名
 	
 	FCPropertyType    Type;       // 类型
-	const FProperty  *Property;
+	//const FProperty  *Property;
+    const FCSafeProperty *SafePropertyPtr;
 	bool              bRef;       // 是不是引用类型
 	bool              bOuter;     // 是不是输出类型
     bool              bTempNeedRef;  // 临时的上下拷贝参数标记
@@ -43,7 +45,7 @@ struct FCDynamicPropertyBase : public FCDynamicField
     const char *DebugDesc;
     #endif
 	
-	FCDynamicPropertyBase() :ElementSize(0), Offset_Internal(0), PropertyIndex(0), Name(nullptr), ClassName(nullptr), Type(FCPropertyType::FCPROPERTY_Unkonw), Property(nullptr), bRef(false), bOuter(false), bTempNeedRef(false), bTempRealRef(false)
+	FCDynamicPropertyBase() :ElementSize(0), Offset_Internal(0), PropertyIndex(0), Name(nullptr), ClassName(nullptr), Type(FCPropertyType::FCPROPERTY_Unkonw), SafePropertyPtr(nullptr), bRef(false), bOuter(false), bTempNeedRef(false), bTempRealRef(false)
 	{
 #ifdef UE_BUILD_DEBUG
         DebugDesc = nullptr;
@@ -68,22 +70,7 @@ struct FCDynamicPropertyBase : public FCDynamicField
 	// 功能：得到委托的触发函数
 	UFunction *GetSignatureFunction() const
 	{		
-		if(FCPropertyType::FCPROPERTY_MulticastDelegateProperty == Type)
-		{
-			FMulticastDelegateProperty* DelegateProperty = (FMulticastDelegateProperty*)Property;
-			return DelegateProperty->SignatureFunction;
-		}
-		else if(FCPROPERTY_DelegateProperty == Type)
-		{
-			FDelegateProperty* DelegateProperty = (FDelegateProperty*)Property;
-			return DelegateProperty->SignatureFunction;
-		}
-        else if(FCPROPERTY_MulticastSparseDelegateProperty == Type)
-        {
-            FMulticastSparseDelegateProperty * DelagateProperty = (FMulticastSparseDelegateProperty*)Property;
-            return DelagateProperty->SignatureFunction;
-        }
-		return nullptr;
+        return SafePropertyPtr->GetSignatureFunction();
 	}
     virtual int GetMemSize() const { return sizeof(FCDynamicPropertyBase); }
 };
@@ -174,10 +161,11 @@ struct FCDynamicOverrideFunction : public FCDynamicFunction
 	int              m_NativeBytecodeIndex;
 	bool             m_bLockCall;
     bool             m_bNeedRestoreNative;
+    bool             m_bNeedReInit;
 	TArray<uint8>    m_NativeScript;
     FName            m_OverideName;
     UClass           *m_BindClass;
-	FCDynamicOverrideFunction() : OleNativeFuncPtr(nullptr), CurOverrideFuncPtr(nullptr), LuaFunctionMame(nullptr), m_NativeBytecodeIndex(0), m_bLockCall(false), m_bNeedRestoreNative(false), m_BindClass(nullptr)
+	FCDynamicOverrideFunction() : OleNativeFuncPtr(nullptr), CurOverrideFuncPtr(nullptr), LuaFunctionMame(nullptr), m_NativeBytecodeIndex(0), m_bLockCall(false), m_bNeedRestoreNative(false), m_bNeedReInit(false), m_BindClass(nullptr)
 	{
 	}
     const char *GetLuaFunctionName() const

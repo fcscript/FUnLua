@@ -324,7 +324,7 @@ FCDynamicDelegateList  *FFCObjectdManager::FindDelegateFunction(UObject *InObjec
 	return nullptr;
 }
 
-void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty, const void* InFuncAddr, int InFunctionRef, const int* InParams, int InParamCount)
+void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty, const void* InFuncAddr, int InFunctionRef, const int* InParams, int InParamCount, uint8* DelegateAddr)
 {
 	if(!InObject || !InDynamicProperty)
 	{
@@ -366,25 +366,26 @@ void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynam
     FuncName = DynamicFunc->m_OverideName;
 	uint8* ObjAddr = (uint8 *)InObject;
 	uint8* ValueAddr = ObjAddr + InDynamicProperty->Offset_Internal;
+    FC_ASSERT(DelegateAddr != ValueAddr);
 	if(InDynamicProperty->Type == FCPropertyType::FCPROPERTY_MulticastDelegateProperty)
 	{
-		FMulticastDelegateProperty* DelegateProperty = (FMulticastDelegateProperty*)InDynamicProperty->Property;		
+		FMulticastDelegateProperty* DelegateProperty = (FMulticastDelegateProperty*)InDynamicProperty->SafePropertyPtr->CastDelegateProperty();
 		FScriptDelegate DynamicDelegate;
 		DynamicDelegate.BindUFunction(InObject, FuncName);
 
-		FMulticastScriptDelegate& MulticastDelegate = (*(FMulticastScriptDelegate*)ValueAddr);
+		FMulticastScriptDelegate& MulticastDelegate = (*(FMulticastScriptDelegate*)DelegateAddr);
 		MulticastDelegate.AddUnique(MoveTemp(DynamicDelegate));
 	}
 	else if(FCPROPERTY_DelegateProperty == InDynamicProperty->Type)
 	{
-		FDelegateProperty* DelegateProperty = (FDelegateProperty*)InDynamicProperty->Property;
-		FScriptDelegate& ScriptDelegate = (*(FScriptDelegate*)ValueAddr);
+		FDelegateProperty* DelegateProperty = (FDelegateProperty*)InDynamicProperty->SafePropertyPtr->CastDelegateProperty();
+		FScriptDelegate& ScriptDelegate = (*(FScriptDelegate*)DelegateAddr);
 		ScriptDelegate.BindUFunction(InObject, FuncName);
 	}
     else if(FCPROPERTY_MulticastSparseDelegateProperty == InDynamicProperty->Type)
     {
-        FMulticastSparseDelegateProperty * DelegateProperty = (FMulticastSparseDelegateProperty*)InDynamicProperty->Property;
-        FSparseDelegate & ScriptDelegate = (*(FSparseDelegate*)ValueAddr);
+        FMulticastSparseDelegateProperty * DelegateProperty = (FMulticastSparseDelegateProperty*)InDynamicProperty->SafePropertyPtr->CastDelegateProperty();
+        FSparseDelegate & ScriptDelegate = (*(FSparseDelegate*)DelegateAddr);
 
         FScriptDelegate DynamicDelegate;
         DynamicDelegate.BindUFunction(InObject, FuncName);
@@ -592,7 +593,7 @@ void  FFCObjectdManager::RemoveObjectDelegate(UObject *InObject, const FCDynamic
 	}
     else if(FCPROPERTY_MulticastSparseDelegateProperty == InDynamicProperty->Type)
     {
-        FMulticastSparseDelegateProperty* DelegateProperty = (FMulticastSparseDelegateProperty*)InDynamicProperty->Property;
+        FMulticastSparseDelegateProperty* DelegateProperty = (FMulticastSparseDelegateProperty*)InDynamicProperty->SafePropertyPtr->CastDelegateProperty();
         FSparseDelegate& ScriptDelegate = (*(FSparseDelegate*)ValueAddr);
         ScriptDelegate.__Internal_Clear(InObject, InDynamicFunc->m_OverideName);  // 这个是会自动删除的，其实这个是不需要的
     }

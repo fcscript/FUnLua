@@ -119,7 +119,7 @@ public:
 	int  NativeCall(UObject* InObject, FCDynamicFunction* DynamicFunc, lua_State* L, int nStart);
 
 	FCDynamicDelegateList  *FindDelegateFunction(UObject *InObject);
-	void  RegisterScriptDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty, const void *InFuncAddr, int InFunctionRef, const int *InParams, int InParamCount);
+	void  RegisterScriptDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty, const void *InFuncAddr, int InFunctionRef, const int *InParams, int InParamCount, uint8* DelegateAddr);
 	void  RemoveScriptDelegate(UObject *InObject, const FCDynamicProperty* InDynamicProperty, const void* InFuncAddr);
 	void  ClearScriptDelegate(UObject* InObject, const FCDynamicProperty* InDynamicProperty);
 

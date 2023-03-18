@@ -187,7 +187,7 @@ int FCTArrayWrap::SetNumb_wrap(lua_State* L)
 		if(ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
 		{
 			FScriptArray *ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-			FArrayProperty  *ArrayProperty = (FArrayProperty *)ObjRef->DynamicProperty->Property;
+			FArrayProperty  *ArrayProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
 			FProperty *Inner = ArrayProperty->Inner;
 			int32 NewNum = lua_tointeger(L, 2);
 			FCTArrayWrap_SetNumb(ScriptArray, Inner, NewNum);
@@ -220,7 +220,7 @@ void FCTArrayWrap_SetAt_warp(lua_State* L)
             int Index = lua_tointeger(L, 2) - 1; // lua 从 1开始
 
 			FScriptArray *ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-			FArrayProperty  *ArrayProperty = (FArrayProperty *)ObjRef->DynamicProperty->Property;
+			FArrayProperty  *ArrayProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
 			int32 Num = ScriptArray->Num();
 			if (Index >= 0 && Index < Num)
 			{
@@ -277,7 +277,7 @@ int FCTArrayWrap::Swap_wrap(lua_State* L)
 			int B = lua_tointeger(L, 3) - 1; // lua 从 1开始
 
 			FScriptArray* ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-			FArrayProperty* ArrayProperty = (FArrayProperty*)ObjRef->DynamicProperty->Property;
+			FArrayProperty* ArrayProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
 			FProperty* Inner = ArrayProperty->Inner;
 			int ElementSize = Inner->GetSize();
 			int Num = ScriptArray->Num();
@@ -328,7 +328,7 @@ int  TArrayWrap_Add(lua_State* L, FCObjRef* ObjRef, int Idx)
 		if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
 		{
 			FScriptArray* ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-			FArrayProperty* ArrayProperty = (FArrayProperty*)ObjRef->DynamicProperty->Property;
+			FArrayProperty* ArrayProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
 			FProperty* Inner = ArrayProperty->Inner;
 			int ElementSize = Inner->GetSize();
 			Index = ScriptArray_Add(ScriptArray, 1, ElementSize);
@@ -414,7 +414,7 @@ int FCTArrayWrap::Insert_wrap(lua_State* L)
 			int32 Index = lua_tointeger(L, 3) - 1; // lua 从1开始
 
 			FScriptArray* ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-			FArrayProperty* ArrayProperty = (FArrayProperty*)ObjRef->DynamicProperty->Property;
+			FArrayProperty* ArrayProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
 			FProperty* Inner = ArrayProperty->Inner;
 			int Numb = ScriptArray->Num();
 			int ElementSize = Inner->GetSize();
@@ -440,7 +440,7 @@ void TArrayWrap_Remove(FCObjRef* ObjRef, int Index)
 		if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
 		{
 			FScriptArray* ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-			FArrayProperty* ArrayProperty = (FArrayProperty*)ObjRef->DynamicProperty->Property;
+			FArrayProperty* ArrayProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
 			FProperty* Inner = ArrayProperty->Inner;
 			int ElementSize = Inner->GetSize();
 			int Numb = ScriptArray->Num();
@@ -495,7 +495,7 @@ int FCTArrayWrap::Remove_wrap(lua_State* L)
 			int Index = lua_tointeger(L, 2);
 
 			FScriptArray *ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-			FArrayProperty  *ArrayProperty = (FArrayProperty *)ObjRef->DynamicProperty->Property;
+			FArrayProperty  *ArrayProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
 			FProperty *Inner = ArrayProperty->Inner;
 			int ElementSize = Inner->GetSize();
 			int Numb = ScriptArray->Num();
@@ -518,7 +518,7 @@ int FCTArrayWrap::Clear_wrap(lua_State* L)
 		if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
 		{
 			FScriptArray *ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-			FArrayProperty  *ArrayProperty = (FArrayProperty *)ObjRef->DynamicProperty->Property;
+			FArrayProperty  *ArrayProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
 			FProperty *Inner = ArrayProperty->Inner;
 			TArray_Clear(ScriptArray, Inner);
 		}
@@ -535,7 +535,7 @@ int FCTArrayWrap::Reserve_wrap(lua_State* L)
 		if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
 		{
 			FScriptArray* ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-			FArrayProperty* ArrayProperty = (FArrayProperty*)ObjRef->DynamicProperty->Property;
+			FArrayProperty* ArrayProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
 			FProperty* Inner = ArrayProperty->Inner;
 			int ElementSize = Inner->GetSize();
             ScriptArray_Empty(ScriptArray, Size, ElementSize);
@@ -553,7 +553,7 @@ int FCTArrayWrap::ToList_wrap(lua_State* L)
 		if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
 		{
 			FScriptArray *ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-			FArrayProperty  *ArrayProperty = (FArrayProperty *)ObjRef->DynamicProperty->Property;
+			FArrayProperty  *ArrayProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
 			FProperty *Inner = ArrayProperty->Inner;
 			int ElementSize = Inner->GetSize();
 			int Numb = ScriptArray->Num();
@@ -612,7 +612,7 @@ int FCTArrayWrap::SetList_wrap(lua_State* L)
             // 如果不在栈顶上，就压入此表的一份引用到栈顶
 
 			FScriptArray *ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-			FArrayProperty  *ArrayProperty = (FArrayProperty *)ObjRef->DynamicProperty->Property;
+			FArrayProperty  *ArrayProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
 			FProperty *Inner = ArrayProperty->Inner;
 			int ElementSize = Inner->GetSize();
 

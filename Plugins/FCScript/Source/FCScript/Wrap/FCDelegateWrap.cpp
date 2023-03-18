@@ -139,7 +139,7 @@ int FCDelegateWrap::AddListener_wrap(lua_State* L)
         {
             return 0;
         }
-        FFCObjectdManager::GetSingleIns()->RegisterScriptDelegate(Object, ObjRef->DynamicProperty, FuncAddr, FunctionRef, CallbackParams, CallbackParamCount);
+        FFCObjectdManager::GetSingleIns()->RegisterScriptDelegate(Object, ObjRef->DynamicProperty, FuncAddr, FunctionRef, CallbackParams, CallbackParamCount, ObjRef->GetPropertyAddr());
     }
 	return 0;
 }

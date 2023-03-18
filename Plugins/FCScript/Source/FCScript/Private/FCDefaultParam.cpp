@@ -21,11 +21,10 @@ void FCDefaultParamBool::WriteDefaultValue(FCDynamicProperty* DynamicProperty, u
 
 void FCDefaultParamByte::InitDefaultValue(FCDynamicProperty* DynamicProperty, const FString& DefaltParam1, const char* DefaultParam2)
 {
-    FByteProperty *Propety = (FByteProperty *)DynamicProperty->Property;
-    if(Propety->Enum)
+    if(DynamicProperty->SafePropertyPtr->IsEnumProperty())
     {
         bEnum = true;
-        DefaultValue = Propety->Enum->GetValueByName(FName(DefaultParam2));
+        DefaultValue = DynamicProperty->SafePropertyPtr->GetEnumValueByName(FName(DefaultParam2));
     }
     else
     {

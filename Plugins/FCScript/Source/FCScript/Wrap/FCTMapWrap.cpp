@@ -93,7 +93,7 @@ int FCTMapWrap::obj_NextPairs(lua_State* L)
         Pairs->PairIndex = NextIndex;
         if(Pairs->IsValidIndex(NextIndex))
         {
-            FMapProperty* MapProperty = (FMapProperty*)Pairs->ObjRef->DynamicProperty->Property;
+            FMapProperty* MapProperty = Pairs->ObjRef->DynamicProperty->SafePropertyPtr->CastMapProperty();
             const FScriptMapLayout& MapLayout = MapProperty->MapLayout;
 
             uint8* PairPtr = (uint8*)Pairs->ScriptMap->GetData(NextIndex, MapLayout);
@@ -164,7 +164,7 @@ int FCTMapWrap::GetNumb_wrap(lua_State* L)
 bool TMap_GetAt(FCObjRef* ObjRef, lua_State* L, int KeyIdx, int ValueIdx)
 {
 	FScriptMap* ScriptMap = (FScriptMap*)ObjRef->GetThisAddr();
-	FMapProperty* MapProperty = (FMapProperty*)ObjRef->DynamicProperty->Property;
+	FMapProperty* MapProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastMapProperty();
 	FProperty* KeyProp = MapProperty->KeyProp;
 
 	FTMapKeyValueBuffer KeyBuffer(KeyProp, L, KeyIdx);
@@ -185,7 +185,7 @@ bool TMap_GetAt(FCObjRef* ObjRef, lua_State* L, int KeyIdx, int ValueIdx)
 void TMap_AddBase(FCObjRef* ObjRef, lua_State* L, FTMapKeyValueBuffer &Key, FTMapKeyValueBuffer &Value)
 {
 	FScriptMap* ScriptMap = (FScriptMap*)ObjRef->GetThisAddr();
-	FMapProperty* MapProperty = (FMapProperty*)ObjRef->DynamicProperty->Property;
+	FMapProperty* MapProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastMapProperty();
 	FProperty* KeyProp = MapProperty->KeyProp;
 	FProperty* ValueProp = MapProperty->ValueProp;
 	
@@ -206,7 +206,7 @@ void TMap_AddBase(FCObjRef* ObjRef, lua_State* L, FTMapKeyValueBuffer &Key, FTMa
 void TMap_Add(FCObjRef* ObjRef, lua_State* L, int KeyIdx, int ValueIdx)
 {
 	FScriptMap* ScriptMap = (FScriptMap*)ObjRef->GetThisAddr();
-	FMapProperty* MapProperty = (FMapProperty*)ObjRef->DynamicProperty->Property;
+	FMapProperty* MapProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastMapProperty();
 	FTMapKeyValueBuffer Key(MapProperty->KeyProp, L, KeyIdx);
 	FTMapKeyValueBuffer Value(MapProperty->ValueProp, L, ValueIdx);
 
@@ -265,7 +265,7 @@ int FCTMapWrap::Remove_wrap(lua_State* L)
 		if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
 		{
 			FScriptMap* ScriptMap = (FScriptMap*)ObjRef->GetThisAddr();
-			FMapProperty* MapProperty = (FMapProperty*)ObjRef->DynamicProperty->Property;
+			FMapProperty* MapProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastMapProperty();
 			FProperty* KeyProp = MapProperty->KeyProp;
 			FProperty* ValueProp = MapProperty->ValueProp;
 	
@@ -299,7 +299,7 @@ int FCTMapWrap::Clear_wrap(lua_State* L)
 		if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
 		{
 			FScriptMap* ScriptMap = (FScriptMap*)ObjRef->GetThisAddr();
-			FMapProperty* MapProperty = (FMapProperty*)ObjRef->DynamicProperty->Property;
+			FMapProperty* MapProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastMapProperty();
 			TMap_Clear(ScriptMap, MapProperty);
 		}
 	}
@@ -314,7 +314,7 @@ int FCTMapWrap::ToMap_wrap(lua_State* L)
 		if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
 		{
 			FScriptMap* ScriptMap = (FScriptMap*)ObjRef->GetThisAddr();
-			FMapProperty* MapProperty = (FMapProperty*)ObjRef->DynamicProperty->Property;
+			FMapProperty* MapProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastMapProperty();
 			FProperty* KeyProp = MapProperty->KeyProp;
 			FProperty* ValueProp = MapProperty->ValueProp;
 			const FScriptMapLayout &MapLayout = MapProperty->MapLayout;
@@ -376,7 +376,7 @@ int FCTMapWrap::SetMap_wrap(lua_State* L)
 			int TableIdx = 2;
 
 			FScriptMap* ScriptMap = (FScriptMap*)ObjRef->GetThisAddr();
-			FMapProperty* MapProperty = (FMapProperty*)ObjRef->DynamicProperty->Property;
+			FMapProperty* MapProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastMapProperty();
 			TMap_Clear(ScriptMap, MapProperty);
 
 			FTMapKeyValueBuffer Key(MapProperty->KeyProp);
@@ -418,7 +418,7 @@ int FCTMapWrap::find_wrap(lua_State* L)
         if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
         {
             FScriptMap* ScriptMap = (FScriptMap*)ObjRef->GetThisAddr();
-            FMapProperty* MapProperty = (FMapProperty*)ObjRef->DynamicProperty->Property;
+            FMapProperty* MapProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastMapProperty();
             FProperty* KeyProp = MapProperty->KeyProp;
 
             FTMapKeyValueBuffer Key(KeyProp, L, 2);

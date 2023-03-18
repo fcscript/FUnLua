@@ -17,7 +17,7 @@ public:
     FCTSetHelper(FScriptSet* InScriptSet, const FCDynamicProperty* InDynamicProperty)
     {
         ScriptSet = InScriptSet;
-        SetProperty = (FSetProperty*)InDynamicProperty->Property;
+        SetProperty = InDynamicProperty->SafePropertyPtr->CastSetProperty();
     }
     FCTSetHelper(FCObjRef* ObjRef) :ScriptSet(nullptr), SetProperty(nullptr)
     {
@@ -30,7 +30,7 @@ public:
         if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
         {
             ScriptSet = (FScriptSet*)ObjRef->GetThisAddr();
-            SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
+            SetProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastSetProperty();
         }
     }
 public:

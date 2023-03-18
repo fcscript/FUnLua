@@ -881,12 +881,12 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     for (; DynamicProperty < EndProperty; ++DynamicProperty, ++Index)
     {
         ValueAddr = Locals + DynamicProperty->Offset_Internal;
-        DynamicProperty->Property->InitializeValue(ValueAddr);
+        DynamicProperty->SafePropertyPtr->InitializeValue(ValueAddr);
         if(LatentPropertyIndex == DynamicProperty->PropertyIndex)
         {
             int32 ThreadRef = GetScriptContext()->QueryLuaRef(L);
             FLatentActionInfo LatentActionInfo(ThreadRef, GetTypeHash(FGuid::NewGuid()), TEXT("OnLatentActionCompleted"), GetScriptContext()->m_Ticker);
-            DynamicProperty->Property->CopySingleValue(ValueAddr, &LatentActionInfo);
+            DynamicProperty->SafePropertyPtr->CopySingleValue(ValueAddr, &LatentActionInfo);
         }
         DynamicProperty->bTempRealRef = false;
         if(Index < NumParams)
@@ -905,13 +905,13 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
         if(DynamicProperty->bOuter)
         {
             *OuterIndexs++ = (short)(Index - ParamIndex);
-            //DynamicProperty->Property->InitializeValue(OuterAddr);
+            //DynamicProperty->SafePropertyPtr->InitializeValue(OuterAddr);
             //OuterParms->PropAddr = OuterAddr;
-            //OuterAddr += DynamicProperty->Property->ElementSize;
+            //OuterAddr += DynamicProperty->SafePropertyPtr->ElementSize;
 
             OuterParms->PropAddr = ValueAddr;
             OuterParms->NextOutParm = nullptr;
-            OuterParms->Property = (FProperty*)DynamicProperty->Property;
+            OuterParms->Property = (FProperty *)DynamicProperty->SafePropertyPtr->GetProperty();
             if(OuterParms != FristOuterParms)
             {
                 (OuterParms-1)->NextOutParm = OuterParms;
@@ -924,7 +924,7 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     {
         DynamicProperty = BeginProperty + DynamicFunc->ReturnPropertyIndex;
         ValueAddr = Locals + DynamicProperty->Offset_Internal;
-        DynamicProperty->Property->InitializeValue(ValueAddr);
+        DynamicProperty->SafePropertyPtr->InitializeValue(ValueAddr);
     }
 
     FFrame NewStack(ThisObject, Function, Frame, NULL, GetChildProperties(Function));
@@ -967,7 +967,7 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
         DynamicProperty = BeginProperty + DynamicFunc->ReturnPropertyIndex;
         ValueAddr = Locals + DynamicProperty->Offset_Internal;
         DynamicProperty->m_WriteScriptFunc(L, DynamicProperty, ValueAddr, nullptr, nullptr);
-        DynamicProperty->Property->DestroyValue(ValueAddr);
+        DynamicProperty->SafePropertyPtr->DestroyValue(ValueAddr);
         ++RetCount;
     }
 
@@ -979,7 +979,7 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
         ValueAddr = OuterParms->PropAddr;
         Index = *OuterIndexs++;
         DynamicProperty = BeginProperty + Index;
-        if (!DynamicProperty->Property->HasAnyPropertyFlags(CPF_ConstParm))
+        if (!DynamicProperty->SafePropertyPtr->HasAnyPropertyFlags(CPF_ConstParm))
         {
             if(!DynamicProperty->m_CopyScriptValue(L, ParamIndex + Index, DynamicProperty, ValueAddr, nullptr, nullptr)) // 尝试修改栈上的变量
             {
@@ -997,7 +997,7 @@ int WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FC
     {
         ValueAddr = Locals + DynamicProperty->Offset_Internal;
         if(!DynamicProperty->bTempRealRef)
-            DynamicProperty->Property->DestroyValue(ValueAddr);
+            DynamicProperty->SafePropertyPtr->DestroyValue(ValueAddr);
         DynamicProperty->bTempRealRef = false;
     }
 

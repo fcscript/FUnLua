@@ -1,4 +1,4 @@
-﻿#include "FCTSetWrap.h"
+#include "FCTSetWrap.h"
 #include "Containers/Map.h"
 #include "FCTemplateType.h"
 
@@ -153,7 +153,7 @@ int FCTSetWrap::Contains_wrap(lua_State* L)
     int32 FindIndex = INDEX_NONE;
     if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
-        FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
+        FSetProperty* SetProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastSetProperty();
         FProperty* ElementProp = SetProperty->ElementProp;
         const FScriptSetLayout& SetLayout = SetProperty->SetLayout;
 
@@ -176,7 +176,7 @@ int FCTSetWrap::Add_wrap(lua_State* L)
     int32 FindIndex = INDEX_NONE;
     if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
-        FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
+        FSetProperty* SetProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastSetProperty();
         FProperty* ElementProp = SetProperty->ElementProp;
         const FScriptSetLayout& SetLayout = SetProperty->SetLayout;
 
@@ -204,7 +204,7 @@ int FCTSetWrap::Remove_wrap(lua_State* L)
     int32 FindIndex = INDEX_NONE;
     if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
-        FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
+        FSetProperty* SetProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastSetProperty();
         FProperty* ElementProp = SetProperty->ElementProp;
         const FScriptSetLayout& SetLayout = SetProperty->SetLayout;
 
@@ -234,7 +234,7 @@ int FCTSetWrap::Clear_wrap(lua_State* L)
     int32 FindIndex = INDEX_NONE;
     if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
-        FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
+        FSetProperty* SetProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastSetProperty();
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
         TSet_Clear(ScriptMap, SetProperty);
     }
@@ -247,7 +247,7 @@ int FCTSetWrap::ToArray_wrap(lua_State* L)
     int32 FindIndex = INDEX_NONE;
     if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
-        FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
+        FSetProperty* SetProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastSetProperty();
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
         FProperty* ElementProp = SetProperty->ElementProp;
         const FScriptSetLayout& SetLayout = SetProperty->SetLayout;
@@ -321,7 +321,7 @@ int FCTSetWrap::SetArray_wrap(lua_State* L)
             return 0;
         }
         int nTableIdx = 2;
-        FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
+        FSetProperty* SetProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastSetProperty();
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
         FProperty* ElementProp = SetProperty->ElementProp;
         const FScriptSetLayout& SetLayout = SetProperty->SetLayout;
@@ -343,7 +343,7 @@ int FCTSetWrap::GetMaxIndex_wrap(lua_State* L)
     int MaxIndex = 0;
     if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
-        FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
+        FSetProperty* SetProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastSetProperty();
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
         MaxIndex = ScriptMap->GetMaxIndex();
     }
@@ -371,7 +371,7 @@ int FCTSetWrap::IsValidIndex_wrap(lua_State* L)
     bool bValid = false;
     if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
-        FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
+        FSetProperty* SetProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastSetProperty();
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
         int32 PairIndex = lua_tointeger(L, 2);
         bValid = ScriptMap->IsValidIndex(PairIndex);
@@ -385,7 +385,7 @@ int FCTSetWrap::GetAt_wrap(lua_State* L)
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);
     if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
-        FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
+        FSetProperty* SetProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastSetProperty();
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
         FProperty* ElementProp = SetProperty->ElementProp;
         const FScriptSetLayout& SetLayout = SetProperty->SetLayout;
@@ -411,7 +411,7 @@ int FCTSetWrap::RemoveAt_wrap(lua_State* L)
     int ValidIndex = 0;
     if (ObjRef && ObjRef->DynamicProperty && ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
     {
-        FSetProperty* SetProperty = (FSetProperty*)ObjRef->DynamicProperty->Property;
+        FSetProperty* SetProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastSetProperty();
         FScriptSet* ScriptMap = (FScriptSet*)ObjRef->GetThisAddr();
         FProperty* ElementProp = SetProperty->ElementProp;
         const FScriptSetLayout& SetLayout = SetProperty->SetLayout;

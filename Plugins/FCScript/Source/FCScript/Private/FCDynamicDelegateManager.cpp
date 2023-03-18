@@ -45,7 +45,7 @@ FCLuaDelegate* FCDynamicDelegateManager::MakeLuaDelegate(UObject* Object, UObjec
     Delegate->Outer = Outer;
     MakeScriptDelegate(Delegate, LuaFuncAddr, Outer, DynamicProperty);
 
-    Delegate->DynamicProperty = GetDynamicProperty(DynamicProperty->Property);
+    Delegate->DynamicProperty = GetDynamicProperty(DynamicProperty->SafePropertyPtr->GetProperty());
     Delegate->DynamicFunc = GetDynamicFunction(Delegate->Function);
 
     AddBindLuaFunction(Delegate, Object);
@@ -98,7 +98,7 @@ FCLuaDelegate* FCDynamicDelegateManager::MakeDelegateByTableParam(lua_State* L, 
         Delegate->Outer = Outer;
         MakeScriptDelegate(Delegate, LuaFuncAddr, Outer, DynamicProperty);
 
-        Delegate->DynamicProperty = GetDynamicProperty(DynamicProperty->Property);
+        Delegate->DynamicProperty = GetDynamicProperty(DynamicProperty->SafePropertyPtr->GetProperty());
         Delegate->DynamicFunc = GetDynamicFunction(Delegate->Function);
 
         AddBindLuaFunction(Delegate, Object);
@@ -208,14 +208,18 @@ void   FCDynamicDelegateManager::Clear()
 
 FCDynamicOverrideFunction* FCDynamicDelegateManager::GetDynamicFunction(UFunction* Function)
 {
-    //CAdr2DynamicFuncMap::iterator itFunc = m_DynamicFuncMap.find(Function);
-    //if(itFunc != m_DynamicFuncMap.end())
-    //{
-    //    return itFunc->second;
-    //}
+    CAdr2DynamicFuncMap::iterator itFunc = m_DynamicFuncMap.find(Function);
+    if(itFunc != m_DynamicFuncMap.end())
+    {
+        if(itFunc->second->m_bNeedReInit)
+        {
+            itFunc->second->InitParam(Function);
+        }
+        return itFunc->second;
+    }
     FCDynamicOverrideFunction *DynamicFunc = new FCDynamicOverrideFunction();
     DynamicFunc->InitParam(Function);
-    //m_DynamicFuncMap[Function] = DynamicFunc;
+    m_DynamicFuncMap[Function] = DynamicFunc;
     return DynamicFunc;
 }
 
@@ -234,14 +238,14 @@ void  FCDynamicDelegateManager::AddBindLuaFunction(FCLuaDelegate* Delegate, UObj
 
 FCDynamicProperty* FCDynamicDelegateManager::GetDynamicProperty(const FProperty* InProperty, const char* InName)
 {
-    //CAdr2DynamicPropertyMap::iterator itFind = m_DynamicProperyMap.find(InProperty);
-    //if(itFind != m_DynamicProperyMap.end())
-    //{
-    //    return itFind->second;
-    //}
+    CAdr2DynamicPropertyMap::iterator itFind = m_DynamicProperyMap.find(InProperty);
+    if(itFind != m_DynamicProperyMap.end())
+    {
+        return itFind->second;
+    }
     FCDynamicProperty *DynamicPropery = new FCDynamicProperty();
     DynamicPropery->InitProperty(InProperty, InName);
-    //m_DynamicProperyMap[InProperty] = DynamicPropery;
+    m_DynamicProperyMap[InProperty] = DynamicPropery;
     return DynamicPropery;
 }
 
@@ -301,13 +305,17 @@ void  FCDynamicDelegateManager::DeleteLuaDelegate(FCLuaDelegate* Delegate)
         FCGetObj::GetIns()->DeleteValue(ObjRef->PtrIndex);
     }
     // 这个地方也许要做一个标记，如果还在Lua中引用，就不能立即释放
-    if(Delegate->DynamicProperty)
+    //if(Delegate->DynamicProperty)
+    //{
+    //    delete Delegate->DynamicProperty;
+    //}
+    //if (Delegate->DynamicFunc)
+    //{
+    //    delete Delegate->DynamicFunc;
+    //}
+    if(Delegate->DynamicFunc)
     {
-        delete Delegate->DynamicProperty;
-    }
-    if (Delegate->DynamicFunc)
-    {
-        delete Delegate->DynamicFunc;
+        Delegate->DynamicFunc->m_bNeedReInit = true;
     }
 
     delete Delegate;
@@ -323,8 +331,7 @@ void FCDynamicDelegateManager::MakeScriptDelegate(FCLuaDelegate* Delegate, const
     FName  FuncName(*NewName);
 
     UClass* OuterClass = Outer->GetClass();
-    FDelegateProperty  *DelegateProperty = (FDelegateProperty *)DynamicProperty->Property;
-    UFunction* LuaFunction = MakeReplaceFunction(DelegateProperty->SignatureFunction, OuterClass, FuncName, FCDynamicDelegate_CallLua);
+    UFunction* LuaFunction = MakeReplaceFunction(DynamicProperty->SafePropertyPtr->GetSignatureFunction(), OuterClass, FuncName, FCDynamicDelegate_CallLua);
 
     Delegate->Delegate.BindUFunction(Outer, FuncName);
     Delegate->Function = LuaFunction;

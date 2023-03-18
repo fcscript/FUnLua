@@ -20,7 +20,7 @@ void  FCDynamicProperty::InitProperty(const FProperty *InProperty, const char* I
     }
 	ElementSize = InProperty->ElementSize;
 	Offset_Internal = InProperty->GetOffset_ForInternal();
-	Property = InProperty;
+    SafePropertyPtr = GetSafeProperty(InProperty);
 	bOuter = InProperty->HasAnyPropertyFlags(CPF_OutParm);
 
     ClassName = GetScriptPropertyClassName(Type, InProperty);
@@ -41,7 +41,7 @@ void  FCDynamicProperty::InitCppType(FCPropertyType InType, const char* InClassN
     Name = "";
     ElementSize = InElementSize;
     Offset_Internal = 0;
-    Property = nullptr;
+    SafePropertyPtr = nullptr;
     Type = InType;
     ClassName = GetConstName(InClassName);
 

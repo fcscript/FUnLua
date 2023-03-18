@@ -204,7 +204,7 @@ void FC_PushArray(lua_State* L, const void* ArrayData, int ArrayLen, const char*
         int64 ObjID = FCGetObj::GetIns()->PushTemplate(DynamicProperty, ScriptArray, EFCObjRefType::NewTArray);
 
         FCObjRef* ObjRef = FCGetObj::GetIns()->FindValue(ObjID);
-        FArrayProperty* ArrayProperty = (FArrayProperty*)ObjRef->DynamicProperty->Property;
+        FArrayProperty* ArrayProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
         FProperty* Inner = ArrayProperty->Inner;
         int ElementSize = Inner->GetSize();
 

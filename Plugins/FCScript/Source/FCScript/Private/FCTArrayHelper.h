@@ -33,7 +33,7 @@ struct TArrayCacheValue
             if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
             {
                 ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-                FArrayProperty* ArrayProperty = (FArrayProperty*)ObjRef->DynamicProperty->Property;
+                FArrayProperty* ArrayProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
                 Inner = ArrayProperty->Inner;
 
                 int ElementSize = Inner->GetSize();
@@ -79,7 +79,7 @@ public:
     FCTArrayHelper(FScriptArray *InScriptArray, const FCDynamicProperty *InDynamicProperty)
     {
         ScriptArray = InScriptArray;
-        ArrayProperty = (FArrayProperty*)InDynamicProperty->Property;
+        ArrayProperty = InDynamicProperty->SafePropertyPtr->CastArrayProperty();
         ElementSize = ArrayProperty->Inner->GetSize();
     }
     FCTArrayHelper(FCObjRef* ObjRef) :ScriptArray(nullptr), ArrayProperty(nullptr), ElementSize(0)
@@ -89,7 +89,7 @@ public:
             if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
             {
                 ScriptArray = (FScriptArray*)ObjRef->GetThisAddr();
-                ArrayProperty = (FArrayProperty*)ObjRef->DynamicProperty->Property;
+                ArrayProperty = (FArrayProperty*)ObjRef->DynamicProperty->SafePropertyPtr->CastArrayProperty();
                 ElementSize = ArrayProperty->Inner->GetSize();
             }
         }

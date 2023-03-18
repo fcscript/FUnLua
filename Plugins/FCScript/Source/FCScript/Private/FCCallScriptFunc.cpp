@@ -110,7 +110,7 @@ bool  IsCanCastToScript(lua_State* L, int Idx, const FCDynamicPropertyBase *Dyna
 		return false;
 	}
 
-	UStruct *PropertyStruct = DynamicProperty->Property->GetOwnerStruct();
+    UStruct* PropertyStruct = DynamicProperty->SafePropertyPtr->GetOwnerStruct();
 	if( ClassDesc->m_Struct != PropertyStruct)
 	{
 		// 必须是子类(这个地方如果会慢的话，可以用hash_map优化)
@@ -132,7 +132,6 @@ bool  IsCanCastToScript(lua_State* L, int Idx, const FCDynamicPropertyBase *Dyna
 // 将UE对象写入脚本对象
 void  PushScriptStruct(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
-	FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
 	// lua 里面没有强类型，所以这里就直接写入吧
 	{
 		int64 ObjID = 0;
@@ -160,14 +159,12 @@ void  PushScriptStruct(lua_State* L, const FCDynamicPropertyBase *DynamicPropert
 
 void PushScriptEnum(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
-    FClassProperty* StructProperty = (FClassProperty*)DynamicProperty->Property;
     FCScript::SetArgValue(L, *ValueAddr);
 }
 
 // 将UE对象写入脚本对象
 void  PushClassProperty(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
-    FClassProperty* StructProperty = (FClassProperty*)DynamicProperty->Property;
     UObject* Object = *((UObject**)ValueAddr);
     FCScript::PushUObject(L, Object);
 }
@@ -290,8 +287,6 @@ void  PushSoftClassPtr(lua_State* L, const FCDynamicPropertyBase* DynamicPropert
 
 void  PushScriptDelegate(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
-	FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
-
 	int64 ObjID = 0;
 	// 如果变量是UObject的属性
 	if (ThisObj)
@@ -312,7 +307,7 @@ void PushScriptSpareDelegate(lua_State* L, const FCDynamicPropertyBase* DynamicP
 
 void  PushScriptTArray(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
-	FArrayProperty* ArrayProperty = (FArrayProperty*)DynamicProperty->Property;
+	//FArrayProperty* ArrayProperty = DynamicProperty->SafePropertyPtr->CastArrayProperty();
 	int64 ObjID = 0;
 	// 如果变量是UObject的属性
     if(DynamicProperty->bTempNeedRef)
@@ -335,7 +330,7 @@ void  PushScriptTArray(lua_State* L, const FCDynamicPropertyBase* DynamicPropert
 
 void  PushScriptTMap(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
-    FMapProperty* MapProperty = (FMapProperty*)DynamicProperty->Property;
+    FMapProperty* MapProperty = DynamicProperty->SafePropertyPtr->CastMapProperty();
     int64 ObjID = 0;
     // 如果变量是UObject的属性
     if (DynamicProperty->bTempNeedRef)
@@ -358,7 +353,7 @@ void  PushScriptTMap(lua_State* L, const FCDynamicPropertyBase* DynamicProperty,
 
 void  PushScriptTSet(lua_State* L, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
-    FSetProperty* MapProperty = (FSetProperty*)DynamicProperty->Property;
+    //FSetProperty* MapProperty = DynamicProperty->SafePropertyPtr->CastSetProperty();
     int64 ObjID = 0;
     // 如果变量是UObject的属性
     if (DynamicProperty->bTempNeedRef)
@@ -541,7 +536,6 @@ void  ReadScriptFText(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* D
 // 将脚本对象写入到UE对象
 void  ReadScriptFVector2D(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
-    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
     if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_Vector2)
     {
@@ -550,7 +544,6 @@ void  ReadScriptFVector2D(lua_State* L, int ValueIdx, const FCDynamicPropertyBas
 }
 void  ReadScriptFVector(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
-    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
     if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_Vector3)
     {
@@ -559,7 +552,6 @@ void  ReadScriptFVector(lua_State* L, int ValueIdx, const FCDynamicPropertyBase*
 }
 void  ReadScriptFVector4D(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
-    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
     if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_Vector4)
     {
@@ -574,11 +566,10 @@ void ReadScriptEnum(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
 // 将脚本对象写入到UE对象
 void  ReadScriptStruct(lua_State* L, int ValueIdx, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
-	FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
 	FCObjRef* ObjRef = (FCObjRef *)FCScript::GetObjRefPtr(L, ValueIdx);
-	if (ObjRef && ObjRef->ClassDesc && ObjRef->ClassDesc->m_Struct == StructProperty->Struct)
+	if (ObjRef && ObjRef->ClassDesc && ObjRef->ClassDesc->m_Struct == DynamicProperty->SafePropertyPtr->GetPropertyStruct())
 	{
-		StructProperty->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), StructProperty->ArrayDim);
+        DynamicProperty->SafePropertyPtr->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->SafePropertyPtr->ArrayDim);
 	}
     else
     {
@@ -588,8 +579,7 @@ void  ReadScriptStruct(lua_State* L, int ValueIdx, const FCDynamicPropertyBase *
 
 void  ReadClassProperty(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
-    FClassProperty* StructProperty = (FClassProperty*)DynamicProperty->Property;
-    UClass *MetaClass = StructProperty->MetaClass;
+    UClass *MetaClass = DynamicProperty->SafePropertyPtr->GetPropertyMetaClass();
     UObject *Object = FCScript::GetUStructOrUObject(L, ValueIdx);
     UClass* InClass = Object ? Object->GetClass() : nullptr;
     if(InClass)
@@ -611,14 +601,13 @@ void  ReadClassProperty(lua_State* L, int ValueIdx, const FCDynamicPropertyBase*
 
 void  ReadScriptUObject(lua_State* L, int ValueIdx, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
-    FObjectProperty* ObjectProperty = (FObjectProperty*)DynamicProperty->Property;
 	UObject *SrcObj = FCScript::GetUObject(L, ValueIdx);
     UClass* InClass = Cast<UClass>(SrcObj);
     if(!InClass)
     {
         InClass = SrcObj ? SrcObj->GetClass() : UObject::StaticClass();
     }
-    UClass* Class = ObjectProperty->PropertyClass;
+    UClass* Class = DynamicProperty->SafePropertyPtr->GetPropertyClass();
     if (Class == InClass || InClass->IsChildOf(Class))
     {
         *((UObject**)ValueAddr) = SrcObj;
@@ -832,7 +821,7 @@ void  ReadScriptTArray(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* 
 	{
 		if(EFCObjRefType::NewTArray == ObjRef->RefType)
 		{
-			FArrayProperty* Property = (FArrayProperty*)DynamicProperty->Property;
+			FArrayProperty* Property = DynamicProperty->SafePropertyPtr->CastArrayProperty();
             if (DynamicProperty->bTempNeedRef)
             {
                 ((FCDynamicPropertyBase*)DynamicProperty)->bTempRealRef = true;
@@ -840,15 +829,15 @@ void  ReadScriptTArray(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* 
             }
             else
             {
-                Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
+                DynamicProperty->SafePropertyPtr->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->SafePropertyPtr->ArrayDim);
             }
 		}
 		else if(DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
 		{
-			FArrayProperty* Property = (FArrayProperty*)DynamicProperty->Property;
+			FArrayProperty* Property = DynamicProperty->SafePropertyPtr->CastArrayProperty();
             if (ObjRef->GetPropertyType() == DynamicProperty->Type)
 			{
-                Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
+                DynamicProperty->SafePropertyPtr->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->SafePropertyPtr->ArrayDim);
 			}
 		}
 	}
@@ -861,8 +850,7 @@ void ReadScriptTMap(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
     {
         if (EFCObjRefType::NewTMap == ObjRef->RefType)
         {
-            FMapProperty* Property = (FMapProperty*)DynamicProperty->Property;
-            //Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
+            FMapProperty* Property = DynamicProperty->SafePropertyPtr->CastMapProperty();
             if(DynamicProperty->bTempNeedRef)
             {
                 ((FCDynamicPropertyBase *)DynamicProperty)->bTempRealRef = true;
@@ -870,16 +858,15 @@ void ReadScriptTMap(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
             }
             else
             {
-                Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
             }
         }
         else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
         {
-            FMapProperty* Property = (FMapProperty*)DynamicProperty->Property;
+            FMapProperty* Property = DynamicProperty->SafePropertyPtr->CastMapProperty();
             if (ObjRef->GetPropertyType() == DynamicProperty->Type)
             {
-                //Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
-                Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
             }
         }
     }
@@ -892,8 +879,7 @@ void ReadScriptTSet(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
     {
         if (EFCObjRefType::NewTSet == ObjRef->RefType)
         {
-            FSetProperty* Property = (FSetProperty*)DynamicProperty->Property;
-            //Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
+            FSetProperty* Property = DynamicProperty->SafePropertyPtr->CastSetProperty();
             if (DynamicProperty->bTempNeedRef)
             {
                 ((FCDynamicPropertyBase*)DynamicProperty)->bTempRealRef = true;
@@ -901,16 +887,15 @@ void ReadScriptTSet(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
             }
             else
             {
-                Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
             }
         }
         else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
         {
-            FSetProperty* Property = (FSetProperty*)DynamicProperty->Property;
+            FSetProperty* Property = DynamicProperty->SafePropertyPtr->CastSetProperty();
             if (ObjRef->GetPropertyType() == DynamicProperty->Type)
             {
-                //Property->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->Property->ArrayDim);
-                Property->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
             }
         }
     }
@@ -1069,11 +1054,10 @@ void PushLuaExitValue(lua_State* L, int ValueIdx, FCObjRef* ObjRef)
 // 将脚本对象写入到UE对象
 bool  CopyScriptStruct(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
-    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
-    if (ObjRef && ObjRef->ClassDesc && ObjRef->ClassDesc->m_Struct == StructProperty->Struct)
+    if (ObjRef && ObjRef->ClassDesc && ObjRef->ClassDesc->m_Struct == DynamicProperty->SafePropertyPtr->GetPropertyStruct())
     {
-        StructProperty->CopyValuesInternal(ObjRef->GetPropertyAddr(), ValueAddr, StructProperty->ArrayDim);
+        DynamicProperty->SafePropertyPtr->CopyValuesInternal(ObjRef->GetPropertyAddr(), ValueAddr, DynamicProperty->SafePropertyPtr->ArrayDim);
         PushLuaExitValue(L, ValueIdx, ObjRef);
         return true;
     }
@@ -1087,7 +1071,6 @@ bool  CopyScriptStruct(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* 
 // 将脚本对象写入到UE对象
 bool  CopyScriptFVector2D(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
-    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
     if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_Vector2)
     {
@@ -1099,7 +1082,6 @@ bool  CopyScriptFVector2D(lua_State* L, int ValueIdx, const FCDynamicPropertyBas
 }
 bool  CopyScriptFVector(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
-    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
     if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_Vector3)
     {
@@ -1111,7 +1093,6 @@ bool  CopyScriptFVector(lua_State* L, int ValueIdx, const FCDynamicPropertyBase*
 }
 bool  CopyScriptFVector4D(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
-    FStructProperty* StructProperty = (FStructProperty*)DynamicProperty->Property;
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
     if (ObjRef && ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_Vector4)
     {
@@ -1155,24 +1136,22 @@ bool  CopyScriptTArray(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* 
     {
         if (EFCObjRefType::NewTArray == ObjRef->RefType)
         {
-            FArrayProperty* Property = (FArrayProperty*)DynamicProperty->Property;
             if (DynamicProperty->bTempRealRef)
             {
                 FMemory::Memcpy(ObjRef->GetPropertyAddr(), ValueAddr, sizeof(FScriptArray));
             }
             else
             {
-                Property->CopyValuesInternal(ObjRef->GetPropertyAddr(), ValueAddr, DynamicProperty->Property->ArrayDim);
+                DynamicProperty->SafePropertyPtr->CopyValuesInternal(ObjRef->GetPropertyAddr(), ValueAddr, DynamicProperty->SafePropertyPtr->ArrayDim);
             }
             PushLuaExitValue(L, ValueIdx, ObjRef);
             return true;
         }
         else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
         {
-            FArrayProperty* Property = (FArrayProperty*)DynamicProperty->Property;
             if (ObjRef->GetPropertyType() == DynamicProperty->Type)
             {
-                Property->CopyValuesInternal(ObjRef->GetPropertyAddr(), ValueAddr, DynamicProperty->Property->ArrayDim);
+                DynamicProperty->SafePropertyPtr->CopyValuesInternal(ObjRef->GetPropertyAddr(), ValueAddr, DynamicProperty->SafePropertyPtr->ArrayDim);
                 PushLuaExitValue(L, ValueIdx, ObjRef);
                 return true;
             }
@@ -1188,24 +1167,22 @@ bool CopyScriptTMap(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
     {
         if (EFCObjRefType::NewTMap == ObjRef->RefType)
         {
-            FMapProperty* Property = (FMapProperty*)DynamicProperty->Property;
             if (DynamicProperty->bTempRealRef)
             {
                 FMemory::Memcpy(ObjRef->GetPropertyAddr(), ValueAddr, sizeof(FScriptMap));
             }
             else
             {
-                Property->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
             }
             PushLuaExitValue(L, ValueIdx, ObjRef);
             return true;
         }
         else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
         {
-            FMapProperty* Property = (FMapProperty*)DynamicProperty->Property;
             if (ObjRef->GetPropertyType() == DynamicProperty->Type)
             {
-                Property->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
                 PushLuaExitValue(L, ValueIdx, ObjRef);
                 return true;
             }
@@ -1221,24 +1198,22 @@ bool CopyScriptTSet(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
     {
         if (EFCObjRefType::NewTSet == ObjRef->RefType)
         {
-            FSetProperty* Property = (FSetProperty*)DynamicProperty->Property;
             if (DynamicProperty->bTempRealRef)
             {
                 FMemory::Memcpy(ObjRef->GetPropertyAddr(), ValueAddr, sizeof(FScriptSet));
             }
             else
             {
-                Property->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
             }
             PushLuaExitValue(L, ValueIdx, ObjRef);
             return true;
         }
         else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
         {
-            FSetProperty* Property = (FSetProperty*)DynamicProperty->Property;
             if (ObjRef->GetPropertyType() == DynamicProperty->Type)
             {
-                Property->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
                 PushLuaExitValue(L, ValueIdx, ObjRef);
                 return true;
             }
@@ -1330,7 +1305,7 @@ int  FCInnerCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 Scri
             if(OutParms)
             {
                 ValueAddr = OutParms->PropAddr;
-                if(!DynamicProperty->Property->HasAnyPropertyFlags(CPF_ConstParm))
+                if(!DynamicProperty->SafePropertyPtr->HasAnyPropertyFlags(CPF_ConstParm))
                 {
                     DynamicProperty->bTempNeedRef = true;
                     DynamicProperty->bTempRealRef = false;
@@ -1374,7 +1349,7 @@ int  FCInnerCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 Scri
             ValueAddr = Locals + ReturnProperty->Offset_Internal;
             if(OutParms)
                 ValueAddr = OutParms->PropAddr;
-            DynamicProperty->m_ReadScriptFunc(L, RetIdx, DynamicProperty, ValueAddr, nullptr, nullptr);
+            ReturnProperty->m_ReadScriptFunc(L, RetIdx, DynamicProperty, ValueAddr, nullptr, nullptr);
             ++RetCount;
         }
 	}

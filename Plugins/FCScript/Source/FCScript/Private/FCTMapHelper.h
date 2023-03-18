@@ -17,7 +17,7 @@ public:
     FCTMapHelper(FScriptMap* InScriptMap, const FCDynamicProperty* InDynamicProperty)
     {
         ScriptMap = InScriptMap;
-        MapProperty = (FMapProperty*)InDynamicProperty->Property;
+        MapProperty = InDynamicProperty->SafePropertyPtr->CastMapProperty();
     }
     FCTMapHelper(FCObjRef* ObjRef) :ScriptMap(nullptr), MapProperty(nullptr)
     {
@@ -26,7 +26,7 @@ public:
             if (ObjRef->DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
             {
                 ScriptMap = (FScriptMap*)ObjRef->GetThisAddr();
-                MapProperty = (FMapProperty*)ObjRef->DynamicProperty->Property;
+                MapProperty = ObjRef->DynamicProperty->SafePropertyPtr->CastMapProperty();
             }
         }
     }
