@@ -120,6 +120,7 @@ bool CallGlobalVoidLua(lua_State* L, const char* FuncName, T&&... Args)
 
 bool RawGetLuaFucntionByScriptIns(lua_State* L, int ScriptIns, const char* InFuncName);
 bool RawGetLuaFunctionByTable(lua_State* L, int TableIdx, const char* InFuncName);
+int ScriptCallInterface(lua_State* L, int ScriptIns, const char* FuncName, int ParamStartIdx, int ParamsCount);
 
 // 调用Table的成员函数，有返回值的那种
 template <typename... T>

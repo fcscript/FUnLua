@@ -69,8 +69,10 @@ FCObjRef* FCGetObj::PushUObjectNoneRef(UObject* Obj)
 	{
 		return itObj->second;
 	}
+    UClass *Class = Cast<UClass>(Obj);
+    Class = Class ? Class : Obj->GetClass();
 	FCScriptContext* ScriptContext = GetScriptContext();
-	FCDynamicClassDesc* ClassDesc = ScriptContext->RegisterUStruct(Obj->GetClass());
+	FCDynamicClassDesc* ClassDesc = ScriptContext->RegisterUStruct(Class);
 
 	FCObjRef* ObjRef = NewObjRef();
 	ObjRef->Ref = 0;

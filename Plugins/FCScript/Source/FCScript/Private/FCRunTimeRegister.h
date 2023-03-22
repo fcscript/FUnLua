@@ -25,7 +25,6 @@ int Class_Cast(lua_State* L);
 int BindScript_Overridden(lua_State* L);
 int BindScript_CallOverridenFunction(lua_State* L);
 
-int Class_CallFunction(lua_State* L);
 int Class_CallGetLibFunction(lua_State* L);
 int Class_CallSetLibFunction(lua_State* L);
 
@@ -34,6 +33,7 @@ void RunTimeRegisterScript(FCScriptContext *Context);
 // 一个闭包调用
 int  Class_CallFunction(lua_State* L);
 int  Class_CallLatentFunction(lua_State* L);
+int  Class_CallInterfaceFunction(lua_State* L);
 int  WrapNativeCallFunction(lua_State* L, int ParamIndex, UObject *ThisObject, FCDynamicFunction  *DynamicFunc, uint8 *Buffer, int BufferSize, FNativeFuncPtr NativeFuncPtr);
 
 const char* GetPropertyType(lua_State* L, int Idx);

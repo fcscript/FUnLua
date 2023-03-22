@@ -395,12 +395,12 @@ void FCDynamicDelegate_CallLua(UObject* Context, FFrame& TheStack, RESULT_DECL)
                 }
                 if (!bZeroParam)
                 {
-                    FCCallScriptDelegate(ScriptContext, Delegate->Object, Delegate->ScriptIns, *Delegate, Delegate->DynamicFunc, TheStack);
+                    FCCallScriptDelegate(ScriptContext->m_LuaState, Delegate->Object, Delegate->ScriptIns, *Delegate, Delegate->DynamicFunc, TheStack);
                 }
             }
             else
             {
-                FCCallScriptDelegate(ScriptContext, Delegate->Object, Delegate->ScriptIns, *Delegate, Delegate->DynamicFunc, TheStack);
+                FCCallScriptDelegate(ScriptContext->m_LuaState, Delegate->Object, Delegate->ScriptIns, *Delegate, Delegate->DynamicFunc, TheStack);
             }
 
             DelegateListNode = DelegateListNode->m_pNext;

@@ -23,6 +23,7 @@ struct FCDynamicField
 	virtual const char* GetFieldName() const { return ""; }
 	virtual FCDynamicField* Clone() const { return nullptr; }
     virtual int GetMemSize() const{ return sizeof(FCDynamicField);}
+    virtual bool IsDynamicFunction() const{ return false; }
 };
 
 // 动态属性(反射)
@@ -96,6 +97,7 @@ struct FCDynamicProperty : public FCDynamicPropertyBase
 	virtual int DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
 	virtual int DoSet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
     virtual int GetMemSize() const { return sizeof(FCDynamicProperty); }
+    virtual bool IsDynamicFunction() const { return false; }
 };
 
 struct FCDefaultParamBase
@@ -127,12 +129,14 @@ struct  FCDynamicFunction : public FCDynamicField
 	bool    bOuter;
 	bool    bRegister;        // 是不是在类中注册了
 	bool    bDelegate;
+    bool    bInterface;
 	const char* Name;        // 函数名
+    const char* FieldName;   // 类成员属性名
 	std::vector<FCDynamicFunctionParam>   m_Property;
 #ifdef UE_BUILD_DEBUG
     const char* DebugDesc;
 #endif
-	FCDynamicFunction():Function(nullptr), LatentPropertyIndex(-1), ReturnPropertyIndex(-1), ParmsSize(0), ParamCount(0), OuterParamCount(0), OuterParamSize(0), bOverride(false), bOuter(false), bRegister(false), bDelegate(false), Name(nullptr)
+	FCDynamicFunction():Function(nullptr), LatentPropertyIndex(-1), ReturnPropertyIndex(-1), ParmsSize(0), ParamCount(0), OuterParamCount(0), OuterParamSize(0), bOverride(false), bOuter(false), bRegister(false), bDelegate(false), bInterface(false), Name(nullptr), FieldName(nullptr)
 	{
 #ifdef UE_BUILD_DEBUG
         DebugDesc = nullptr;
@@ -151,6 +155,7 @@ struct  FCDynamicFunction : public FCDynamicField
 	virtual int DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
 	virtual int DoSet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
     virtual int GetMemSize() const { return sizeof(FCDynamicFunction); }
+    virtual bool IsDynamicFunction() const { return true; }
 };
 
 struct FCDynamicOverrideFunction : public FCDynamicFunction
@@ -356,6 +361,7 @@ struct FCDynamicClassDesc
 		{
 			return itFunction->second;
         }
+        FuncName = GetConstName(FuncName);
         // 没有找到，就动态注册一个
         FCDynamicFunction* Function = RegisterUEFunc(FuncName);
         if (Function)
@@ -363,7 +369,6 @@ struct FCDynamicClassDesc
             return Function;
         }
         // 如果还是没有找到，就是设置一个空的, 避免反复查找
-        FuncName = GetConstName(FuncName);
         m_Functions[FuncName] = nullptr;
         return nullptr;
 	}
@@ -392,14 +397,25 @@ struct FCDynamicClassDesc
         {
             return itFiled->second;
         }
+        InFieldName = GetConstName(InFieldName);
         // 没有找到，就动态注册一个
 		FCDynamicField* Filed = RegisterFieldByCString(m_Struct, InFieldName);
 		if (Filed)
 		{
 			return Filed;
 		}
+        if(m_Class && m_Class->HasAnyClassFlags(CLASS_Interface))
+        {
+            FCDynamicFunction* DynamicFunction = new FCDynamicFunction();
+            DynamicFunction->Name = InFieldName;
+            DynamicFunction->FieldName = InFieldName;
+            DynamicFunction->bInterface = true;
+            m_Functions[InFieldName] = DynamicFunction;
+            m_Fileds[InFieldName] = DynamicFunction;
+            return DynamicFunction;
+        }
+
         // 都没有找到的情况下，尝试注册一个空的，以免再次查找
-		InFieldName = GetConstName(InFieldName);
 		m_Fileds[InFieldName] = nullptr;
         return nullptr;
     }

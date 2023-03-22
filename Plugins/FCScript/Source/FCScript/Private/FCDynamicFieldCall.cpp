@@ -50,7 +50,10 @@ int FCDynamicFunction::DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr)
     }
     else
     {
-        lua_pushcclosure(L, Class_CallFunction, 3);        // closure
+        if(this->bInterface)
+            lua_pushcclosure(L, Class_CallInterfaceFunction, 3);        // closure
+        else
+            lua_pushcclosure(L, Class_CallFunction, 3);        // closure
     }
     return 1;
 }

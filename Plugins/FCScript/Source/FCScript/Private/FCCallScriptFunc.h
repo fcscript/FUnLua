@@ -75,5 +75,5 @@ bool  CallAnyScriptFunc(FCScriptContext* Context, int64 ScriptIns, const char *S
     return false;
 }
 
-bool  FCCallScriptFunc(FCScriptContext *Context, UObject *Object, int64 ScriptIns, const char *ScriptFuncName, FCDynamicFunction* DynamicFunction, FFrame& TheStack);
-void  FCCallScriptDelegate(FCScriptContext *Context, UObject *Object, int64 ScriptIns, const FCDelegateInfo &DelegateInfo, FCDynamicFunction* DynamicFunction, FFrame& TheStack);
+bool  FCCallScriptFunc(lua_State* L, UObject *Object, int64 ScriptIns, const char *ScriptFuncName, FCDynamicFunction* DynamicFunction, FFrame& TheStack);
+void  FCCallScriptDelegate(lua_State* L, UObject *Object, int64 ScriptIns, const FCDelegateInfo &DelegateInfo, FCDynamicFunction* DynamicFunction, FFrame& TheStack);

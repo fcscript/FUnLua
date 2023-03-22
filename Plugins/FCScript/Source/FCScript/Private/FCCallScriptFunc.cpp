@@ -1263,9 +1263,8 @@ LPCopyScriptValueFunc InitDynamicPropertyCopyFunc(FCPropertyType Flag)
 //---------------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------------
-int  FCInnerCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 ScriptIns, FCDynamicFunction* DynamicFunction, FFrame& TheStack, int (*LPPreparePushCallback)(FCScriptContext *, const void *), const void *UserData)
+int  FCInnerCallScriptFunc(lua_State* L, UObject *Object, int64 ScriptIns, FCDynamicFunction* DynamicFunction, FFrame& TheStack, int (*LPPreparePushCallback)(lua_State*, const void *), const void *UserData)
 {
-	lua_State *L = Context->m_LuaState;
 	if(!L)
 	{
 		return 0;
@@ -1289,7 +1288,7 @@ int  FCInnerCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 Scri
 	// 输入脚本参数
 	if (LPPreparePushCallback)
 	{
-		nParamCount += LPPreparePushCallback(Context, UserData);
+		nParamCount += LPPreparePushCallback(L, UserData);
 	}
 
     int TempObjIDCount = FCGetObj::GetIns()->GetTempObjIDCount();
@@ -1359,9 +1358,8 @@ int  FCInnerCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 Scri
 
 	return RetCount;
 }
-bool  FCCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 ScriptIns, const char *ScriptFuncName, FCDynamicFunction* DynamicFunction, FFrame& TheStack)
+bool  FCCallScriptFunc(lua_State* L, UObject *Object, int64 ScriptIns, const char *ScriptFuncName, FCDynamicFunction* DynamicFunction, FFrame& TheStack)
 {
-    lua_State* L = Context->m_LuaState;
     if (!L)
     {
         return false;
@@ -1381,7 +1379,7 @@ bool  FCCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 ScriptIn
 		lua_getglobal(L, ScriptFuncName);
 	}
 	if(lua_isfunction(L, -1))
-		FCInnerCallScriptFunc(Context, Object, ScriptIns, DynamicFunction, TheStack, nullptr, nullptr);
+		FCInnerCallScriptFunc(L, Object, ScriptIns, DynamicFunction, TheStack, nullptr, nullptr);
 	else
 	{
 		UE_LOG(LogFCScript, Error, TEXT("Invalid Script call, ScriptIns = %d : %s"), ScriptIns, UTF8_TO_TCHAR(ScriptFuncName));
@@ -1394,9 +1392,8 @@ bool  FCCallScriptFunc(FCScriptContext* Context, UObject *Object, int64 ScriptIn
     return true;
 }
 
-int ScriptDelegatePrepareCall(FCScriptContext * Context, const void* UserData)
+int ScriptDelegatePrepareCall(lua_State* L, const void* UserData)
 {
-	lua_State* L = Context->m_LuaState;
 	const FCDelegateInfo* DelegateInfo = (const FCDelegateInfo*)UserData;
 	for (int i = 0; i < DelegateInfo->ParamCount; ++i)
 	{
@@ -1405,16 +1402,15 @@ int ScriptDelegatePrepareCall(FCScriptContext * Context, const void* UserData)
 	return DelegateInfo->ParamCount;
 }
 
-void  FCCallScriptDelegate(FCScriptContext *Context, UObject *Object, int64 ScriptIns, const FCDelegateInfo& DelegateInfo, FCDynamicFunction* DynamicFunction, FFrame& TheStack)
+void  FCCallScriptDelegate(lua_State* L, UObject *Object, int64 ScriptIns, const FCDelegateInfo& DelegateInfo, FCDynamicFunction* DynamicFunction, FFrame& TheStack)
 {
-    lua_State* L = Context->m_LuaState;
 	if(L)
     {
 		int StartIdx = lua_gettop(L);
         lua_pushcfunction(L, ReportLuaCallError);
 		lua_rawgeti(L, LUA_REGISTRYINDEX, DelegateInfo.FunctionRef);
 		if(lua_isfunction(L, -1))
-			FCInnerCallScriptFunc(Context, Object, ScriptIns, DynamicFunction, TheStack, ScriptDelegatePrepareCall, &DelegateInfo);
+			FCInnerCallScriptFunc(L, Object, ScriptIns, DynamicFunction, TheStack, ScriptDelegatePrepareCall, &DelegateInfo);
 		else
 		{
 			UE_LOG(LogFCScript, Error, TEXT("Invalid Script call, FunctionRef = %d : %s"), DelegateInfo.FunctionRef, UTF8_TO_TCHAR(DynamicFunction->Name));

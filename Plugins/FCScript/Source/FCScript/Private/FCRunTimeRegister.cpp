@@ -1068,6 +1068,46 @@ int  Class_CallLibFunction(lua_State* L, bool bGet)
     return 0;
 }
 
+int  Class_CallInterfaceFunction(lua_State* L)
+{
+    FCDynamicClassDesc* ClassDesc = (FCDynamicClassDesc*)lua_touserdata(L, lua_upvalueindex(1));  // 从闭包中取第一个参数
+    int64 HostObjID = (int64)lua_touserdata(L, lua_upvalueindex(2));  // 从闭包中取第二个参数
+    FCDynamicFunction* InterfaceFunc = (FCDynamicFunction*)lua_touserdata(L, lua_upvalueindex(3));  // 从闭包中取第三个参数
+    FCObjRef* HostRef = FCGetObj::GetIns()->FindValue(HostObjID);
+    int RetCount = 0;
+
+    FCObjRef* ArgObjectRef = (FCObjRef*)FCScript::GetObjRefPtr(L, 1);    
+    // UInterface.AnyFunc(Object, param ... )
+    if(ArgObjectRef)
+    {
+        UObject* ThisObject = ArgObjectRef->GetUObject();
+        if(ThisObject)
+        {
+            FCDynamicClassDesc *DynamicClassDesc = GetScriptContext()->RegisterUStruct(ThisObject->GetClass());
+            FCDynamicField *FuncField = DynamicClassDesc->FindFieldByName(InterfaceFunc->FieldName);
+            if(FuncField && FuncField->IsDynamicFunction())
+            {
+                FCDynamicFunction *ThisDynamicFunc = (FCDynamicFunction*)FuncField;
+                int StartIdx = 2;
+                uint8   Buffer[256];
+                RetCount = WrapNativeCallFunction(L, StartIdx, ThisObject, ThisDynamicFunc, Buffer, sizeof(Buffer), nullptr);
+                return RetCount;
+            }
+            // 没有的话，就直接调用对应的脚本函数吧
+            int64 ScriptIns = -1;
+            if (FFCObjectdManager::GetSingleIns()->GetBindScriptIns(ArgObjectRef->PtrIndex, ScriptIns))
+            {
+                int ParamsCount = lua_gettop(L) - 1;
+                int ParamStartIdx = 2;
+                RetCount = ScriptCallInterface(L, ScriptIns, InterfaceFunc->FieldName, ParamStartIdx, ParamsCount);
+                return RetCount;
+            }
+        }
+    }
+
+    return 0;
+}
+
 int   Class_CallGetLibFunction(lua_State* L)
 {
     return Class_CallLibFunction(L, true);

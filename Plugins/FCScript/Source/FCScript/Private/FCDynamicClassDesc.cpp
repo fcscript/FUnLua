@@ -305,6 +305,8 @@ FCDynamicField* FCDynamicClassDesc::RegisterFieldByCString(UStruct* Struct, cons
         {
             FCDynamicFunction* DynamicFunction = new FCDynamicFunction();
             DynamicFunction->InitParam(Function);
+            DynamicFunction->bInterface = m_Class->HasAnyClassFlags(CLASS_Interface);
+            DynamicFunction->FieldName = InFieldName;
             const char* FieldName = DynamicFunction->Name;
             m_Functions[FieldName] = DynamicFunction;
             m_Fileds[FieldName] = DynamicFunction;
@@ -422,6 +424,7 @@ FCDynamicFunction*  FCDynamicClassDesc::RegisterUEFunc(const char *pcsFuncName)
 	}
 	FCDynamicFunction* DynamicFunction = new FCDynamicFunction();
 	DynamicFunction->InitParam(Function);
+    DynamicFunction->FieldName = GetConstName(pcsFuncName);
 	m_Functions[DynamicFunction->Name] = DynamicFunction;
 	m_Fileds[DynamicFunction->Name] = DynamicFunction;
 
@@ -770,11 +773,13 @@ void FCScriptContext::Init()
     {
         m_CopyWrapFunc = new FCDynamicWrapLibFunction(ScriptStruct_Copy_wrap, nullptr);
         m_CopyWrapFunc->Name = "Copy";
+        m_CopyWrapFunc->FieldName = m_CopyWrapFunc->Name;
     }
     if(!m_CopyFromWrapFunc)
     {
         m_CopyFromWrapFunc = new FCDynamicWrapLibFunction(ScriptStruct_CopyFrom_wrap, nullptr);
         m_CopyFromWrapFunc->Name = "CopyFrom";
+        m_CopyFromWrapFunc->FieldName = m_CopyFromWrapFunc->Name;
     }
 }
 

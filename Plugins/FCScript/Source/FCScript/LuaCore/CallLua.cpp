@@ -138,3 +138,38 @@ UObject* LuaGetUObject(lua_State* L, int Idx)
 {
     return FCScript::GetUObject(L, Idx);
 }
+
+int ScriptCallInterface(lua_State* L, int ScriptIns, const char* FuncName, int ParamStartIdx, int ParamsCount)
+{
+    int StartIdx = lua_gettop(L);
+    lua_pushcfunction(L, ReportLuaCallError);
+    lua_rawgeti(L, LUA_REGISTRYINDEX, ScriptIns);
+    int TableIdx = lua_gettop(L);
+    RawGetLuaFunctionByTable(L, TableIdx, FuncName);
+
+    int32 MessageHandlerIdx = lua_gettop(L) - 1;
+    lua_pushvalue(L, TableIdx); // push self
+    int32 NumArgs = 1;
+    for (int i = 0; i < ParamsCount; ++i)
+    {
+        lua_pushvalue(L, ParamStartIdx + i);
+        ++NumArgs;
+    }
+    int32 Code = lua_pcall(L, NumArgs, LUA_MULTRET, MessageHandlerIdx);
+
+    int32 TopIdx = lua_gettop(L);
+    if (Code == LUA_OK)
+    {
+        int32 NumResults = TopIdx - MessageHandlerIdx;
+        for (int i = StartIdx + 1; i < MessageHandlerIdx; ++i)
+        {
+            lua_remove(L, i);
+        }
+        return NumResults;
+    }
+    else
+    {
+        lua_pop(L, TopIdx - StartIdx);
+    }
+    return 0;
+}

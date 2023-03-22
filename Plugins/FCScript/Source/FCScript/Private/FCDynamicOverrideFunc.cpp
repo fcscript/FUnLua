@@ -89,7 +89,7 @@ void FCDynamicOverrideNative(UObject* Context, FFrame& TheStack, RESULT_DECL)
             int64 ScriptIns = FFCObjectdManager::GetSingleIns()->FindOverrideScriptIns(Object, Func);
 			if (ScriptIns)
 			{
-				if(FCCallScriptFunc(ScriptContext, Object, ScriptIns, DynamicFunction->GetLuaFunctionName(), DynamicFunction, TheStack))
+				if(FCCallScriptFunc(ScriptContext->m_LuaState, Object, ScriptIns, DynamicFunction->GetLuaFunctionName(), DynamicFunction, TheStack))
                 {
                     return ;
                 }
@@ -97,7 +97,7 @@ void FCDynamicOverrideNative(UObject* Context, FFrame& TheStack, RESULT_DECL)
 		}
 		else
 		{
-			if(FCCallScriptFunc(ScriptContext, Object, 0, DynamicFunction->GetLuaFunctionName(), DynamicFunction, TheStack))
+			if(FCCallScriptFunc(ScriptContext->m_LuaState, Object, 0, DynamicFunction->GetLuaFunctionName(), DynamicFunction, TheStack))
             {
                 return ;
             }
@@ -367,7 +367,7 @@ void FCDynamicOverrideDelegate(UObject* Context, FFrame& TheStack, RESULT_DECL)
 			FCDelegateInfo &Info = DelegateList->Delegates[i];
 			if(Info.DynamicFunc->Function == Func)
 			{
-				FCCallScriptDelegate(ScriptContext, Object, 0, Info, Info.DynamicFunc, TheStack);
+				FCCallScriptDelegate(ScriptContext->m_LuaState, Object, 0, Info, Info.DynamicFunc, TheStack);
 			}
 		}
 	}
