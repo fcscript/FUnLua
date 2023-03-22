@@ -42,18 +42,8 @@ int FCClassWrap::DoLoad_wrap(lua_State* L, void* ObjRefPtr, UObject* ThisObject)
     {
         return 0;
     }
-    FString Name = UTF8_TO_TCHAR(ClassName);
-    UClass* Class = LoadObject<UClass>(nullptr, *Name);
-    if(Class)
-    {
-        FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUStruct(Class);
-    }
-    else
-    {
-        FCDynamicClassDesc* ClassDesc = UEUtil_FindClassDesc(ClassName);
-        Class = ClassDesc ? ClassDesc->m_Class : nullptr;
-    }
-    FCScript::PushUObject(L, Class);
+    FCDynamicClassDesc* ClassDesc = UEUtil_FindClassDesc(ClassName);
+    FCScript::PushUObject(L, ClassDesc ? ClassDesc->m_Struct : nullptr);
     return 1;
 }
 
