@@ -43,6 +43,16 @@ void FCGetObj::Clear()
 	m_nObjID = 0;
 }
 
+void FCGetObj::SetAllObjRefFlag()
+{
+    for(CIntPtr2RefObjMap::iterator itObjRef = m_IntPtrMap.begin(); itObjRef != m_IntPtrMap.end(); ++itObjRef)
+    {
+        FCObjRef* ObjRef = itObjRef->second;
+        SetPtrRefFlag(ObjRef->DynamicProperty);
+        SetPtrRefFlag(ObjRef->ClassDesc);
+    }
+}
+
 int64  FCGetObj::PushUObject(UObject *Obj)
 {
 	FCObjRef  *ObjRef = PushUObjectNoneRef(Obj);
@@ -579,19 +589,25 @@ void  FCGetObj::DestroyObjRef(FCObjRef *ObjRef)
 				UScriptStruct *ScriptStruct = ObjRef->ClassDesc->m_ScriptStruct;
 				int ValueSize = Struct->GetStructureSize();
 				int ArrayDim = ObjRef->DynamicProperty ? ObjRef->DynamicProperty->SafePropertyPtr->ArrayDim : 1;
+                bool bNeedDestory = true;
 				if (ScriptStruct)
 				{
 					if ((ScriptStruct->StructFlags & (STRUCT_IsPlainOldData | STRUCT_NoDestructor)))
 					{
-						break;
+                        bNeedDestory = false;
 					}
 				}
-				Struct->DestroyStruct(ObjRef->GetPropertyAddr(), ArrayDim);
+                if(bNeedDestory)
+                {
+				    Struct->DestroyStruct(ObjRef->GetPropertyAddr(), ArrayDim);
+                }
+                DelStructBuffer(ObjRef->GetThisAddr());
 			}
 			break;
 			case EFCObjRefType::NewProperty:
 			{
                 ObjRef->DynamicProperty->SafePropertyPtr->DestroyValue(ObjRef->GetThisAddr());
+                DelStructBuffer(ObjRef->GetThisAddr());
 			}
 			break;
 			case EFCObjRefType::NewTArray:

@@ -193,6 +193,7 @@ void FFCDelegateModule::PreLoadMap(const FString &MapName)
 
 void FFCDelegateModule::PostLoadMapWithWorld(UWorld *World)
 {
+    OnClearInvalidPtr();
 	CallAnyScriptFunc(GetClientScriptContext(), 0, "OnPostLoadMapWithWorld", World);
     OnMapLoaded(World);
 }
@@ -404,6 +405,7 @@ void FFCDelegateModule::Shutdown()
 	}
 	ReleasePropertyTable();
     ClearAllSafeProperty();
+    ClearAllPtrRefFlag();
     mScriptNameMap.clear();
 
     CandidateInputComponents.Empty();
@@ -573,6 +575,25 @@ void FFCDelegateModule::OnWorldTickStart(ELevelTick TickType, float DeltaTime)
 
     CandidateInputComponents.Empty();
     FWorldDelegates::OnWorldTickStart.Remove(OnWorldTickStartHandle);
+}
+
+void FFCDelegateModule::OnClearInvalidPtr()
+{
+    // 这里执行GC用处不是很大
+    //lua_State* L = GetClientScriptContext()->m_LuaState;
+    //if (L)
+    //{
+    //    lua_gc(L, LUA_GCCOLLECT, 0);
+    //    lua_gc(L, LUA_GCCOLLECT, 0);
+    //}
+
+    ClearAllPtrRefFlag();
+    FCGetObj::GetIns()->SetAllObjRefFlag();
+    SetAllCppPropertyRefFlag();
+    // 先清除ClassDesc中没有引用的属性
+    GetClientScriptContext()->ClearNoneRefField();
+    ClearAllNoneRefProperty();
+    ClearAllPtrRefFlag();
 }
 
 void FFCDelegateModule::OnMapLoaded(UWorld* World)

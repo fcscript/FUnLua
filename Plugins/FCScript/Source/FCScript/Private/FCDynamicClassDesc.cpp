@@ -146,6 +146,14 @@ void  FCDynamicFunction::InitParam(UFunction *InFunction)
 #endif
 }
 
+void  FCDynamicFunction::SetParamRefFlags()
+{
+    for (int i = m_Property.size() - 1; i >= 0; --i)
+    {
+        SetPtrRefFlag(m_Property[i].SafePropertyPtr);
+    }
+}
+
 int FCDynamicDelegateList::FindDelegate(const FCDelegateInfo &Info) const
 {
 	for(int i = 0; i<Delegates.size(); ++i)
@@ -204,6 +212,40 @@ void FCDynamicClassDesc::Clear()
     m_Fileds.clear();
     m_SystemFunctions.clear();
     m_UserDefinedStructFlag = 0;
+}
+
+void FCDynamicClassDesc::ClearNoneRefField()
+{
+    for(int i = m_Property.size() - 1; i>=0; --i)
+    {
+        FCDynamicProperty * FCProperty = m_Property[i];
+        if(!IsRefPtr(FCProperty))
+        {
+            bool bValidPtr = FCProperty->SafePropertyPtr && FCProperty->SafePropertyPtr->IsValid();
+            if(!bValidPtr)
+            {
+                m_Name2Property.erase(FCProperty->Name);
+                m_Fileds.erase(FCProperty->Name);
+                delete FCProperty;
+                m_Property.erase(m_Property.begin() + i);
+            }
+            else
+            {
+                SetPtrRefFlag(FCProperty->SafePropertyPtr);
+            }
+        }
+        else
+        {
+            SetPtrRefFlag(FCProperty->SafePropertyPtr);
+        }
+    }
+    // 函数也清除
+    for(CDynamicFunctionNameMap::iterator itFunc = m_Functions.begin(); itFunc != m_Functions.end(); ++itFunc)
+    {
+        FCDynamicFunction *FCFunc = itFunc->second;
+        if(FCFunc)
+            FCFunc->SetParamRefFlags();
+    }
 }
 
 FCDynamicClassDesc &FCDynamicClassDesc::CopyDesc(const FCDynamicClassDesc &other)
@@ -817,6 +859,14 @@ void FCScriptContext::Clear()
     {
         delete m_CopyFromWrapFunc;
         m_CopyFromWrapFunc = nullptr;
+    }
+}
+
+void FCScriptContext::ClearNoneRefField()
+{
+    for(CDynamicClassNameMap::iterator itClass = m_ClassFinder.begin(); itClass != m_ClassFinder.end(); ++itClass)
+    {
+        itClass->second->ClearNoneRefField();
     }
 }
 

@@ -143,6 +143,7 @@ struct  FCDynamicFunction : public FCDynamicField
 #endif
 	}
 	void  InitParam(UFunction *InFunction);
+    void  SetParamRefFlags();
     bool IsLatentFunction() const 
     {
         return LatentPropertyIndex != -1; 
@@ -323,6 +324,7 @@ struct FCDynamicClassDesc
 	}
 
 	void Clear();
+    void ClearNoneRefField();
 	FCDynamicClassDesc &CopyDesc(const FCDynamicClassDesc &other);
 
 	void  OnRegisterStruct(UStruct *Struct, void *Context);
@@ -489,6 +491,7 @@ struct FCScriptContext
     int GetClassMemSize(const char *InClassName) const;
     void Init();
 	void Clear();
+    void ClearNoneRefField();
 };
 
 struct FCContextManager

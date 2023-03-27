@@ -65,6 +65,7 @@ protected:
 #else
 	void OnWorldTickStart(ELevelTick TickType, float DeltaTime);
 #endif
+    void OnClearInvalidPtr();
     void OnMapLoaded(UWorld* World);
 protected:
 	FDelegateHandle OnActorSpawnedHandle;

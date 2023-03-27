@@ -97,6 +97,7 @@ FCDynamicProperty *GetTMapDynamicProperty(const char *KeyTypeName, const char *V
 FCDynamicProperty* GetTSetDynamicProperty(const char* KeyTypeName);
 
 void ReleaseTempalteProperty();
+void SetAllCppPropertyRefFlag();
 
 void TArray_Clear(FScriptArray *ScriptArray, FProperty *Inner);
 

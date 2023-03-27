@@ -525,6 +525,26 @@ void ReleaseTempalteProperty()
 	GScriptStruct = nullptr;
 }
 
+template <class _TyMapList>
+void SetMapPtrRefFlags(_TyMapList &MapList)
+{
+    for (_TyMapList::iterator it = MapList.begin(); it != MapList.end(); ++it)
+    {
+        SetPtrRefFlag(it->second->SafePropertyPtr);
+    }
+}
+
+void SetAllCppPropertyRefFlag()
+{
+    SetMapPtrRefFlags(GTArrayDynamicPropertyMap);
+    SetMapPtrRefFlags(GTMapDynamicPropertyMap);
+    SetMapPtrRefFlags(GTSetDynamicPropertyMap);
+
+    SetMapPtrRefFlags(GStructDynamicPropertyMap);
+    SetMapPtrRefFlags(GPropertyDynamicPropertyMap);
+    SetMapPtrRefFlags(GCppDynamicPropertyMap);
+}
+
 void TArray_Clear(FScriptArray *ScriptArray, FProperty *Inner)
 {
 	int ElementSize = Inner->GetSize();

@@ -53,3 +53,7 @@ struct FCSafeProperty
 
 FCSafeProperty  *GetSafeProperty(const FProperty* InProperty);
 void ClearAllSafeProperty();
+void ClearAllNoneRefProperty();
+void SetPtrRefFlag(const void *Ptr);
+bool IsRefPtr(const void *Ptr);
+void ClearAllPtrRefFlag();

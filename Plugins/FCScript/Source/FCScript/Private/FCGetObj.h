@@ -156,6 +156,7 @@ public:
 	}
 public:
     void Clear();
+    void SetAllObjRefFlag();
 	// 功能：压入一个UObject对象
 	int64  PushUObject(UObject* Obj);
 	FCObjRef*  PushUObjectNoneRef(UObject* Obj);

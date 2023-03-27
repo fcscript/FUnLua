@@ -478,3 +478,40 @@ void ClearAllSafeProperty()
 {
     ReleasePtrMap(GSafePropertyMap);
 }
+
+void ClearAllNoneRefProperty()
+{
+    for(CSafeProperyMap::iterator itProperty = GSafePropertyMap.begin(); itProperty != GSafePropertyMap.end();)
+    {
+        FCSafeProperty* SafeProperty = itProperty->second;
+        if(!IsRefPtr(SafeProperty) && !SafeProperty->IsValid())
+        {
+            itProperty = GSafePropertyMap.erase(itProperty);
+            delete SafeProperty;
+        }
+        else
+        {
+            ++itProperty;
+        }
+    }    
+}
+
+typedef  std::unordered_map<const void*, bool>   CPtrRefFlagsMap; // const void* ==> bool
+CPtrRefFlagsMap  GPtrRefFlagsMap;
+void SetPtrRefFlag(const void* Ptr)
+{
+    if(Ptr)
+    {
+        GPtrRefFlagsMap[Ptr] = true;
+    }
+}
+
+bool IsRefPtr(const void* Ptr)
+{
+    return GPtrRefFlagsMap.find(Ptr) != GPtrRefFlagsMap.end();
+}
+
+void ClearAllPtrRefFlag()
+{
+    GPtrRefFlagsMap.clear();
+}
