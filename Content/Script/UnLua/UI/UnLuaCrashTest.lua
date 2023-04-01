@@ -356,12 +356,33 @@ function TestCrash:Crash20(worldContextObject)
     end
 end
 
+function TestCrash:Crash21(worldContextObject)    
+    UEPrint("[TestCrash]Crash21----begin")
+    -- local actor = CreateTestActor("/Game/UnLua/Blueprints/TestBaseC.TestBaseC", "UnLua.UI.TestBaseC", worldContextObject)
+    -- local actor = CreateTestActor("/Game/UnLua/Blueprints/TestBaseC.TestBaseC", nil, worldContextObject)
+    local assetName = "/Game/UnLua/Blueprints/TestBaseC.TestBaseC"    
+    local playerBPClass = UE4.UClass.Load(assetName)
+    local transform = CreateDefaultTransform()
+    UEPrint("[TestCrash]CreateTestActor----3, playerBPClass=", playerBPClass)
+    local world = worldContextObject:GetWorld()
+    local localActor = world:SpawnActor(playerBPClass, transform, UE4.ESpawnActorCollisionHandlingMethod.AlwaysSpawn, nil, nil, nil)
+    UEPrint("[TestCrash]Crash21----end")
+end
+
 function TestCrash:OnDelegateCall(tagName)
     UEPrint("[TestCrash]OnUIAction-------, tagName:", tagName)
 end
 
 function TestCrash.OnUIAction(tagName)
     UEPrint("[TestCrash]OnUIAction-------, tagName:", tagName)
+end
+
+function TestCrash:CrashAll(worldContextObject)    
+    for nextFuncIndex = 1, 20 do
+        local funcName = "Crash" .. nextFuncIndex
+        local func = self[funcName]
+        func(self, worldContextObject)
+    end
 end
 
 function  TestCrash:DoCrash(worldContextObject)
@@ -393,7 +414,8 @@ function  TestCrash:DoCrash(worldContextObject)
     -- self:Crash17(worldContextObject) --
     -- self:Crash18(worldContextObject) --
     -- self:Crash19(worldContextObject) --
-    self:Crash20(worldContextObject) --
+    -- self:Crash20(worldContextObject) --
+    self:Crash21(worldContextObject) --
 
     ----- 下面是FUnLua的测试结果
     -- self:Crash1(worldContextObject) -- 正常
