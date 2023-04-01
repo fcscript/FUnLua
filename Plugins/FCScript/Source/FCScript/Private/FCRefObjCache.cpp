@@ -45,7 +45,7 @@ void  FCRefObjCache::CheckGC(float DeltaTime)
 	if (m_fPassTime > 1)
 	{
 		m_fPassTime = 0;
-		m_UnitReleaseCount = m_CacheList.size() / 100;
+		m_UnitReleaseCount = m_CacheList.size() / 10;
 		if (m_UnitReleaseCount < 1)
 		{
 			m_UnitReleaseCount = 1;
