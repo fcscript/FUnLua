@@ -37,7 +37,9 @@ void  InitPropertyTable()
 	gPropertyTypeMap[FClassProperty::StaticClass()]  = FCPROPERTY_ClassProperty;
 
 	gPropertyTypeMap[FObjectProperty::StaticClass()] = FCPROPERTY_ObjectProperty;
+    #if ENGINE_MAJOR_VERSION >= 5
     gPropertyTypeMap[FObjectPtrProperty::StaticClass()] = FCPROPERTY_ObjectPtrProperty; // TObjectPtr<class>
+    #endif
 	gPropertyTypeMap[FWeakObjectProperty::StaticClass()] = FCPROPERTY_WeakObjectPtr;
 	gPropertyTypeMap[FLazyObjectProperty::StaticClass()] = FCPROPERTY_LazyObjectPtr;
 	gPropertyTypeMap[FInterfaceProperty::StaticClass()] = FCPROPERTY_Interface;

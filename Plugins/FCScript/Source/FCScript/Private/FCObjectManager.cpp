@@ -289,7 +289,7 @@ int  FFCObjectdManager::NativeCall(UObject* InObject, FCDynamicFunction* Dynamic
 			return 0;
 		}
         // 如果没有原生的函数，空的蓝图的接口
-        if (OverideFunc->m_NativeScript.IsEmpty() && OverideFunc->Function->Script.Num() == 5)
+        if (OverideFunc->m_NativeScript.Num() == 0 && OverideFunc->Function->Script.Num() == 5)
         {
             return 0;
         }

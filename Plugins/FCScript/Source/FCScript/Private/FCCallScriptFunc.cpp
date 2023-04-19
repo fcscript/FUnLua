@@ -630,7 +630,7 @@ void  ReadScriptObjectPtr(lua_State* L, int ValueIdx, const FCDynamicPropertyBas
     {
         if(ObjRef && ObjRef->IsValid())
         {
-            *DesValue = (FObjectPtr*)ObjRef->GetPropertyAddr();
+            *DesValue = *((FObjectPtr*)ObjRef->GetPropertyAddr());
         }
         else
         {
