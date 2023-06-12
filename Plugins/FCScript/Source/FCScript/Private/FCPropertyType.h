@@ -102,17 +102,17 @@ typedef UMulticastDelegateProperty FMulticastDelegateProperty;
 typedef UMulticastInlineDelegateProperty FMulticastInlineDelegateProperty;
 typedef UMulticastSparseDelegateProperty FMulticastSparseDelegateProperty;
 #endif
+struct FObjectPtr
+{
+    UObject* Ptr;
+    FObjectPtr() :Ptr(nullptr) {}
+    FObjectPtr(UObject* Obj) :Ptr(Obj) {}
+    void operator = (const FObjectPtr& Other) { Ptr = Other.Ptr; }
+    void operator = (UObject* InPtr) { Ptr = InPtr; }
+};
 #else
 #define GetPropertyOuter(Property) (Property)->GetOwnerUObject()
 #define GetChildProperties(Function) (Function)->ChildProperties
-struct FObjectPtr
-{
-    UObject*  Ptr;
-    FObjectPtr():Ptr(nullptr){}
-    FObjectPtr(UObject *Obj):Ptr(Obj){}
-    void operator = (const FObjectPtr &Other) { Ptr = Other.Ptr; }
-    void operator = (UObject *InPtr){ Ptr = InPtr; }
-};
 #endif
 
 void  InitPropertyTable();
