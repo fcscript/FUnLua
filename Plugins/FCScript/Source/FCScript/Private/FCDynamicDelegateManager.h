@@ -77,6 +77,7 @@ public:
 
     void   Clear();
 
+    void  TryRemoveClassFunction(UClass *Class, UFunction *Func);
 public:
     FCLuaDelegateList *FindDelegateByFunction(UFunction *Function)
     {

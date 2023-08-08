@@ -206,6 +206,16 @@ void   FCDynamicDelegateManager::Clear()
     ReleasePtrMap(m_DynamicProperyMap);
 }
 
+void  FCDynamicDelegateManager::TryRemoveClassFunction(UClass* Class, UFunction* Func)
+{
+    CUFunction2DelegateListMap::iterator itDeletageList = m_UFunction2DelegateListMap.find(Func);
+    if(itDeletageList != m_UFunction2DelegateListMap.end())
+    {
+        return ;
+    }
+    Class->RemoveFunctionFromFunctionMap(Func);
+}
+
 FCDynamicOverrideFunction* FCDynamicDelegateManager::GetDynamicFunction(UFunction* Function)
 {
     CAdr2DynamicFuncMap::iterator itFunc = m_DynamicFuncMap.find(Function);
@@ -295,15 +305,24 @@ void  FCDynamicDelegateManager::DeleteLuaDelegate(FCLuaDelegate* Delegate)
         luaL_unref(L, LUA_REGISTRYINDEX, Delegate->FunctionRef);
     }
 
-    UFunction *FindFunc = Delegate->OuterClass->FindFunctionByName(Delegate->DynamicFunc->Name);
-    if(FindFunc && FindFunc == Delegate->Function)
-    {        
-        Delegate->OuterClass->RemoveFunctionFromFunctionMap(Delegate->Function);
-    }
-    else
+    CUFunction2DelegateListMap::iterator itDeletateList = m_UFunction2DelegateListMap.find(Delegate->Function);
+    int  DeletateCount = 0;
+    if(itDeletateList != m_UFunction2DelegateListMap.end())
     {
-        check(false);
-        UE_LOG(LogTemp, Warning, TEXT("[FCDynamicDelegateManager]DeleteLuaDelegate, invalid function[%s]"), UTF8_TO_TCHAR(Delegate->DynamicFunc->Name));
+        DeletateCount = itDeletateList->second.size();
+    }
+    if(DeletateCount == 0)
+    {
+        UFunction* FindFunc = Delegate->OuterClass->FindFunctionByName(Delegate->DynamicFunc->Name);
+        if (FindFunc && FindFunc == Delegate->Function)
+        {
+            Delegate->OuterClass->RemoveFunctionFromFunctionMap(Delegate->Function);
+        }
+        else
+        {
+            check(false);
+            UE_LOG(LogTemp, Warning, TEXT("[FCDynamicDelegateManager]DeleteLuaDelegate, invalid function[%s]"), UTF8_TO_TCHAR(Delegate->DynamicFunc->Name));
+        }
     }
 
     ObjRefKey Key(nullptr, Delegate);

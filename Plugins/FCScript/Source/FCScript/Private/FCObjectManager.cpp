@@ -3,6 +3,7 @@
 #include "FCCallScriptFunc.h"
 #include "FCRunTimeRegister.h"
 #include "FCObjectUseFlag.h"
+#include "FCDynamicDelegateManager.h"
 
 extern uint8 GRegisterNative(int32 NativeBytecodeIndex, const FNativeFuncPtr& Func);
 
@@ -571,7 +572,8 @@ void  FFCObjectdManager::RemoveDelegateFromClass(FCDynamicOverrideFunction *InDy
         FC_ASSERT(true);
     }
 
-	InClass->RemoveFunctionFromFunctionMap(Function);
+	//InClass->RemoveFunctionFromFunctionMap(Function);
+    FCDynamicDelegateManager::GetIns().TryRemoveClassFunction(InClass, Function);
     // 因为m_OverrideFunctionMap还在引用这个Function, 然后InDynamicFunc有可能还在LUA中引用，所以暂时不能从Class中移除不然UFunction会GC掉
     // 这个数量有限，保留这个不会有太多的内存开销，所以不必从Class中移除
 
@@ -647,7 +649,8 @@ void  FFCObjectdManager::ClearAllDynamicFunction()
 
             if(DynamicFunc->m_BindClass)
             {   
-                DynamicFunc->m_BindClass->RemoveFunctionFromFunctionMap(DynamicFunc->Function);
+                //DynamicFunc->m_BindClass->RemoveFunctionFromFunctionMap(DynamicFunc->Function);
+                FCDynamicDelegateManager::GetIns().TryRemoveClassFunction(DynamicFunc->m_BindClass, DynamicFunc->Function);
             }
         }
 	}
