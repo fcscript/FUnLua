@@ -50,7 +50,10 @@ function M:ReceiveAnyDamage(Damage, DamageType, InstigatedBy, DamageCauser)
 		local Health = self.Health - Damage
 		self.Health = math.max(Health, 0)
 		if Health <= 0.0 then
+			self.DamageType = DamageType
+			self.IsDead = true
 			self:Died_Multicast(DamageType)
+
 			local co = coroutine.create(M.Destroy)
 			coroutine.resume(co, self, self.BodyDuration)
 		end
@@ -72,7 +75,6 @@ function M:Destroy(Duration)
 	if not self:IsValid() then
 		return false
 	end
-
 	if self.Weapon then
 		self.Weapon:K2_DestroyActor()
 	end

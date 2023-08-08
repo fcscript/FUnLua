@@ -15,8 +15,11 @@ function M:ReceiveBeginPlay()
 	-- UnLua.Ref(nil)
 	if self:IsLocalPlayerController() then
 		-- 创建一个准星界面
-		local Widget = UE.UWidgetBlueprintLibrary.Create(self, UE.UClass.Load("/Game/Core/UI/UMG_Main.UMG_Main_C"))
-		Widget:AddToViewport()
+		-- local Widget = UE.UWidgetBlueprintLibrary.Create(self, UE.UClass.Load("/Game/Core/UI/UMG_FrontSight.UMG_FrontSight_C"))
+		-- Widget:AddToViewport()
+		
+		-- local Widget = UE.UWidgetBlueprintLibrary.Create(self, UE.UClass.Load("/Game/Core/UI/UMG_ShortcutBar.UMG_ShortcutBar_C"))
+		-- Widget:AddToViewport()
 						
 		-- 创建一个HUD界面
 		-- local worldContext = self
@@ -53,6 +56,23 @@ function M:SetupHUD()
 		hud = localPlayerControler:GetHUD()
 		UEPrint("[HUD]SetupHUD=", hudBPClass, ",old hud=", hud)
 	end	
+end
+
+function M:Inventory()
+	if self.InventoryPanel and UE4.UObject.IsValid(self.InventoryPanel) then
+		-- self.InventoryPanel:RemoveFromParent()
+		-- self.InventoryPanel = nil
+	else
+		local Widget = UE.UWidgetBlueprintLibrary.Create(self, UE.UClass.Load("/Game/Core/UI/UMG_Inventory.UMG_Inventory_C"))
+		Widget:AddToViewport()
+		self.InventoryPanel = Widget
+		
+		local world = self:GetWorld()
+		local localPlayerControler = _G.UGameplayStatics.GetPlayerController(world, 0)
+		if localPlayerControler ~= nil then
+			localPlayerControler.bShowMouseCursor = 1
+		end
+	end
 end
 
 function M:Turn(AxisValue)

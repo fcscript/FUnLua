@@ -13,7 +13,14 @@ end
 function M:ReceiveBeginPlay()
 	self.Super.ReceiveBeginPlay(self)
 	self.Sphere.OnComponentBeginOverlap:Add(self, M.OnComponentBeginOverlap_Sphere)
+	UnLua.Log("[AI]ReceiveBeginPlay, Name:", self:GetName())
 end
+
+function M:ReceiveDestroyed()
+    -- ReceiveEndPlay
+    UnLua.Log("[AI]ReceiveDestroyed, Name=", self:GetName())
+end
+
 
 function M:Died_Multicast_RPC(DamageType)
 	self.Super.Died_Multicast_RPC(self, DamageType)
@@ -26,16 +33,20 @@ function M:Died_Multicast_RPC(DamageType)
 	if GameMode then
 		local BPI_Interfaces = UE.UClass.Load("/Game/Core/Blueprints/BPI_Interfaces.BPI_Interfaces_C")
 		BPI_Interfaces.NotifyEnemyDied(GameMode)
+		self:OnDied()
 	end
 	--self.Sphere.OnComponentBeginOverlap:Remove(self, M.OnComponentBeginOverlap_Sphere)
 end
 
 function M:OnComponentBeginOverlap_Sphere(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult)
+	if self.IsDead then
+		return 
+	end
 	local BP_PlayerCharacter = UE.UClass.Load("/Game/Core/Blueprints/Player/BP_PlayerCharacter.BP_PlayerCharacter_C")
 	local PlayerCharacter = OtherActor:Cast(BP_PlayerCharacter)
 	if PlayerCharacter then
 		local Controller = self:GetController()
-		UE.UGameplayStatics.ApplyDamage(PlayerCharacter, self.Damage, Controller, self, self.DamageType)
+		-- UE.UGameplayStatics.ApplyDamage(PlayerCharacter, self.Damage, Controller, self, self.DamageType)
 	end
 end
 
