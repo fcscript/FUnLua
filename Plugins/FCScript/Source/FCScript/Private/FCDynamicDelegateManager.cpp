@@ -295,7 +295,16 @@ void  FCDynamicDelegateManager::DeleteLuaDelegate(FCLuaDelegate* Delegate)
         luaL_unref(L, LUA_REGISTRYINDEX, Delegate->FunctionRef);
     }
 
-    Delegate->OuterClass->RemoveFunctionFromFunctionMap(Delegate->Function);
+    UFunction *FindFunc = Delegate->OuterClass->FindFunctionByName(Delegate->DynamicFunc->Name);
+    if(FindFunc && FindFunc == Delegate->Function)
+    {        
+        Delegate->OuterClass->RemoveFunctionFromFunctionMap(Delegate->Function);
+    }
+    else
+    {
+        check(false);
+        UE_LOG(LogTemp, Warning, TEXT("[FCDynamicDelegateManager]DeleteLuaDelegate, invalid function[%s]"), UTF8_TO_TCHAR(Delegate->DynamicFunc->Name));
+    }
 
     ObjRefKey Key(nullptr, Delegate);
     FCObjRef *ObjRef = FCGetObj::GetIns()->FindObjRefByKey(Key);

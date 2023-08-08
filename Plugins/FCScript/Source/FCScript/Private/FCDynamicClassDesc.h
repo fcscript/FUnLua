@@ -100,6 +100,21 @@ struct FCDynamicProperty : public FCDynamicPropertyBase
     virtual bool IsDynamicFunction() const { return false; }
 };
 
+struct FCDynamicProtectedProperty : FCDynamicProperty
+{
+    FCDynamicField   *m_GetterFunc;
+    FCDynamicField   *m_SetterFunc;
+
+    FCDynamicProtectedProperty():m_GetterFunc(nullptr), m_SetterFunc(nullptr){}
+
+    void  InitPropertyProperty(FCDynamicField *GetterFunc, FCDynamicField *SetterFunc, const FProperty* InProperty, const char* InName = nullptr);
+
+    virtual FCDynamicField* Clone() const { return new FCDynamicProtectedProperty(*this); }
+    virtual int DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
+    virtual int DoSet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr);
+    virtual int GetMemSize() const { return sizeof(FCDynamicProtectedProperty); }
+};
+
 struct FCDefaultParamBase
 {
     virtual ~FCDefaultParamBase() {}

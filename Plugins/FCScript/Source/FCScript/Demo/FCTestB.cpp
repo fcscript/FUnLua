@@ -15,3 +15,8 @@ void UFCTestB::SetPtr(UObject* Ptr)
 {
     BasePtr = Ptr;
 }
+
+int UFCTestB::GetUserID() const
+{
+    return UserID;
+}

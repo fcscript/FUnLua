@@ -37,6 +37,24 @@ int FCDynamicProperty::DoSet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr)
     return 0;
 }
 
+int FCDynamicProtectedProperty::DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr)
+{
+    if(m_GetterFunc)
+    {
+        return m_GetterFunc->DoGet(L, ObjRefPtr, ClassDescPtr);
+    }
+    return FCDynamicProperty::DoGet(L, ObjRefPtr, ClassDescPtr);
+}
+
+int FCDynamicProtectedProperty::DoSet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr)
+{
+    if(m_SetterFunc)
+    {
+        return m_SetterFunc->DoGet(L, ObjRefPtr, ClassDescPtr);
+    }
+    return FCDynamicProtectedProperty::DoSet(L, ObjRefPtr, ClassDescPtr);
+}
+
 int FCDynamicFunction::DoGet(lua_State* L, void* ObjRefPtr, void* ClassDescPtr)
 {
     FCObjRef* ObjRef = (FCObjRef*)ObjRefPtr;

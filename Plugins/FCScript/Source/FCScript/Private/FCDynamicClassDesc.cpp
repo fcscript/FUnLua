@@ -56,6 +56,13 @@ void  FCDynamicProperty::InitCppType(FCPropertyType InType, const char* InClassN
 #endif
 }
 
+void  FCDynamicProtectedProperty::InitPropertyProperty(FCDynamicField* GetterFunc, FCDynamicField* SetterFunc, const FProperty* InProperty, const char* InName)
+{
+    m_GetterFunc = GetterFunc;
+    m_SetterFunc = SetterFunc;
+    InitProperty(InProperty, InName);
+}
+
 void  FCDynamicFunction::InitParam(UFunction *InFunction)
 {
     Name = TCHAR_TO_UTF8(*(InFunction->GetName()));
@@ -380,6 +387,29 @@ FCDynamicField* FCDynamicClassDesc::RegisterFieldByCString(UStruct* Struct, cons
     }
     if (Property)
     {
+#if WITH_EDITORONLY_DATA
+        if (Property->PropertyFlags & CPF_NativeAccessSpecifierProtected)
+        {
+            FName GetterKeyName = TEXT("BlueprintGetter");  // 编辑器模式下才，如果运行时需要支持，需要提前导出
+            FName SetterKeyName = TEXT("BlueprintSetter");
+            const TMap<FName, FString> *MetaDataMap = Property->GetMetaDataMap();
+            if(MetaDataMap)
+            {
+                const FString* GetterValueName = MetaDataMap->Find(GetterKeyName);
+                const FString* SetterValueName = MetaDataMap->Find(SetterKeyName);
+                FCDynamicFunction* GetterFunc = nullptr;
+                FCDynamicFunction* SetterFunc = nullptr;
+                if(GetterValueName)
+                {
+                    GetterFunc = FindFunctionByName(TCHAR_TO_UTF8(**GetterValueName));
+                }
+                if(SetterValueName)
+                {
+                    SetterFunc = FindFunctionByName(TCHAR_TO_UTF8(**SetterValueName));
+                }
+            }
+        }
+#endif
         FCDynamicProperty* FCProperty = new FCDynamicProperty();
         FCProperty->InitProperty(Property, InFieldName);
         FCProperty->PropertyIndex = m_Property.size();
