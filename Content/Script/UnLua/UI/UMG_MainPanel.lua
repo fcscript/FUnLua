@@ -15,6 +15,7 @@ function UMG_MainPanel:Construct()
     self:BindButton(self.Button_1, self.OnClickButton_1)
     self:BindButton(self.ButtonProfile, self.OnClickProfile)
     self:BindButton(self.ButtonCrash, self.OnButtonCrashClicked)
+    self:BindButton(self.ButtonGetter, self.OnButtonGetterClicked)
         
 	local world = self:GetWorld()
 	local localPlayerControler = _G.UGameplayStatics.GetPlayerController(world, 0)
@@ -53,6 +54,12 @@ end
 function UMG_MainPanel:OnButtonCrashClicked()    
 	local world = self:GetWorld()
     TestCrash:DoCrash(world)
+end
+
+function UMG_MainPanel:OnButtonGetterClicked()	
+    UEPrint("[Unlua]UMG_MainPanel:OnButtonGetterClicked")    
+	local TestB = NewObject(UE4.UFCTestB)
+	local UserID = TestB.UserID
 end
 
 function UMG_MainPanel:OnMouseButtonDown(MyGeometry, MouseEvent)
