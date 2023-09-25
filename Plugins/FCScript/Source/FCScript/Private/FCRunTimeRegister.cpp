@@ -1125,6 +1125,21 @@ int   Class_CallLatentFunction(lua_State* L)
     return lua_yield(L, RetCount);
 }
 
+int Global_WaitFunction(lua_State* L)
+{
+    // Wait()
+    float  DelayTime = (float)lua_tonumber(L, 1);
+    int32 ThreadRef = GetScriptContext()->QueryLuaRef(L);
+
+    FDynamicWaitInfo  Info;
+    Info.ThreadRef = ThreadRef;
+    Info.WaitTime = DelayTime;
+
+    GetScriptContext()->m_WaitList.push_back(Info);
+
+    return lua_yield(L, 0);
+}
+
 void   RunTimeRegisterScript(FCScriptContext *Context)
 {
     lua_State  *L = Context->m_LuaState;
@@ -1137,6 +1152,7 @@ void   RunTimeRegisterScript(FCScriptContext *Context)
     lua_register(L, "print", Global_Print);
     lua_register(L, "UEPrint", Global_Print);
     lua_register(L, "require", Global_Require);
+    lua_register(L, "GlbWait", Global_WaitFunction);
 
     //lua_gc(L, LUA_GCSETPAUSE, 100);
     //lua_gc(L, LUA_GCSETSTEPMUL, 5000);

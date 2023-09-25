@@ -639,7 +639,7 @@ int  FCScriptContext::QueryLuaRef(lua_State* Thread)
         if (Value == 1)
         {
             lua_pop(Thread, 1);
-            UE_LOG(LogFCScript, Warning, TEXT("%s: Can't call latent action in main lua thread!"), ANSI_TO_TCHAR(__FUNCTION__));
+            UE_LOG(LogFCScript, Warning, TEXT("%s: Can't call latent action in main lua thread, mast in coroutine!"), ANSI_TO_TCHAR(__FUNCTION__));
             return 0;
         }
         ThreadRef = luaL_ref(Thread, LUA_REGISTRYINDEX);
@@ -873,6 +873,7 @@ void FCScriptContext::Clear()
 	m_ClassFinder.clear();
     m_ThreadToRef.clear();
     m_RefToThread.clear();
+    m_WaitList.clear();
 
     if(m_ManualObjectReference)
     {

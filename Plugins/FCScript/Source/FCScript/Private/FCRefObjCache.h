@@ -14,16 +14,16 @@ class FCRefObjCache
 		FRefCacheInfo* m_pLast;
 		FRefCacheInfo* m_pNext;
 
-		int64  ObjID;   // ÒýÓÃµÄ¶ÔÏó
-		int    LuaRef;  // luaµÄÒýÓÃ
-		int    Ref;     // ÒýÓÃ¼ÆÊý
+		int64  ObjID;   // å¯¹è±¡ID
+		int    LuaRef;  // lua å¼•ç”¨è®¡æ•°
+		int    Ref;     // Cpp å¼•ç”¨è®¡æ•°
 		FRefCacheInfo() :m_pLast(nullptr), m_pNext(nullptr), ObjID(0), LuaRef(-1), Ref(0) {}
 	};
 	typedef  std::unordered_map<int64, FRefCacheInfo*>   CRefID2LuaCacheMap;  // RefID ==> RefCacheInfo
 
 	CRefID2LuaCacheMap        m_ID2CacheMap;  // ID ==> RefCacheInfo
-	CFastList<FRefCacheInfo>  m_CacheList;    // »º´æÁÐ±í
-	CFastList<FRefCacheInfo>  m_InvalidList;  // ¶ÔÏó³Ø
+	CFastList<FRefCacheInfo>  m_CacheList;    // ç¼“å­˜åˆ—è¡¨
+	CFastList<FRefCacheInfo>  m_InvalidList;  // æ— æ•ˆçš„å›žæ”¶åˆ—è¡¨
 	float                     m_fPassTime;
 	int                       m_UnitReleaseCount;
 public:

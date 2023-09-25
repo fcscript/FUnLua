@@ -460,6 +460,12 @@ struct FDynamicEnum
     }
 };
 
+struct FDynamicWaitInfo
+{
+    int32   ThreadRef = 0;
+    float   WaitTime = 0;
+};
+
 typedef std::unordered_map<const char *, FCDynamicClassDesc*, FCStringHash, FCStringEqual>   CDynamicClassNameMap;
 typedef std::unordered_map<std::string, FDynamicEnum*>   CDynamicEnumNameMap;
 typedef std::unordered_map<int, FCDynamicClassDesc*>   CDynamicClassIDMap;
@@ -467,6 +473,7 @@ typedef std::unordered_map<UStruct*, FCDynamicClassDesc*>   CDynamicUStructMap;
 typedef std::unordered_map<FProperty*, FCDynamicClassDesc*>   CDynamicPropertyMap;
 typedef std::unordered_map<lua_State*, int32>   ThreadToRefMap;
 typedef std::unordered_map<int32, lua_State*>   RefToThreadMap;
+typedef std::vector<FDynamicWaitInfo>  CDynamicWaitInfoList;
 
 struct FCScriptContext
 {
@@ -483,6 +490,8 @@ struct FCScriptContext
 
     ThreadToRefMap        m_ThreadToRef;
     RefToThreadMap        m_RefToThread;
+
+    CDynamicWaitInfoList  m_WaitList;
 
     FCObjectReferencer    *m_ManualObjectReference;
 
