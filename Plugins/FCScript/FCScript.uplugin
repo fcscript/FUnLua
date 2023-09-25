@@ -21,6 +21,11 @@
             "Name" : "FCScript",
             "Type" : "Runtime",
             "LoadingPhase" : "PostConfigInit"
+        },
+        {
+          "Name": "FCScriptEditor",
+          "Type": "Editor",
+          "LoadingPhase": "PostConfigInit"
         }
     ]
 }

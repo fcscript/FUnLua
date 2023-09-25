@@ -15,9 +15,9 @@
 using System.IO;
 using UnrealBuildTool;
 
-public class FCScript : ModuleRules
+public class FCScriptEditor : ModuleRules
 {
-    public FCScript(ReadOnlyTargetRules Target) : base(Target)
+    public FCScriptEditor(ReadOnlyTargetRules Target) : base(Target)
     {
         bEnforceIWYU = false;
 
@@ -32,15 +32,19 @@ public class FCScript : ModuleRules
         
         PrivateIncludePaths.AddRange(
             new string[] {
-                "FCScript/Private",
-				"FCScript/Wrap",
-			}
+            }
             );
 
 
         PublicIncludePathModuleNames.AddRange(
             new string[] {
                 "ApplicationCore",
+            }
+        );
+
+        PublicDependencyModuleNames.AddRange(
+            new string[]
+            {
             }
         );
 
@@ -51,17 +55,15 @@ public class FCScript : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "Slate",
-                "InputCore",
-                "UMG",
-                "Projects",
-                "LuaLib",
+                "SlateCore",
+                "GraphEditor",
+                "UnrealEd",
+                "ToolMenus",
+                "EditorScriptingUtilities",
+                "PropertyEditor",
+                "BlueprintGraph",
+                "FCScript",
             }
-        );
-        
-        
-        if (Target.bBuildEditor == true)
-        {
-            PrivateDependencyModuleNames.Add("UnrealEd");
-        }
+        );        
     }
 }
