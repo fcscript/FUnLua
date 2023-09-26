@@ -9,12 +9,12 @@
 #include "K2Node_CallFunction.h"
 #include "EdGraph/EdGraphPin.h"
 
-#include "K2Node_VariadicFucntionCall.generated.h"
+#include "K2Node_CallLua.generated.h"
 
 class FBlueprintActionDatabaseRegistrar;
 
 UCLASS()
-class FCSCRIPTEDITOR_API UK2Node_VariadicFucntionCall : public UK2Node_CallFunction, public IK2Node_AddPinInterface
+class FCSCRIPTEDITOR_API UK2Node_CallLua : public UK2Node_CallFunction, public IK2Node_AddPinInterface
 {
 	GENERATED_UCLASS_BODY()
 
