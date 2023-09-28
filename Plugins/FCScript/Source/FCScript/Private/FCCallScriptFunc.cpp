@@ -1267,10 +1267,15 @@ int  FCInnerCallScriptFunc(lua_State* L, UObject *Object, int64 ScriptIns, FCDyn
 	}
 	int32 MessageHandlerIdx = lua_gettop(L) - 1;
 
-	int nParamCount = DynamicFunction->ParamCount; // DynamicFunction->m_Property.size();
+	int nParamCount = 0; // DynamicFunction->m_Property.size();
     FCDynamicFunctionParam *BeginProperty = DynamicFunction->m_Property.data();
     FCDynamicFunctionParam *EndProperty = BeginProperty + DynamicFunction->m_Property.size();
     FCDynamicFunctionParam *DynamicProperty = BeginProperty;
+    // 目前最后一个参数是返回值
+    if(EndProperty != nullptr && DynamicFunction->ReturnPropertyIndex == (DynamicFunction->m_Property.size() - 1))
+    {
+        --EndProperty;
+    }
 
     FOutParmRec *OutParms = TheStack.OutParms;
 
@@ -1295,6 +1300,7 @@ int  FCInnerCallScriptFunc(lua_State* L, UObject *Object, int64 ScriptIns, FCDyn
 		ValueAddr = Locals + DynamicProperty->Offset_Internal;
         // 引用对象, 实际上，非&标记的可以使用引用，隐藏规则是lua里面不能对这个变量保存，如果要保存，就需要clone这个变量
         // 主要是针对TArray, TSet, TMap 这些容器，可以大幅度优化性能，然后面后统一删除这个对象
+        ++nParamCount;
         if(DynamicProperty->bOuter)
         {
             if(OutParms)
@@ -1344,7 +1350,7 @@ int  FCInnerCallScriptFunc(lua_State* L, UObject *Object, int64 ScriptIns, FCDyn
             ValueAddr = Locals + ReturnProperty->Offset_Internal;
             if(OutParms)
                 ValueAddr = OutParms->PropAddr;
-            ReturnProperty->m_ReadScriptFunc(L, RetIdx, DynamicProperty, ValueAddr, nullptr, nullptr);
+            ReturnProperty->m_ReadScriptFunc(L, RetIdx, ReturnProperty, ValueAddr, nullptr, nullptr);
             ++RetCount;
         }
 	}
