@@ -626,20 +626,16 @@ void  ReadScriptObjectPtr(lua_State* L, int ValueIdx, const FCDynamicPropertyBas
 {
     FObjectPtr  *DesValue = (FObjectPtr *)ValueAddr;
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
-    if(DynamicProperty->Type == FCPropertyType::FCPROPERTY_ObjectPtrProperty)
+    if(ObjRef && ObjRef->IsValid())
     {
-        if(ObjRef && ObjRef->IsValid())
+        if(ObjRef->GetPropertyType() == FCPropertyType::FCPROPERTY_ObjectPtrProperty)
         {
             *DesValue = *((FObjectPtr*)ObjRef->GetPropertyAddr());
         }
         else
         {
-            *DesValue = nullptr;
+            *DesValue = ObjRef->GetUObject();
         }
-    }
-    else if(ObjRef && ObjRef->IsValid())
-    {
-        *DesValue = ObjRef->GetUObject();
     }
     else
     {
