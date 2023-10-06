@@ -27,16 +27,28 @@ void* VectorBase_GetAddr(lua_State* L, int Idx, const char* ClassName)
     if (ClassName)
     {
         FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUClass(ClassName);
-        if (ObjRef && ObjRef->IsValid() && ObjRef->ClassDesc == ClassDesc)
-            return ObjRef->GetPropertyAddr();
-        else
+        if (ObjRef)
         {
-            if(ObjRef)
+            if(ObjRef->IsValid())
             {
-                ReportLuaError(L, "unsame struct class type");
+                if (ObjRef->ClassDesc == ClassDesc)
+                    return ObjRef->GetPropertyAddr();
+                else
+                {
+                    FCDynamicClassDesc *pSuper = ObjRef->ClassDesc->m_Super;
+                    while(pSuper)
+                    {
+                        if(pSuper == ClassDesc)
+                        {
+                            return ObjRef->GetPropertyAddr();
+                        }
+                        pSuper = pSuper->m_Super;
+                    }
+                }
             }
-            return nullptr;
+            ReportLuaError(L, "unsame struct class type");
         }
+        return nullptr;
     }
     else
     {
