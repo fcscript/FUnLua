@@ -104,7 +104,12 @@ void  FFCObjectdManager::NotifyDeleteUObject(const class UObjectBase* Object, in
 		CallAnyScriptFunc(GetScriptContext(), BindInfo.m_ScriptIns, "ReceiveBeginDestroy");
 
 		luaL_unref(L, LUA_REGISTRYINDEX, BindInfo.m_ScriptIns);
-        m_BindScriptInsMap.erase(m_BindScriptInsMap.find(ObjID));
+        
+        CBindScriptInsMap::iterator itBindScriptIns = m_BindScriptInsMap.find(ObjID);
+        if(itBindScriptIns != m_BindScriptInsMap.end())
+        {
+            m_BindScriptInsMap.erase(itBindScriptIns);
+        }
 		BindInfo.m_ScriptIns = 0;
 		m_BindObjects.erase(itBind);
 
