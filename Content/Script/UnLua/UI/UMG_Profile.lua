@@ -150,7 +150,7 @@ function UMG_Profile:DoOther()
     local AvatarClass = UE4.UFCTest
     local obj = NewObject(AvatarClass)
     local objAvatar = obj.AvatarParams
-    local ProfileFrame = require "ProfileFrame"
+    local ProfileFrame = require "FUnLua.ProfileFrame"
     local world = self:GetWorld()
     print("[ProfileFrame]UnLua------------------")
     ProfileFrame.DoStruct(world, objAvatar)
