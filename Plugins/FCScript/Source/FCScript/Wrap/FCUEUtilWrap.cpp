@@ -485,7 +485,7 @@ int FCUEUtilWrap::NewObject_wrap(lua_State* L)
 		FName  Name(NAME_None);
 		if(ObjectName && ObjectName[0] != 0)
 		{
-			Name = FName(ObjectName);
+			Name = FName(UTF8_TO_TCHAR(ObjectName));
         }
 
 
@@ -566,7 +566,11 @@ int FCUEUtilWrap::SpawActor_wrap(lua_State* L)
     }
     if (NumParams > 9)
     {
-        SpawnParameters.Name = FName(lua_tostring(L, 10));
+        const char *CustomName = lua_tostring(L, 10);
+        if(CustomName)
+        {
+            SpawnParameters.Name = FName(UTF8_TO_TCHAR(CustomName));
+        }
     }
     if(!World || !Class)
     {
@@ -742,4 +746,3 @@ int FCUEUtilWrap::PrintGCObjects_wrap(lua_State* L)
     }
     return 0;
 }
-
