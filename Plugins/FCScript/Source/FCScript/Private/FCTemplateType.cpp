@@ -1,6 +1,5 @@
 #include "FCTemplateType.h"
 
-
 template<class _Ty>
 _Ty* NewUEProperty(UScriptStruct* ScriptStruct)
 {
@@ -21,21 +20,30 @@ FProperty  *NewUEBoolProperty(UScriptStruct* ScriptStruct)
 	// see overloaded operator new that defined in DECLARE_CLASS(...)
 	UBoolProperty* Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UBoolProperty(FObjectInitializer(), EC_CppProperty, 0, (EPropertyFlags)0, 0xFF, 1, true);
 #elif ENGINE_MAJOR_VERSION >= 5 
-    constexpr auto Params = UECodeGen_Private::FBoolPropertyParams
-    {
-        nullptr,
-        nullptr,
-        CPF_None,
-        UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool,
-        RF_Transient,
-        1,
-        nullptr,
-        nullptr,
-        sizeof(bool),
-        sizeof(ScriptStruct),
-        nullptr,
-        METADATA_PARAMS(nullptr, 0)
-    };
+    UECodeGen_Private::FBoolPropertyParams Params;
+    FMemory::Memzero(&Params, sizeof(Params));
+    Params.PropertyFlags = CPF_None;
+    Params.Flags = UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool;
+    Params.ObjectFlags = RF_Transient;
+    Params.ArrayDim = 1;
+    Params.ElementSize = sizeof(bool);
+    Params.SizeOfOuter = sizeof(ScriptStruct);
+
+    //constexpr auto Params = UECodeGen_Private::FBoolPropertyParams
+    //{
+    //    nullptr,
+    //    nullptr,
+    //    CPF_None,
+    //    UECodeGen_Private::EPropertyGenFlags::Bool | UECodeGen_Private::EPropertyGenFlags::NativeBool,
+    //    RF_Transient,
+    //    #if ENGINE_MINOR_VERSION > 2
+    //    nullptr, nullptr, 1, sizeof(bool), sizeof(ScriptStruct), nullptr,
+    //    METADATA_PARAMS(0, nullptr)
+    //    #else
+    //    1, nullptr, nullptr, sizeof(bool), sizeof(ScriptStruct), nullptr,
+    //    METADATA_PARAMS(nullptr, 0)
+    //    #endif
+    //};
     FBoolProperty* Property = new FBoolProperty(ScriptStruct, Params);
 #else
 	FBoolProperty* Property = new FBoolProperty(ScriptStruct, NAME_None, RF_Transient, 0, (EPropertyFlags)0, 0xFF, 1, true);
@@ -49,22 +57,34 @@ FProperty* NewUEStructProperty(UScriptStruct* Struct, UScriptStruct* ScriptStruc
 	// see overloaded operator new that defined in DECLARE_CLASS(...)
     UStructProperty *Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UStructProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_HasGetValueTypeHash, Struct);
 #elif ENGINE_MAJOR_VERSION >= 5 
-    const auto Params = UECodeGen_Private::FStructPropertyParams
-    {
-        nullptr,
-        nullptr,
-        ScriptStruct->GetCppStructOps()
-            ? ScriptStruct->GetCppStructOps()->GetComputedPropertyFlags() | CPF_HasGetValueTypeHash
-            : CPF_HasGetValueTypeHash,
-        UECodeGen_Private::EPropertyGenFlags::Struct,
-        RF_Transient,
-        1,
-        nullptr,
-        nullptr,
-        0,
-        nullptr,
-        METADATA_PARAMS(nullptr, 0)
-    };
+    UECodeGen_Private::FStructPropertyParams Params;
+    FMemory::Memzero(&Params, sizeof(Params));
+    Params.PropertyFlags = ScriptStruct->GetCppStructOps()
+        ? ScriptStruct->GetCppStructOps()->GetComputedPropertyFlags() | CPF_HasGetValueTypeHash
+        : CPF_HasGetValueTypeHash;
+    Params.Flags = UECodeGen_Private::EPropertyGenFlags::Struct;
+    Params.ObjectFlags = RF_Transient;
+    Params.ArrayDim = 1;
+    Params.Offset = 0;
+
+    //const auto Params = UECodeGen_Private::FStructPropertyParams
+    //{
+    //    nullptr,
+    //    nullptr,
+    //    ScriptStruct->GetCppStructOps()
+    //        ? ScriptStruct->GetCppStructOps()->GetComputedPropertyFlags() | CPF_HasGetValueTypeHash
+    //        : CPF_HasGetValueTypeHash,
+    //    UECodeGen_Private::EPropertyGenFlags::Struct,
+    //    RF_Transient,
+
+    //    #if ENGINE_MINOR_VERSION > 2
+    //    nullptr, nullptr, 1, 0, nullptr,
+    //    METADATA_PARAMS(0, nullptr)
+    //    #else
+    //    1, nullptr, nullptr, 0, nullptr,
+    //    METADATA_PARAMS(nullptr, 0)
+    //    #endif
+    //};
     FStructProperty* Property = new FStructProperty(ScriptStruct, Params);
     Property->Struct = Struct;
     Property->ElementSize = Struct->PropertiesSize;
@@ -81,20 +101,28 @@ FProperty  *NewUEClassProperty(UClass *Class, UScriptStruct* ScriptStruct)
     //UObjectProperty* Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UObjectProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_HasGetValueTypeHash, Class);
     UClassProperty *Property = new (EC_InternalUseOnlyConstructor, ScriptStruct, NAME_None, RF_Transient) UClassProperty(FObjectInitializer(), EC_CppProperty, 0, CPF_HasGetValueTypeHash | CPF_UObjectWrapper, Class, nullptr);
 #elif ENGINE_MAJOR_VERSION >= 5 
-    constexpr auto Params = UECodeGen_Private::FObjectPropertyParams
-    {
-        nullptr,
-        nullptr,
-        CPF_HasGetValueTypeHash,
-        UECodeGen_Private::EPropertyGenFlags::Object,
-        RF_Transient,
-        1,
-        nullptr,
-        nullptr,
-        0,
-        nullptr,
-        METADATA_PARAMS(nullptr, 0)
-    };
+    UECodeGen_Private::FObjectPropertyParams Params;
+    FMemory::Memzero(&Params, sizeof(Params));
+    Params.PropertyFlags = CPF_HasGetValueTypeHash;
+    Params.Flags = UECodeGen_Private::EPropertyGenFlags::Object;
+    Params.ObjectFlags = RF_Transient;
+    Params.ArrayDim = 1;
+
+    //constexpr auto Params = UECodeGen_Private::FObjectPropertyParams
+    //{
+    //    nullptr,
+    //    nullptr,
+    //    CPF_HasGetValueTypeHash,
+    //    UECodeGen_Private::EPropertyGenFlags::Object,
+    //    RF_Transient,
+    //    #if ENGINE_MINOR_VERSION > 2
+    //    nullptr, nullptr, 1, 0, nullptr,
+    //    METADATA_PARAMS(0, nullptr)
+    //    #else
+    //    1, nullptr, nullptr, 0, nullptr,
+    //    METADATA_PARAMS(nullptr, 0)
+    //    #endif
+    //};
     FObjectProperty* Property = new FObjectProperty(ScriptStruct, Params);
     Property->PropertyClass = Class;
 #else
