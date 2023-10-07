@@ -30,6 +30,7 @@ int FCUnLuaWrap::LibOpen_wrap(lua_State* L)
         {"Unref", Unref_wrap},
         {"Class", Class_wrap},
         {"DebugBreak", DebugBreak_wrap},
+        {"DebugCheck", DebugCheck_wrap},
         {NULL, NULL}
     };
     const char* ClassName = lua_tostring(L, 1);
@@ -196,6 +197,14 @@ int  FCUnLuaWrap::DebugBreak_wrap(lua_State* L)
     }
     return 0;
 }
+
+int FCUnLuaWrap::DebugCheck_wrap(lua_State* L)
+{
+    UObject* Object = FCScript::GetUObject(L, 1);
+    UE_DEBUG_BREAK();
+    return 0;
+}
+
 void FCUnLuaWrap::RegisterGlobalIndex(lua_State* L)
 {
     static const char* Chunk = R"(

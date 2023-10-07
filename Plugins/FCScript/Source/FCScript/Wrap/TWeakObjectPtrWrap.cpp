@@ -7,6 +7,7 @@
 void TWeakObjectPtrWrap::Register(lua_State* L)
 {
     luaL_requiref(L, "TWeakObjectPtr", LibOpen_wrap, 1);
+    luaL_requiref(L, "FWeakObjectPtr", LibOpen_wrap, 1);
     luaL_requiref(L, "WeakPtr", LibOpen_wrap, 1);
 }
 
@@ -102,4 +103,3 @@ int TWeakObjectPtrWrap::Set_wrap(lua_State* L)
     }
     return 0;
 }
-
