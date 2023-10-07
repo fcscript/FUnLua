@@ -490,7 +490,8 @@ void  FFCObjectdManager::ClearScriptDelegate(UObject* InObject, const FCDynamicP
 			DelegateList.Delegates.erase(DelegateList.Delegates.begin() + i);
 		}
 	}
-	RemoveDelegateFromClass(DynamicFunc, DynamicFunc->m_BindClass ? DynamicFunc->m_BindClass : InObject->GetClass());
+    // 这里不能释放，引用计数不为零的情况
+	//RemoveDelegateFromClass(DynamicFunc, DynamicFunc->m_BindClass ? DynamicFunc->m_BindClass : InObject->GetClass());
     RemoveObjectDelegate(InObject, InDynamicProperty, DynamicFunc);
 }
 
