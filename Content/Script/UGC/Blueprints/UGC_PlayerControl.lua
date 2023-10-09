@@ -3,17 +3,16 @@ local M = {}
 
 function M:LeftMouseButton_Pressed(key)
     -- print("[UGC][LeftMouseButton_Pressed]key=", key)
-    local playerControler = UE.UGameplayStatics.GetPlayerController(self:GetWorld(), 0)
-    if playerControler then
-        local traceChannel = UE.ECollisionChannel.WorldStatic
-        local hitResult = UE.FHitResult()
-        local bSuc = playerControler:GetHitResultUnderCursor(traceChannel, true, hitResult)
-        local HitObjectHandle = hitResult.HitObjectHandle
-        local hitActor = HitObjectHandle.Actor:Get()
-        -- local parentActor = self:GetRootActor(hitResult.Component:Get())
-        -- UnLua.DebugCheck(hitActor)
-        -- print("[UGC][GetHitResultUnderCursor]traceChannel=", traceChannel, "bSuc=", bSuc, ",hitResult=", hitResult,  ",hitActor=", hitActor)
-    end
+    -- local playerControler = UE.UGameplayStatics.GetPlayerController(self:GetWorld(), 0)
+
+    local traceChannel = UE.ECollisionChannel.WorldStatic
+    local hitResult = UE.FHitResult()
+    local bSuc = self:GetHitResultUnderCursor(traceChannel, true, hitResult)
+    local HitObjectHandle = hitResult.HitObjectHandle
+    local hitActor = HitObjectHandle.Actor:Get()
+    -- local parentActor = self:GetRootActor(hitResult.Component:Get())
+    -- UnLua.DebugCheck(hitActor)
+    -- print("[UGC][GetHitResultUnderCursor]traceChannel=", traceChannel, "bSuc=", bSuc, ",hitResult=", hitResult,  ",hitActor=", hitActor)
 end
 
 function M:GetRootActor(actorComponent)

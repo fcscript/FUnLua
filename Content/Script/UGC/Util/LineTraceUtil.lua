@@ -13,7 +13,7 @@ function M:GetPickupPosition(worldContex, screenPos)
         local playerCharacter = UE.UGameplayStatics.GetPlayerCharacter(worldContex, 0)
         local pickPos = self:GetPlayerFacePostion(playerCharacter, 100)
         -- print("[UGC]GetPickupPosition, failed Project camear, pickPos=", pickPos)
-        return pickPos
+        return pickPos, nil
     end
 
     local endPos = WorldLocation + WorldDirection * 100000
@@ -26,10 +26,10 @@ function M:GetPickupPosition(worldContex, screenPos)
     
     if bHit then
         -- print("[UGC]GetPickupPosition, bHit is true, hitPos=", hitResult.Location)
-        return hitResult.Location
+        return hitResult.Location, hitResult
     else
         -- print("[UGC]GetPickupPosition, bHit is false, near pos=", WorldLocation + WorldDirection * 10000)
-        return WorldLocation + WorldDirection * 10000
+        return WorldLocation + WorldDirection * 10000, nil
     end
 end
 
