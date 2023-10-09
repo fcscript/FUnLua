@@ -5,6 +5,22 @@
 #include "CoreUObject.h"
 #include "FCStringCore.h"
 
+struct FCFNameHash
+{
+    size_t operator()(const FName& Key) const
+    {
+        return Key.ToUnstableInt();
+    }
+};
+
+struct FCFNameEqual
+{
+    bool operator()(const FName& key1, const FName& key2) const
+    {
+        return key1 == key2;
+    }
+};
+
 enum FCPropertyType
 {
 	FCPROPERTY_Unkonw,          // 未知的

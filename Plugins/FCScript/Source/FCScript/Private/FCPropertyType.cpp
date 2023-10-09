@@ -6,8 +6,9 @@ typedef  std::unordered_map<const char *, FCPropertyType, FCStringHash, FCString
 typedef  std::unordered_map<FCPropertyType, const char *>   CPropertyClassNameMap;
 typedef std::unordered_map<const char*, char*, FCStringHash, FCStringEqual> CCppName2NameMap;
 typedef std::unordered_map<const char*, bool, FCStringHash, FCStringEqual> CWrapClassFlagMap;
+typedef  std::unordered_map<FName, FCPropertyType, FCFNameHash, FCFNameEqual>   CFName2PropertyTypeMap;
 CPropertyTypeMap  gPropertyTypeMap;
-CGraphyTypeMap   gGraphyTypeMap;
+CFName2PropertyTypeMap  gInnerGraphyTypeMap;
 CPropertyTypeMap gCachePropertyTypeMap;
 CPropertyClassNameMap gPropertyClassNameMap;
 CCppName2NameMap      GCppName2NameMap;
@@ -62,17 +63,12 @@ void  InitPropertyTable()
 	gPropertyTypeMap[FMulticastSparseDelegateProperty::StaticClass()] = FCPROPERTY_MulticastSparseDelegateProperty;
 	#endif
 
-	gGraphyTypeMap["Vector2"] = FCPROPERTY_Vector2;
-	gGraphyTypeMap["Vector3"] = FCPROPERTY_Vector3;
-	gGraphyTypeMap["Vector4"] = FCPROPERTY_Vector4;
-    gGraphyTypeMap["Vector2D"] = FCPROPERTY_Vector2;
-    gGraphyTypeMap["Vector4D"] = FCPROPERTY_Vector4;
-    gGraphyTypeMap["Vector"] = FCPROPERTY_Vector3;
-
-    gGraphyTypeMap["Vector_NetQuantize"] = FCPROPERTY_Vector3;
-    gGraphyTypeMap["Vector_NetQuantizeNormal"] = FCPROPERTY_Vector3;
-    gGraphyTypeMap["Vector_NetQuantize10"] = FCPROPERTY_Vector3;
-    gGraphyTypeMap["FVector_NetQuantize100"] = FCPROPERTY_Vector3;
+    gInnerGraphyTypeMap["Vector2"] = FCPROPERTY_Vector2;
+    gInnerGraphyTypeMap["Vector3"] = FCPROPERTY_Vector3;
+    gInnerGraphyTypeMap["Vector4"] = FCPROPERTY_Vector4;
+    gInnerGraphyTypeMap["Vector2D"] = FCPROPERTY_Vector2;
+    gInnerGraphyTypeMap["Vector4D"] = FCPROPERTY_Vector4;
+    gInnerGraphyTypeMap["Vector"] = FCPROPERTY_Vector3;
 }
 
 void  InitProperyNameTable()
@@ -127,7 +123,7 @@ void  ReleasePropertyTable()
 {
 	gPropertyTypeMap.clear();
 	gPropertyClassNameMap.clear();
-	gGraphyTypeMap.clear();
+    gInnerGraphyTypeMap.clear();
 	gCachePropertyTypeMap.clear();
     ReleasePtrMap(GCppName2NameMap);
     GWrapClassFlagMap.clear();
@@ -176,13 +172,20 @@ FCPropertyType  GetScriptPropertyType(const FProperty *Property)
 			{
 				return itCacheType->second;
 			}
-			FString StructName = StructProperty->Struct->GetName();
-            const char *PropertyName = TCHAR_TO_UTF8(*StructName);
-			CGraphyTypeMap::iterator itGraphy = gGraphyTypeMap.find(PropertyName);
-			if(itGraphy != gGraphyTypeMap.end())
-			{
-				Type = itGraphy->second;
-			}
+
+            UStruct* Super = StructProperty->Struct;
+            while(Super)
+            {
+                FName StructPropertyName = Super->GetFName();
+                CFName2PropertyTypeMap::iterator ItInner = gInnerGraphyTypeMap.find(StructPropertyName);
+                if (ItInner != gInnerGraphyTypeMap.end())
+                {
+                    Type = ItInner->second;
+                    break;
+                }
+                Super = Super->GetSuperStruct();
+            }
+
 			gCachePropertyTypeMap[StructProperty->Struct] = Type;
 		}
 		return Type;

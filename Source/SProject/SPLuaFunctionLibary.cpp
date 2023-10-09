@@ -10,3 +10,19 @@ bool USPLuaFunctionLibary::GetRenderTextureColors(TArray<FColor>& OutColors, UTe
     }
     return false;
 }
+
+FVector2D  USPLuaFunctionLibary::GetLastMousePosition()
+{
+    FVector2D  MousePosition;
+    if(GEngine && !GEngine->GameViewport.IsNull())
+    {
+        GEngine->GameViewport->GetMousePosition(MousePosition);
+    }
+    return MousePosition;
+}
+
+void  USPLuaFunctionLibary::CheckPostion(const FVector& InPos)
+{
+    float X = InPos.X;
+    float Y = InPos.Y;
+}

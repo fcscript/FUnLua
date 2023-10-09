@@ -13,4 +13,10 @@ class  USPLuaFunctionLibary : public UBlueprintFunctionLibrary
 public:
 	UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "SPLuaFunctionLibary"))
     static bool GetRenderTextureColors(TArray<FColor> &OutColors, UTextureRenderTarget2D *SourceRenderTarget);
+
+    UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "SPLuaFunctionLibary"))
+    static FVector2D  GetLastMousePosition();
+
+    UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "SPLuaFunctionLibary"))
+    static void  CheckPostion(const FVector& InPos);
 };
