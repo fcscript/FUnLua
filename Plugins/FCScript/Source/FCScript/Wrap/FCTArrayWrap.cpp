@@ -163,6 +163,8 @@ void  FCTArrayWrap_SetNumb(FScriptArray *ScriptArray, FProperty *Inner, int NewN
 	if (OldNum < NewNum)
 	{
 		int32 Index = ScriptArray_Add(ScriptArray, NewNum - OldNum, ElementSize);
+        ObjAddr = (uint8*)ScriptArray->GetData();
+        ValueAddr = ObjAddr;
 		for (; Index < NewNum; ++Index)
 		{
 			ValueAddr = ObjAddr + Index * ElementSize;

@@ -1,4 +1,6 @@
 #include "FCTest.h"
+#include "FCDynamicClassDesc.h"
+#include "../LuaCore/CallLua.h"
 
 float UFCTest::GetHP() const
 {
@@ -81,6 +83,39 @@ void UFCTest::TestCall_NotifyIDMap()
 int UFCTest::NotifyAll(int nType, const FVector &Pos)
 {
 	return 100 + nType;
+}
+
+template <class _TyList>
+void  FCTest_CallAnyList(const FString& InFuncName, const _TyList& Datas)
+{
+    FCScriptContext* ScriptContext = GetScriptContext();
+    if (ScriptContext->m_LuaState)
+    {
+        lua_State* L = ScriptContext->m_LuaState;
+
+        const char* FuncName = TCHAR_TO_UTF8(*InFuncName);
+        CallGlobalVoidLua(L, FuncName, Datas);
+    }
+}
+
+void UFCTest::CallTArrayParamFunc(const FString& InFuncName, const TArray<FString>& Datas)
+{
+    FCTest_CallAnyList(InFuncName, Datas);
+}
+
+void UFCTest::CallMapParamFunc(const FString &InFuncName, const TMap<int32, FString>& Datas)
+{
+    FCTest_CallAnyList(InFuncName, Datas);
+}
+
+void UFCTest::CallStringMapFunc(const FString& InFuncName, const TMap<FString, int32>& Datas)
+{
+    FCTest_CallAnyList(InFuncName, Datas);
+}
+
+void UFCTest::CallSetParamFunc(const FString& InFuncName, const TSet<int32>& Datas)
+{
+    FCTest_CallAnyList(InFuncName, Datas);
 }
 
 void UFCTest::TestCall_DefaultParam(int InID, const FString InName, EFCTestEnum TestType, FVector InPos)

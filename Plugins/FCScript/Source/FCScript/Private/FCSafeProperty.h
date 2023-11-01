@@ -49,6 +49,7 @@ struct FCSafeProperty
     virtual void CopyValuesInternal(void* Dest, void const* Src, int32 Count) const;
     virtual void CopyCompleteValue(void* Dest, void const* Src) const;
     virtual void DestroyValue(void* Dest) const;
+    virtual int GetTemplateParamNameID() const;
 };
 
 FCSafeProperty  *GetSafeProperty(const FProperty* InProperty);

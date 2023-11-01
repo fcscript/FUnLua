@@ -5,6 +5,7 @@
 #include "UObject/UnrealType.h"
 #include "Containers/UnrealString.h"
 #include "LuaHeader.h"
+#include "FCSetArg.h"
 
 template <typename T> struct TFLRemoveReference { typedef T Type; };
 template <typename T> struct TFLRemoveReference<T& > { typedef T Type; };
@@ -48,6 +49,21 @@ template <class _Ty>
 int  LuaPushValue(lua_State* L, const TArray<_Ty> &Array, bool bCopy)
 {
     FCScript::SetArgValue(L, Array);
+    return 1;
+}
+
+template<class _TyKey, class _TyValue>
+int LuaPushValue(lua_State* L, const TMap<_TyKey, _TyValue>& Map, bool bCopy)
+{
+    FCScript::SetArgValue(L, Map);
+    return 1;
+}
+
+template <class _Ty>
+int  LuaPushValue(lua_State* L, const TSet<_Ty>& Set, bool bCopy)
+{
+    FCScript::SetArgValue(L, Set);
+    return 1;
 }
 
 UObject *LuaGetUObject(lua_State* L, int Idx);

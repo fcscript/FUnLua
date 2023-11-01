@@ -120,6 +120,29 @@ template<> struct std::equal_to<ObjRefKey>
     }
 };
 
+struct OffsetStringKey
+{
+    const char *Key;
+    int  Offset;
+    OffsetStringKey():Key(nullptr), Offset(0){}
+    OffsetStringKey(const char *InKey, int InOffset = 0):Key(InKey), Offset(InOffset){}
+};
+
+template<> struct std::hash<OffsetStringKey>
+{
+    size_t operator()(const OffsetStringKey& Key) const
+    {
+        return (size_t)Key.Key + (size_t)Key.Offset;
+    }
+};
+template<> struct std::equal_to<OffsetStringKey>
+{
+    bool operator()(const OffsetStringKey& key1, const OffsetStringKey& key2) const
+    {
+        return key1.Offset == key2.Offset && fc_hash_string_key::Equal(key1.Key, key2.Key);
+    }
+};
+
 template <class _TyPtrMap>
 void  ReleasePtrMap(_TyPtrMap &PtrMap)
 {

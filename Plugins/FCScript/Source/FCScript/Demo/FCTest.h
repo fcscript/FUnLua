@@ -113,6 +113,18 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "NotifyAll"))
 	static int NotifyAll(int nType, const FVector &Pos);
 
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "NotifyAll"))
+    static void CallTArrayParamFunc(const FString& InFuncName, const TArray<FString>& Datas);
+
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "NotifyAll"))
+    static void CallMapParamFunc(const FString &InFuncName, const TMap<int32, FString> & Datas);
+
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "NotifyAll"))
+    static void CallStringMapFunc(const FString& InFuncName, const TMap<FString, int32>& Datas);
+
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "NotifyAll"))
+    static void CallSetParamFunc(const FString& InFuncName, const TSet<int32>& Datas);
+
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "TestCall_DefaultParam"))
     void TestCall_DefaultParam(int InID = 10, const FString InName = TEXT("ABC"), EFCTestEnum TestType = EFCTestEnum::Wan, FVector InPos = FVector(3, 5, 6));
 

@@ -39,7 +39,7 @@ namespace FCScript
 
     template <> FORCEINLINE const char* ExtractTypeName(const int&)
     {
-        return "int";
+        return "int32";
     }
 
     template <> FORCEINLINE const char* ExtractTypeName(const uint32&)

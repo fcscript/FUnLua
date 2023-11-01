@@ -813,57 +813,71 @@ void ReadScriptSoftClassPtr(lua_State* L, int ValueIdx, const FCDynamicPropertyB
 void  ReadScriptTArray(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
 	FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
-	if (ObjRef)
+	if (ObjRef && ObjRef->IsValid())
 	{
-		if(EFCObjRefType::NewTArray == ObjRef->RefType)
-		{
-			FArrayProperty* Property = DynamicProperty->SafePropertyPtr->CastArrayProperty();
-            if (DynamicProperty->bTempNeedRef)
+        if (DynamicProperty->SafePropertyPtr->GetTemplateParamNameID() == ObjRef->DynamicProperty->GetTemplateParamNameID())
+        {
+            if (EFCObjRefType::NewTArray == ObjRef->RefType)
             {
-                ((FCDynamicPropertyBase*)DynamicProperty)->bTempRealRef = true;
-                FMemory::Memcpy(ValueAddr, ObjRef->GetPropertyAddr(), sizeof(FScriptArray));
+                FArrayProperty* Property = DynamicProperty->SafePropertyPtr->CastArrayProperty();
+                if (DynamicProperty->bTempNeedRef)
+                {
+                    ((FCDynamicPropertyBase*)DynamicProperty)->bTempRealRef = true;
+                    FMemory::Memcpy(ValueAddr, ObjRef->GetPropertyAddr(), sizeof(FScriptArray));
+                }
+                else
+                {
+                    DynamicProperty->SafePropertyPtr->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->SafePropertyPtr->ArrayDim);
+                }
             }
-            else
+            else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
             {
-                DynamicProperty->SafePropertyPtr->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->SafePropertyPtr->ArrayDim);
+                FArrayProperty* Property = DynamicProperty->SafePropertyPtr->CastArrayProperty();
+                if (ObjRef->GetPropertyType() == DynamicProperty->Type)
+                {
+                    DynamicProperty->SafePropertyPtr->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->SafePropertyPtr->ArrayDim);
+                }
             }
-		}
-		else if(DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
-		{
-			FArrayProperty* Property = DynamicProperty->SafePropertyPtr->CastArrayProperty();
-            if (ObjRef->GetPropertyType() == DynamicProperty->Type)
-			{
-                DynamicProperty->SafePropertyPtr->CopyValuesInternal(ValueAddr, ObjRef->GetPropertyAddr(), DynamicProperty->SafePropertyPtr->ArrayDim);
-			}
-		}
+        }
+        else
+        {
+            ReportLuaError(L, "invalid template param, please check TArray params");
+        }
 	}
 }
 
 void ReadScriptTMap(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
-    if (ObjRef)
+    if (ObjRef && ObjRef->IsValid())
     {
-        if (EFCObjRefType::NewTMap == ObjRef->RefType)
+        if (DynamicProperty->SafePropertyPtr->GetTemplateParamNameID() == ObjRef->DynamicProperty->GetTemplateParamNameID())
         {
-            FMapProperty* Property = DynamicProperty->SafePropertyPtr->CastMapProperty();
-            if(DynamicProperty->bTempNeedRef)
+            if (EFCObjRefType::NewTMap == ObjRef->RefType)
             {
-                ((FCDynamicPropertyBase *)DynamicProperty)->bTempRealRef = true;
-                FMemory::Memcpy(ValueAddr, ObjRef->GetPropertyAddr(), sizeof(FScriptMap));
+                FMapProperty* Property = DynamicProperty->SafePropertyPtr->CastMapProperty();
+                if (DynamicProperty->bTempNeedRef)
+                {
+                    ((FCDynamicPropertyBase*)DynamicProperty)->bTempRealRef = true;
+                    FMemory::Memcpy(ValueAddr, ObjRef->GetPropertyAddr(), sizeof(FScriptMap));
+                }
+                else
+                {
+                    DynamicProperty->SafePropertyPtr->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+                }
             }
-            else
+            else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
             {
-                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+                FMapProperty* Property = DynamicProperty->SafePropertyPtr->CastMapProperty();
+                if (ObjRef->GetPropertyType() == DynamicProperty->Type)
+                {
+                    DynamicProperty->SafePropertyPtr->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+                }
             }
         }
-        else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
+        else
         {
-            FMapProperty* Property = DynamicProperty->SafePropertyPtr->CastMapProperty();
-            if (ObjRef->GetPropertyType() == DynamicProperty->Type)
-            {
-                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
-            }
+            ReportLuaError(L, "invalid template param, please check TMap params");
         }
     }
 }
@@ -871,28 +885,35 @@ void ReadScriptTMap(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
 void ReadScriptTSet(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
-    if (ObjRef)
+    if (ObjRef && ObjRef->IsValid())
     {
-        if (EFCObjRefType::NewTSet == ObjRef->RefType)
+        if (DynamicProperty->SafePropertyPtr->GetTemplateParamNameID() == ObjRef->DynamicProperty->GetTemplateParamNameID())
         {
-            FSetProperty* Property = DynamicProperty->SafePropertyPtr->CastSetProperty();
-            if (DynamicProperty->bTempNeedRef)
+            if (EFCObjRefType::NewTSet == ObjRef->RefType)
             {
-                ((FCDynamicPropertyBase*)DynamicProperty)->bTempRealRef = true;
-                FMemory::Memcpy(ValueAddr, ObjRef->GetPropertyAddr(), sizeof(FScriptSet));
+                FSetProperty* Property = DynamicProperty->SafePropertyPtr->CastSetProperty();
+                if (DynamicProperty->bTempNeedRef)
+                {
+                    ((FCDynamicPropertyBase*)DynamicProperty)->bTempRealRef = true;
+                    FMemory::Memcpy(ValueAddr, ObjRef->GetPropertyAddr(), sizeof(FScriptSet));
+                }
+                else
+                {
+                    DynamicProperty->SafePropertyPtr->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+                }
             }
-            else
+            else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
             {
-                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+                FSetProperty* Property = DynamicProperty->SafePropertyPtr->CastSetProperty();
+                if (ObjRef->GetPropertyType() == DynamicProperty->Type)
+                {
+                    DynamicProperty->SafePropertyPtr->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
+                }
             }
         }
-        else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
+        else
         {
-            FSetProperty* Property = DynamicProperty->SafePropertyPtr->CastSetProperty();
-            if (ObjRef->GetPropertyType() == DynamicProperty->Type)
-            {
-                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ValueAddr, ObjRef->GetPropertyAddr());
-            }
+            ReportLuaError(L, "invalid template param, please check TSet params");
         }
     }
 }
@@ -1128,29 +1149,36 @@ bool  CopyScriptTArray(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* 
 {
     // 将UE对象拷贝到指定lua栈上参数
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
-    if (ObjRef)
+    if (ObjRef && ObjRef->IsValid())
     {
-        if (EFCObjRefType::NewTArray == ObjRef->RefType)
+        if (DynamicProperty->SafePropertyPtr->GetTemplateParamNameID() == ObjRef->DynamicProperty->GetTemplateParamNameID())
         {
-            if (DynamicProperty->bTempRealRef)
+            if (EFCObjRefType::NewTArray == ObjRef->RefType)
             {
-                FMemory::Memcpy(ObjRef->GetPropertyAddr(), ValueAddr, sizeof(FScriptArray));
-            }
-            else
-            {
-                DynamicProperty->SafePropertyPtr->CopyValuesInternal(ObjRef->GetPropertyAddr(), ValueAddr, DynamicProperty->SafePropertyPtr->ArrayDim);
-            }
-            PushLuaExitValue(L, ValueIdx, ObjRef);
-            return true;
-        }
-        else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
-        {
-            if (ObjRef->GetPropertyType() == DynamicProperty->Type)
-            {
-                DynamicProperty->SafePropertyPtr->CopyValuesInternal(ObjRef->GetPropertyAddr(), ValueAddr, DynamicProperty->SafePropertyPtr->ArrayDim);
+                if (DynamicProperty->bTempRealRef)
+                {
+                    FMemory::Memcpy(ObjRef->GetPropertyAddr(), ValueAddr, sizeof(FScriptArray));
+                }
+                else
+                {
+                    DynamicProperty->SafePropertyPtr->CopyValuesInternal(ObjRef->GetPropertyAddr(), ValueAddr, DynamicProperty->SafePropertyPtr->ArrayDim);
+                }
                 PushLuaExitValue(L, ValueIdx, ObjRef);
                 return true;
             }
+            else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Array)
+            {
+                if (ObjRef->GetPropertyType() == DynamicProperty->Type)
+                {
+                    DynamicProperty->SafePropertyPtr->CopyValuesInternal(ObjRef->GetPropertyAddr(), ValueAddr, DynamicProperty->SafePropertyPtr->ArrayDim);
+                    PushLuaExitValue(L, ValueIdx, ObjRef);
+                    return true;
+                }
+            }
+        }
+        else
+        {
+            ReportLuaError(L, "invalid template param, failed copy array, please check TArray params");
         }
     }
     return false;
@@ -1159,29 +1187,36 @@ bool  CopyScriptTArray(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* 
 bool CopyScriptTMap(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
-    if (ObjRef)
+    if (ObjRef && ObjRef->IsValid())
     {
-        if (EFCObjRefType::NewTMap == ObjRef->RefType)
+        if (DynamicProperty->SafePropertyPtr->GetTemplateParamNameID() == ObjRef->DynamicProperty->GetTemplateParamNameID())
         {
-            if (DynamicProperty->bTempRealRef)
+            if (EFCObjRefType::NewTMap == ObjRef->RefType)
             {
-                FMemory::Memcpy(ObjRef->GetPropertyAddr(), ValueAddr, sizeof(FScriptMap));
-            }
-            else
-            {
-                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
-            }
-            PushLuaExitValue(L, ValueIdx, ObjRef);
-            return true;
-        }
-        else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
-        {
-            if (ObjRef->GetPropertyType() == DynamicProperty->Type)
-            {
-                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+                if (DynamicProperty->bTempRealRef)
+                {
+                    FMemory::Memcpy(ObjRef->GetPropertyAddr(), ValueAddr, sizeof(FScriptMap));
+                }
+                else
+                {
+                    DynamicProperty->SafePropertyPtr->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+                }
                 PushLuaExitValue(L, ValueIdx, ObjRef);
                 return true;
             }
+            else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Map)
+            {
+                if (ObjRef->GetPropertyType() == DynamicProperty->Type)
+                {
+                    DynamicProperty->SafePropertyPtr->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+                    PushLuaExitValue(L, ValueIdx, ObjRef);
+                    return true;
+                }
+            }
+        }
+        else
+        {
+            ReportLuaError(L, "invalid template param, failed copy map, please check TMap params");
         }
     }
     return false;
@@ -1190,29 +1225,36 @@ bool CopyScriptTMap(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* Dyn
 bool CopyScriptTSet(lua_State* L, int ValueIdx, const FCDynamicPropertyBase* DynamicProperty, uint8* ValueAddr, UObject* ThisObj, void* ObjRefPtr)
 {
     FCObjRef* ObjRef = (FCObjRef*)FCScript::GetObjRefPtr(L, ValueIdx);
-    if (ObjRef)
+    if (ObjRef && ObjRef->IsValid())
     {
-        if (EFCObjRefType::NewTSet == ObjRef->RefType)
+        if (DynamicProperty->SafePropertyPtr->GetTemplateParamNameID() == ObjRef->DynamicProperty->GetTemplateParamNameID())
         {
-            if (DynamicProperty->bTempRealRef)
+            if (EFCObjRefType::NewTSet == ObjRef->RefType)
             {
-                FMemory::Memcpy(ObjRef->GetPropertyAddr(), ValueAddr, sizeof(FScriptSet));
-            }
-            else
-            {
-                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
-            }
-            PushLuaExitValue(L, ValueIdx, ObjRef);
-            return true;
-        }
-        else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
-        {
-            if (ObjRef->GetPropertyType() == DynamicProperty->Type)
-            {
-                DynamicProperty->SafePropertyPtr->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+                if (DynamicProperty->bTempRealRef)
+                {
+                    FMemory::Memcpy(ObjRef->GetPropertyAddr(), ValueAddr, sizeof(FScriptSet));
+                }
+                else
+                {
+                    DynamicProperty->SafePropertyPtr->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+                }
                 PushLuaExitValue(L, ValueIdx, ObjRef);
                 return true;
             }
+            else if (DynamicProperty->Type == FCPropertyType::FCPROPERTY_Set)
+            {
+                if (ObjRef->GetPropertyType() == DynamicProperty->Type)
+                {
+                    DynamicProperty->SafePropertyPtr->CopyCompleteValue(ObjRef->GetPropertyAddr(), ValueAddr);
+                    PushLuaExitValue(L, ValueIdx, ObjRef);
+                    return true;
+                }
+            }
+        }
+        else
+        {
+            ReportLuaError(L, "invalid template param, failed copy set, please check TSet params");
         }
     }
     return false;

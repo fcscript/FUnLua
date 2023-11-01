@@ -34,7 +34,17 @@ enum FCInnerBaseType
 #define ScriptArray_Empty(ScriptArray, Size, ElementSize)  ScriptArray->Empty(Size, ElementSize)
 #endif
 
-struct FCTArrayDynamicProperty : public FCDynamicProperty
+struct FCTemplateDynamicProperty : public FCDynamicProperty
+{
+    int ParamsNameID;
+    FCTemplateDynamicProperty():ParamsNameID(0){}
+    virtual int GetTemplateParamNameID() const override
+    {
+        return ParamsNameID;
+    }
+};
+
+struct FCTArrayDynamicProperty : public FCTemplateDynamicProperty
 {
     FArrayProperty* ArrayProperty;
     FCDynamicProperty *Inner;
@@ -42,6 +52,7 @@ struct FCTArrayDynamicProperty : public FCDynamicProperty
     FCTArrayDynamicProperty(FArrayProperty* InArrayProperty, FCDynamicProperty *ChildInner) :ArrayProperty(InArrayProperty), Inner(ChildInner), ElementSize(0)
     {
         ElementSize = ArrayProperty->Inner->GetSize();
+        InitTemplateParamNameID();
     }
     ~FCTArrayDynamicProperty()
     {
@@ -50,13 +61,15 @@ struct FCTArrayDynamicProperty : public FCDynamicProperty
             // delete ArrayProperty; // 这个不能释放，UE会自动释放，不然就会Crash
         }
     }
+    void InitTemplateParamNameID();
 };
 
-struct FCTMapDynamicProperty : public FCDynamicProperty
+struct FCTMapDynamicProperty : public FCTemplateDynamicProperty
 {
     FMapProperty* MapProperty;
     FCTMapDynamicProperty(FMapProperty* InMapProperty) :MapProperty(InMapProperty)
     {
+        InitTemplateParamNameID();
     }
     ~FCTMapDynamicProperty()
     {
@@ -65,13 +78,15 @@ struct FCTMapDynamicProperty : public FCDynamicProperty
             //delete MapProperty; // 这个不能释放，UE会自动释放，不然就会Crash
         }
     }
+    void InitTemplateParamNameID();
 };
 
-struct FCTSetDynamicProperty : public FCDynamicProperty
+struct FCTSetDynamicProperty : public FCTemplateDynamicProperty
 {
     FSetProperty* SetProperty;
     FCTSetDynamicProperty(FSetProperty* InSetProperty) :SetProperty(InSetProperty)
     {
+        InitTemplateParamNameID();
     }
     ~FCTSetDynamicProperty()
     {
@@ -80,6 +95,7 @@ struct FCTSetDynamicProperty : public FCDynamicProperty
             //delete SetProperty; // 这个不能释放，UE会自动释放，不然就会Crash
         }
     }
+    void InitTemplateParamNameID();
 };
 
 FProperty  *CreateClassProperty(const char *InClassName);

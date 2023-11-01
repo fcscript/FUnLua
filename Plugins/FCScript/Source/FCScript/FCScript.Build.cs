@@ -53,6 +53,7 @@ public class FCScript : ModuleRules
                 "Slate",
                 "InputCore",
                 "UMG",
+                "PakFile",
                 "Projects",
                 "LuaLib",
             }

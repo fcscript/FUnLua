@@ -3,6 +3,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/TextureRenderTarget2D.h"
+#include "Engine/PostProcessVolume.h"
 #include "SPLuaFunctionLibary.generated.h"
 
 UCLASS()
@@ -19,4 +20,10 @@ public:
 
     UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "SPLuaFunctionLibary"))
     static void  CheckPostion(const FVector& InPos);
+
+    UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "SPLuaFunctionLibary"))
+    static void  SetActorSelectEffect(AActor * InActor);
+
+    UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "SPLuaFunctionLibary"))
+    static APostProcessVolume*  CreatePostProcessActor(const FPostProcessSettings &PostProcessSettings);
 };

@@ -451,20 +451,28 @@ FCDynamicProperty* GetTArrayDynamicProperty(const char* InPropertyType)
 FMapProperty* CreateTMapProperty(const char *KeyType, const char *ValueType)
 {
 	FProperty *KeyProperty = QueryTempalteProperty(KeyType);
-	FProperty *ValueProperty = QueryTempalteProperty(ValueType);
-	if(!KeyProperty || !ValueProperty)
-	{
-		return nullptr;
-	}
+    FProperty* ValueProperty = QueryTempalteProperty(ValueType);
+    if(!KeyProperty || !ValueProperty)
+    {
+        return nullptr;
+    }
+    int AlignKeySize = KeyProperty->GetMinAlignment();
+    int AlignValueSize = ValueProperty->GetMinAlignment();
+
 	FMapProperty  *MapProperty = NewUEMapProperty(GetGlbScriptStruct());
 	MapProperty->KeyProp = KeyProperty;
 	MapProperty->ValueProp = ValueProperty;
 
 	int ValueSize = ValueProperty->ElementSize * ValueProperty->ArrayDim;
-	int AlignKeySize = KeyProperty->GetMinAlignment();
-    int AlignValueSize = ValueProperty->GetMinAlignment();
-
+    int KeySize = KeyProperty->ElementSize * KeyProperty->ArrayDim;
+    //if(strcmp(KeyType, "FString") == 0)
+    int ValueOffset = KeySize;
+    if(ValueOffset > sizeof(void*))
+    {
+        ValueOffset = sizeof(void*);  // 只能按指针计算
+    }
 	MapProperty->MapLayout = FScriptMap::GetScriptLayout(KeyProperty->ElementSize, AlignKeySize, ValueSize, AlignValueSize);
+    MapProperty->MapLayout.ValueOffset = ValueOffset;
 
 	return MapProperty;
 }
@@ -647,4 +655,18 @@ bool IsBaseTypeCopy(const FProperty *InPropery)
     bool bBaseType = (CastFlags & AllBaseFlags) != 0;
     GPropertyBaseCopyTypeMap[InPropery] = bBaseType;
     return bBaseType;
+}
+
+//--------------------------------------
+void FCTArrayDynamicProperty::InitTemplateParamNameID()
+{
+    ParamsNameID = GetMapTemplateParamNameID(ArrayProperty->Inner, ArrayProperty->Inner);
+}
+void FCTMapDynamicProperty::InitTemplateParamNameID()
+{
+    ParamsNameID = GetMapTemplateParamNameID(MapProperty->KeyProp, MapProperty->ValueProp);
+}
+void FCTSetDynamicProperty::InitTemplateParamNameID()
+{
+    ParamsNameID = GetMapTemplateParamNameID(SetProperty->ElementProp, SetProperty->ElementProp);
 }

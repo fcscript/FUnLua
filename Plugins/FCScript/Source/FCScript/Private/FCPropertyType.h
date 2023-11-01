@@ -142,3 +142,5 @@ bool  IsWrapClassName(const char *InClassName);
 // 功能：得到反射属性的类型（脚本所支持的）
 FCPropertyType  GetScriptPropertyType(const FProperty *Property);
 const char * GetScriptPropertyClassName(FCPropertyType PropertyType, const FProperty* Property);
+
+int  GetMapTemplateParamNameID(const FProperty* KeyProperty, const FProperty* ValueProperty);

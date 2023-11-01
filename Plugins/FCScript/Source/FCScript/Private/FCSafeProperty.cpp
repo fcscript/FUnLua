@@ -147,6 +147,11 @@ void FCSafeProperty::DestroyValue(void* Dest) const
     }
 }
 
+int FCSafeProperty::GetTemplateParamNameID() const
+{
+    return 0;
+}
+
 //----------------------------------------------------------
 
 // bool, int8, int16, int, float, double
@@ -358,19 +363,38 @@ struct FCSafeProperty_Delegate : public FCSafeProperty
 
 struct FCSafeProperty_Array : public FCSafeProperty
 {
+    int  ParamsNameID = 0;
     FArrayProperty* CastArrayProperty() const override
     {
         return (FArrayProperty*)Property;
+    }
+    virtual void InitProperty(const FProperty* InProperty) override
+    {
+        FCSafeProperty::InitProperty(InProperty);
+        FArrayProperty* ArrayProperty = (FArrayProperty*)Property;
+        ParamsNameID = GetMapTemplateParamNameID(ArrayProperty->Inner, ArrayProperty->Inner);
     }
     void CopyValuesInternal(void* Dest, void const* Src, int32 Count) const override
     {
         FArrayProperty *ArrayProperty = (FArrayProperty *)Property;
         ArrayProperty->CopyValuesInternal(Dest, Src, Count);
     }
+    int GetTemplateParamNameID() const override
+    {
+        return ParamsNameID;
+    }
 };
 
 struct FCSafeProperty_Map : public FCSafeProperty
 {
+    int  ParamsNameID = 0;
+    virtual void InitProperty(const FProperty* InProperty) override
+    {
+        FCSafeProperty::InitProperty(InProperty);
+        FMapProperty* MapProperty = (FMapProperty*)Property;
+        ParamsNameID = GetMapTemplateParamNameID(MapProperty->KeyProp, MapProperty->ValueProp);
+    }
+
     FMapProperty* CastMapProperty() const override
     {
         return (FMapProperty*)Property;
@@ -385,13 +409,25 @@ struct FCSafeProperty_Map : public FCSafeProperty
         FMapProperty* MapProperty = (FMapProperty*)Property;
         MapProperty->CopyValuesInternal(Dest, Src, Count);
     }
+
+    int GetTemplateParamNameID() const override
+    {
+        return ParamsNameID;
+    }
 };
 
 struct FCSafeProperty_Set : public FCSafeProperty
 {
+    int  ParamsNameID = 0;
     FSetProperty* CastSetProperty() const override
     {
         return (FSetProperty*)Property;
+    }
+    virtual void InitProperty(const FProperty* InProperty) override
+    {
+        FCSafeProperty::InitProperty(InProperty);
+        FSetProperty* SetProperty = (FSetProperty*)Property;
+        ParamsNameID = GetMapTemplateParamNameID(SetProperty->ElementProp, SetProperty->ElementProp);
     }
     void CopyCompleteValue(void* Dest, void const* Src) const override
     {
@@ -402,6 +438,10 @@ struct FCSafeProperty_Set : public FCSafeProperty
     {
         FSetProperty* SetProperty = (FSetProperty*)Property;
         SetProperty->CopyValuesInternal(Dest, Src, Count);
+    }
+    int GetTemplateParamNameID() const override
+    {
+        return ParamsNameID;
     }
 };
 

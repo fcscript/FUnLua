@@ -4,6 +4,8 @@
 #include "FCTemplateType.h"
 #include "FCGetObj.h"
 #include "FCRefObjCache.h"
+#include "FCTMapHelper.h"
+#include "FCTSetHelper.h"
 
 void FC_SetArgValue_CppPtr(lua_State* L, const void* CppPtr)
 {
@@ -214,6 +216,45 @@ void FC_PushArray(lua_State* L, const void* ArrayData, int ArrayLen, const char*
         FMemory::Memcpy(ScriptArray->GetData(), ArrayData, ArrayLen * ElementSize);
 
         FC_PushBindLuaValue(L, ObjID, "TArray");
+    }
+    else
+    {
+        lua_pushnil(L);
+    }
+}
+
+void FC_PushMap(lua_State* L, const FScriptMap* ScriptMap, const char* KeyName, const char* ValueName)
+{
+    FCDynamicProperty* DynamicMapProperty = GetTMapDynamicProperty(KeyName, ValueName);
+    if(DynamicMapProperty)
+    {
+        FScriptMap* DesScriptMap = new FScriptMap();
+
+        // 拷贝来源数据
+        FCTMapHelper  Helper(DesScriptMap, DynamicMapProperty);
+        Helper.Copy(ScriptMap);
+
+        int64 ObjID = FCGetObj::GetIns()->PushTemplate(DynamicMapProperty, DesScriptMap, EFCObjRefType::NewTMap);
+        FCScript::PushBindObjRef(L, ObjID, "TMap");        
+    }
+    else
+    {
+        lua_pushnil(L);
+    }
+}
+
+void FC_PushSet(lua_State* L, const FScriptSet* ScriptSet, const char* InnerType)
+{
+    FCDynamicProperty* DynamicProperty = GetTSetDynamicProperty(InnerType);
+    if (DynamicProperty)
+    {
+        FScriptSet* DesScriptMap = new FScriptSet();
+
+        FCTSetHelper Helper(DesScriptMap, DynamicProperty);
+        Helper.Copy(ScriptSet);
+
+        int64 ObjID = FCGetObj::GetIns()->PushTemplate(DynamicProperty, DesScriptMap, EFCObjRefType::NewTSet);
+        FCScript::PushBindObjRef(L, ObjID, "TSet");
     }
     else
     {

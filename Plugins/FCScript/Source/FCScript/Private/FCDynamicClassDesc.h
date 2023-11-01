@@ -74,6 +74,7 @@ struct FCDynamicPropertyBase : public FCDynamicField
         return SafePropertyPtr->GetSignatureFunction();
 	}
     virtual int GetMemSize() const { return sizeof(FCDynamicPropertyBase); }
+    virtual int GetTemplateParamNameID() const{ return 0; }
 };
 
 typedef  void(*LPPushScriptValueFunc)(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void *ObjRefPtr);

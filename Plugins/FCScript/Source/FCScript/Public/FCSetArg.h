@@ -2,6 +2,7 @@
 
 #include "UObject/UnrealType.h"
 #include "UObject/ObjectMacros.h"
+#include "Containers/Map.h"
 #include "CoreUObject.h"
 #include "FCTypeName.h"
 
@@ -13,6 +14,8 @@ FCSCRIPT_API void FC_SetArgValue_Object(lua_State* L, const UObject* Object);
 FCSCRIPT_API void FC_PushBindLuaValue(lua_State* L, int64 ObjID, const char *ClassName);
 FCSCRIPT_API bool GlbRegisterClass(lua_State* L, const char* ClassName);
 FCSCRIPT_API void FC_PushArray(lua_State* L, const void *ArrayData, int ArrayLen, const char *InnerType);
+FCSCRIPT_API void FC_PushMap(lua_State* L, const FScriptMap *ScriptMap, const char *KeyName, const char *ValueName);
+FCSCRIPT_API void FC_PushSet(lua_State* L, const FScriptSet *ScriptSet, const char* InnerType);
 
 FORCEINLINE bool FC_Set_IsUObject(const UObject *){ return true; }
 FORCEINLINE bool FC_Set_IsUObject(void*) { return false; }
@@ -149,6 +152,21 @@ namespace FCScript
     {
         const char *InnerName = FCScript::ExtractTypeName(_Ty());
         FC_PushArray(L, Array.GetData(), Array.Num(), InnerName);
+    }
+
+    template<class _TyKey, class _TyValue>
+    FORCEINLINE void SetArgValue(lua_State* L, const TMap<_TyKey, _TyValue>& Map)
+    {
+        const char* InnerKeyName = FCScript::ExtractTypeName(_TyKey());
+        const char* InnerValueName = FCScript::ExtractTypeName(_TyValue());
+        FC_PushMap(L, (const FScriptMap*)(&Map), InnerKeyName, InnerValueName);
+    }
+
+    template <class _Ty>
+    FORCEINLINE void SetArgValue(lua_State* L, const TSet<_Ty>& Set)
+    {
+        const char* InnerName = FCScript::ExtractTypeName(_Ty());        
+        FC_PushSet(L, (const FScriptSet*)(&Set), InnerName);
     }
 
 	FORCEINLINE void SetArgValue(lua_State* L, const UObject* value)

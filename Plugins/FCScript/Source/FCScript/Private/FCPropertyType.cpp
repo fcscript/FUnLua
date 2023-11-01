@@ -7,12 +7,14 @@ typedef  std::unordered_map<FCPropertyType, const char *>   CPropertyClassNameMa
 typedef std::unordered_map<const char*, char*, FCStringHash, FCStringEqual> CCppName2NameMap;
 typedef std::unordered_map<const char*, bool, FCStringHash, FCStringEqual> CWrapClassFlagMap;
 typedef  std::unordered_map<FName, FCPropertyType, FCFNameHash, FCFNameEqual>   CFName2PropertyTypeMap;
+typedef std::unordered_map <FCDoubleKey, int>  CDoubleName2IntMap;
 CPropertyTypeMap  gPropertyTypeMap;
 CFName2PropertyTypeMap  gInnerGraphyTypeMap;
 CPropertyTypeMap gCachePropertyTypeMap;
 CPropertyClassNameMap gPropertyClassNameMap;
 CCppName2NameMap      GCppName2NameMap;
 CWrapClassFlagMap     GWrapClassFlagMap;
+CDoubleName2IntMap    GDoubleName2IntMap;
 
 void  InitPropertyTable()
 {
@@ -127,6 +129,7 @@ void  ReleasePropertyTable()
 	gCachePropertyTypeMap.clear();
     ReleasePtrMap(GCppName2NameMap);
     GWrapClassFlagMap.clear();
+    GDoubleName2IntMap.clear();
 }
 
 const char* GetConstName(const char* InName)
@@ -210,4 +213,22 @@ const char * GetScriptPropertyClassName(FCPropertyType PropertyType, const FProp
 
 	const char *Name = TCHAR_TO_UTF8(*(Property->GetClass()->GetName()));
     return GetConstName(Name);
+}
+
+int  GetMapTemplateParamNameID(const FProperty* KeyProperty, const FProperty* ValueProperty)
+{
+    FCPropertyType  KeyPropertyType = GetScriptPropertyType(KeyProperty);
+    FCPropertyType  ValuePropertyType = GetScriptPropertyType(ValueProperty);
+    const char *KeyName = GetScriptPropertyClassName(KeyPropertyType, KeyProperty);
+    const char* ValueName = GetScriptPropertyClassName(ValuePropertyType, ValueProperty);
+
+    FCDoubleKey  DoubleKey(KeyName, ValueName);
+    CDoubleName2IntMap::iterator itFind = GDoubleName2IntMap.find(DoubleKey);
+    if(itFind != GDoubleName2IntMap.end())
+    {
+        return itFind->second;
+    }
+    int NameID = GDoubleName2IntMap.size() + 1;
+    GDoubleName2IntMap[DoubleKey] = NameID;
+    return NameID;
 }
