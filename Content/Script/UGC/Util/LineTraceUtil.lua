@@ -3,7 +3,7 @@ local M = {}
 M.__index = M
 
 -- 获得屏幕射线拾取的位置
-function M:GetPickupPosition(worldContex, screenPos)    
+function M:GetPickupPosition(worldContex, screenPos, ignoreActor)    
     local palyerControl = UE.UGameplayStatics.GetPlayerController(worldContex, 0)
     local WorldLocation = UE.FVector()
     local WorldDirection = UE.FVector()
@@ -22,6 +22,9 @@ function M:GetPickupPosition(worldContex, screenPos)
     local hitResult = UE.FHitResult()
     local TraceColor = UE.FLinearColor(1, 0, 0, 1)
     local TraceHitColor = UE.FLinearColor(0, 1, 0, 1)
+    if ignoreActor then
+        ActorsToIgnore:Add(ignoreActor)                
+    end
     local bHit = UE.UKismetSystemLibrary.LineTraceSingle(worldContex,WorldLocation,endPos,traceChannel,false,ActorsToIgnore, 1, hitResult, true,TraceColor,TraceHitColor,5)
     
     if bHit then

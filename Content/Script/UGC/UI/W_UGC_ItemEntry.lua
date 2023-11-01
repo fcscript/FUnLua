@@ -35,13 +35,14 @@ end
 function M:AutoCreateDragItem(screenPos)
     local UGC_DragInfo = require("UGC.UI.UGC_DragInfo")
     local LineTraceUtil = require("UGC.Util.LineTraceUtil")
-    local pickPos = LineTraceUtil:GetPickupPosition(self, screenPos)
+    local pickPos = LineTraceUtil:GetPickupPosition(self, screenPos, UGC_DragInfo.WorldItem)
 
     -- print("[UGC]AutoCreateDragItem, pickPos=", pickPos)
 
     if UGC_DragInfo.WorldItem == nil then
         local bpPath = self.Item.BpPath
-        bpPath = "/Game/UGC/ItemTemplate/ZhaLan1.ZhaLan1_C"
+        print("[UGC]bpPath=", bpPath)
+        -- bpPath = "/Game/UGC/ItemTemplate/ZhaLan1.ZhaLan1_C"
         local itemBpClass = UE.UClass.Load(bpPath)
         local initRotation = UE.FRotator(0, 0, 0)
         local transform = UE.FTransform(initRotation:ToQuat(), pickPos)

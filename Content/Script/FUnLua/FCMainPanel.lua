@@ -9,6 +9,7 @@ function FCMainPanel:ReceiveBeginPlay()
 	self.Button_Print.OnClicked:AddListener(FCMainPanel.PrintRefInfo, self)	
 	self.ButtonProfile.OnClicked:AddListener(FCMainPanel.OnButtonProfileClicked, self)	
 	self.ButtonCrash.OnClicked:AddListener(FCMainPanel.OnButtonCrashClicked, self)	
+	self.ButtonCppCallLua.OnClicked:AddListener(FCMainPanel.OnButtonCppCallLuaClicked, self)	
 	local world = self:GetWorld()
 	local localPlayerControler = _G.UGameplayStatics.GetPlayerController(world, 0)
 	if localPlayerControler ~= nil then
@@ -48,6 +49,52 @@ end
 function FCMainPanel:OnButtonCrashClicked()
 	local world = self:GetWorld()
     TestCrash:DoCrash(world)
+end
+
+local function PrintMap(Map)
+	for key, value in pairs(Map) do
+		print("[PrintMap]map,key=", key, ",value=", value)
+	end
+end
+
+function FCMainPanel:OnButtonCppCallLuaClicked()
+	-- local Map = UE.TMap(_G.int32, _G.FString)
+	-- Map:Add(1, "a1")
+	-- Map:Add(2, "a2")
+	-- Map:Add(3, "a3")
+	-- PrintMap(Map)
+	-- UE.UFCTest.CallMapParamFunc("MainPanel_TestMap", Map)
+	
+	-- UE.UFCTest.CallStringMapFunc("MainPanel_TestMap", Map) -- 参数错了，会Crash
+
+	-- local StrMap = UE.TMap(_G.FString, _G.int32)
+	-- StrMap:Add("a1", 1)
+	-- StrMap:Add("a2", 2)
+	-- StrMap:Add("a3", 3)
+	-- UE.UFCTest.CallStringMapFunc("MainPanel_TestMap", StrMap)
+	
+    -- local Set = UE4.TSet(UE4.int32)
+    -- Set:Add(100)
+    -- Set:Add(102)
+    -- Set:Add(302)
+	-- UE.UFCTest.CallSetParamFunc("MainPanel_TestMap", Set)
+
+	-- local Array = UE4.TArray(UE4.FString)
+	-- Array:Add("t1")
+	-- Array:Add("t2")
+	-- Array:Add("t3")
+	-- UE.UFCTest.CallTArrayParamFunc("MainPanel_TestMap", Array)
+
+	-- local Array = UE4.TArray(_G.int32)
+	-- Array:Add(1)
+	-- Array:Add(2)
+	-- Array:Add(3)
+	-- UE.UFCTest.CallTArrayParamFunc("MainPanel_TestMap", Array)
+end
+
+function _G.MainPanel_TestMap(Map)
+	print("[MainPanel_TestMap]--------begin")
+	PrintMap(Map)
 end
 
 function FCMainPanel:PrintRefInfo()

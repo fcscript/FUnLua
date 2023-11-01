@@ -8,6 +8,10 @@ function M:ReceiveBeginPlay()
     local BPClassPath = "/Game/UGC/UI/W_UGC_Main.W_UGC_Main_C"
 	local Widget = UE.UWidgetBlueprintLibrary.Create(self, UE.UClass.Load(BPClassPath))
 	Widget:AddToViewport()
+    
+    BPClassPath = "/Game/UGC/UI/W_TestScroll.W_TestScroll_C"
+	Widget = UE.UWidgetBlueprintLibrary.Create(self, UE.UClass.Load(BPClassPath))
+	Widget:AddToViewport()
 end
 
 function M:ReceiveEndPlay(EndPlayReason)

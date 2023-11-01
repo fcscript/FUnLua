@@ -12,7 +12,11 @@ function M:OnMouseButtonDown(MyGeometry, MouseEvent)
     -- 真实的屏幕坐标 = 当前屏幕坐标 - 左上角的屏幕坐标
     local realScreenPos = UE.FVector2D(screenPos.X - selfScreenPos.X, screenPos.Y - selfScreenPos.Y)
     local selectActor = self:FindNearActor(realScreenPos)
-    
+
+    if selectActor then
+        -- self:SetSelectEffect(selectActor)
+        UE.USPLuaFunctionLibary.SetActorSelectEffect(selectActor)
+    end    
     -- local LineTraceUtil = require("UGC.Util.LineTraceUtil")
     -- local pickPos, hitResult = LineTraceUtil:GetPickupPosition(self, panelPos)
     -- if hitResult then
@@ -39,7 +43,7 @@ function M:FindNearActor(screenPos)
         local actorScreenPosition = UE.FVector2D()
         local bSuc = UE.UGameplayStatics.ProjectWorldToScreen(playerControler, WorldPosition, actorScreenPosition, false)
         if bSuc then
-            print("[UGC][FindNearActor]actorScreenPosition:", actorScreenPosition, ",screenPos:", screenPos)
+            print("[UGC][FindNearActor]actorScreenPosition:", actorScreenPosition, ",screenPos:", screenPos, ",name:", obj:GetName())
             local dx = sx - actorScreenPosition.X
             local dy = sy - actorScreenPosition.Y
             local dist = dx * dx + dy * dy
@@ -50,6 +54,16 @@ function M:FindNearActor(screenPos)
         end
     end
     return findActor
+end
+
+function M:SetSelectEffect(selectActor)    
+	local componentList = selectActor:K2_GetComponentsByClass(UE4.UMeshComponent)    
+    print("[UGC]SetSelectEffect, component num:", #componentList)
+
+    for _idx, component in pairs(componentList) do
+        component:SetCustomDepthStencilValue(2)
+        component:SetRenderCustomDepth(true)
+    end
 end
 
 return M

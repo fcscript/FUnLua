@@ -10,18 +10,23 @@ function M:Construct()
     local objCfgs = 
     {
         {
-            Name = "栅栏1",
+            Name = "盒子1",
             ID = 1,
-            BpPath = "/Game/UGC/ItemTemplate/ZhaLan1.ZhaLan1",
+            BpPath = "/Game/UGC/ItemTemplate/Box1.Box1_C",
+        },
+        {
+            Name = "栅栏1",
+            ID = 2,
+            BpPath = "/Game/UGC/ItemTemplate/ZhaLan1.ZhaLan1_C",
         },
         {
             Name = "栅栏2",
-            ID = 2,
-            BpPath = "/Game/UGC/ItemTemplate/ZhaLan1.ZhaLan1",
+            ID = 3,
+            BpPath = "/Game/UGC/ItemTemplate/ZhaLan1.ZhaLan1_C",
         },
     }
     for i = 1, 10 do
-        local ID = #objCfgs + 1
+        local ID = #objCfgs
         local objInfo = 
         {
             Name = "栅栏" .. tostring(ID),
@@ -38,7 +43,7 @@ function M:Construct()
     }
     local entryBindScript = "UGC.UI.BP_TemplateItem"
     _G.GlbRefreshListView(CustomData, self.ListView_Template, itemClass, entryBindScript, objCfgs, function(item, sourceInfo, index)
-        item.BPPath = sourceInfo.BPPath
+        item.BpPath = sourceInfo.BpPath
         item.ID = sourceInfo.ID
         item.Name = sourceInfo.Name
     end)
