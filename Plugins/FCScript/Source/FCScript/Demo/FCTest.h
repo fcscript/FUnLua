@@ -117,6 +117,12 @@ public:
     static void CallTArrayParamFunc(const FString& InFuncName, const TArray<FString>& Datas);
 
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "NotifyAll"))
+    static void CallTArraVectorFunc(const FString& InFuncName, const TArray<FVector>& Datas);
+
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "NotifyAll"))
+    static void CallTArrayTestItemInfo(const FString &InFuncName, const TArray<FTestBoneAdjustItemInfo> &Datas);
+
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "NotifyAll"))
     static void CallMapParamFunc(const FString &InFuncName, const TMap<int32, FString> & Datas);
 
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "NotifyAll"))

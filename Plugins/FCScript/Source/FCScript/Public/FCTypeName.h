@@ -9,6 +9,9 @@ namespace FCScript
     template <class _Ty>
     FORCEINLINE const char* ExtractTypeName(const _Ty&)
     {
+        //const type_info& Info = typeid(_Ty);
+        //const char* Name = Info.name();
+        check(false);
         return "";
     }
 

@@ -85,6 +85,14 @@ int UFCTest::NotifyAll(int nType, const FVector &Pos)
 	return 100 + nType;
 }
 
+namespace FCScript
+{
+    template <> FORCEINLINE const char* ExtractTypeName(const FTestBoneAdjustItemInfo&)
+    {
+        return "FTestBoneAdjustItemInfo";
+    }
+}
+
 template <class _TyList>
 void  FCTest_CallAnyList(const FString& InFuncName, const _TyList& Datas)
 {
@@ -99,6 +107,16 @@ void  FCTest_CallAnyList(const FString& InFuncName, const _TyList& Datas)
 }
 
 void UFCTest::CallTArrayParamFunc(const FString& InFuncName, const TArray<FString>& Datas)
+{
+    FCTest_CallAnyList(InFuncName, Datas);
+}
+
+void UFCTest::CallTArraVectorFunc(const FString& InFuncName, const TArray<FVector>& Datas)
+{
+    FCTest_CallAnyList(InFuncName, Datas);
+}
+
+void UFCTest::CallTArrayTestItemInfo(const FString& InFuncName, const TArray<FTestBoneAdjustItemInfo>& Datas)
 {
     FCTest_CallAnyList(InFuncName, Datas);
 }

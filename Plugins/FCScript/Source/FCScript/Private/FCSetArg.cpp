@@ -219,6 +219,7 @@ void FC_PushArray(lua_State* L, const void* ArrayData, int ArrayLen, const char*
     }
     else
     {
+        UE_LOG(LogFCScript, Error, TEXT("Lua error FC_PushArray, invalid cpp type, check FCScript::ExtractTypeName"));
         lua_pushnil(L);
     }
 }
@@ -239,6 +240,7 @@ void FC_PushMap(lua_State* L, const FScriptMap* ScriptMap, const char* KeyName, 
     }
     else
     {
+        UE_LOG(LogFCScript, Error, TEXT("Lua error FC_PushArray, invalid cpp type, check FCScript::ExtractTypeName"));
         lua_pushnil(L);
     }
 }
@@ -258,6 +260,7 @@ void FC_PushSet(lua_State* L, const FScriptSet* ScriptSet, const char* InnerType
     }
     else
     {
+        UE_LOG(LogFCScript, Error, TEXT("Lua error FC_PushArray, invalid cpp type, check FCScript::ExtractTypeName"));
         lua_pushnil(L);
     }
 }
