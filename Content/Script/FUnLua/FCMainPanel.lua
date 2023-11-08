@@ -57,6 +57,13 @@ local function PrintMap(Map)
 	end
 end
 
+function _G.PrintStructList(List)
+	print("[PrintStructList]--------begin, List=", List)
+	for i = 1, #List do
+		print("[PrintMap]List, i=", i, ",value=", List[i])
+	end
+end
+
 function FCMainPanel:OnButtonCppCallLuaClicked()
 	-- local Map = UE.TMap(_G.int32, _G.FString)
 	-- Map:Add(1, "a1")
@@ -90,6 +97,19 @@ function FCMainPanel:OnButtonCppCallLuaClicked()
 	-- Array:Add(2)
 	-- Array:Add(3)
 	-- UE.UFCTest.CallTArrayParamFunc("MainPanel_TestMap", Array)
+
+	-- local Array = UE4.TArray(UE4.FVector)
+	-- Array:Add(UE4.FVector(1,2,3))
+	-- Array:Add(UE4.FVector(2,3,4))
+	-- Array:Add(UE4.FVector(4,5,6))
+	-- UE.UFCTest.CallTArraVectorFunc("MainPanel_TestMap", Array)
+
+	-- local Array = UE4.TArray(UE4.FTestBoneAdjustItemInfo)
+	-- Array:Add(UE4.FTestBoneAdjustItemInfo())
+	-- Array:Add(UE4.FTestBoneAdjustItemInfo())
+	-- Array:Add(UE4.FTestBoneAdjustItemInfo())
+	-- print("before call, #Array=", #Array)
+	-- UE.UFCTest.CallTArrayTestItemInfo("PrintStructList", Array)
 end
 
 function _G.MainPanel_TestMap(Map)
