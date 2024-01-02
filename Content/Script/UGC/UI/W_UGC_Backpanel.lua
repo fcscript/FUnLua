@@ -15,7 +15,8 @@ function M:OnMouseButtonDown(MyGeometry, MouseEvent)
 
     if selectActor then
         -- self:SetSelectEffect(selectActor)
-        UE.USPLuaFunctionLibary.SetActorSelectEffect(selectActor)
+        -- UE.USPLuaFunctionLibary.SetActorSelectEffect(selectActor)
+        self:ShowAxisActor(selectActor)
     end    
     -- local LineTraceUtil = require("UGC.Util.LineTraceUtil")
     -- local pickPos, hitResult = LineTraceUtil:GetPickupPosition(self, panelPos)
@@ -26,6 +27,25 @@ function M:OnMouseButtonDown(MyGeometry, MouseEvent)
     -- end
 
 	return UE.UWidgetBlueprintLibrary.Unhandled()
+end
+
+function M:CreateAxisObject(Location)    
+    local world = self:GetWorld()
+    local ActorClass = UE.AAxisActor    
+    local objName = "AxisActor"
+    local initRotation = UE.FRotator(0, 0, 0)
+    local transform = UE.FTransform(initRotation:ToQuat(), Location)
+    local moduleName = nil
+    self.AxisActor = world:SpawnActor(ActorClass, transform, UE.ESpawnActorCollisionHandlingMethod.AlwaysSpawn, nil, nil, moduleName, nil, nil, objName)    
+end
+
+function M:ShowAxisActor(selectActor)
+	local Location = selectActor:K2_GetActorLocation()
+    if self.AxisActor == nil then
+        self:CreateAxisObject(Location)
+    end
+    local SweepHitResult = UE.FHitResult()
+    self.AxisActor:K2_GetRootComponent():K2_SetRelativeLocation(Location, false, SweepHitResult, false)
 end
 
 function M:FindNearActor(screenPos)
