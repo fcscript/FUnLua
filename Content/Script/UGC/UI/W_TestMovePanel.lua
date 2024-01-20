@@ -8,7 +8,8 @@ function M:Construct()
     self.DragUtil = MovingPanelUtil.New()
     local ItemClassPath = "/Game/UGC/UI/W_ScrollItem.W_ScrollItem"
     local MovingPanel = self.W_MovePanel
-    self.DragUtil:Init(self, MovingPanel, MovingPanel.Panel_Childs, ItemClassPath, 3, 200, 200, 100, 0, true)
+    local IconCount = 3
+    self.DragUtil:Init(self, MovingPanel, MovingPanel.Panel_Childs, ItemClassPath, IconCount, 200, 200, 0, true)
     local PanelChilds = MovingPanel.Panel_Childs
     print("[UGC][MovePanel]:Construct, end, DragUtil=", self.DragUtil)
     PanelChilds:GetChildAt(0).Image_bk:SetColorAndOpacity(UE.FLinearColor(0.322917, 0.839192, 1, 0.698))

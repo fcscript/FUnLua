@@ -3,19 +3,39 @@
 local MovingPanelUtil = {}
 MovingPanelUtil.__index = MovingPanelUtil
 
-function MovingPanelUtil:ctor(...)
+local ScrollType = 
+{
+	LinearMovement = 0, -- 线性移动
+	FastInAndStay = 1, -- 快速进入并且停留一会
+}
+
+function MovingPanelUtil:ctor(...)	
 	self.Speed = 100
+	self.InitSpeed = self.Speed
 	self.ChildWidth = 200
 	self.ChildHeight = 100
 	self.ChildGap = 0
+	self.ChildNum = 0
+	self.TotalWidth = 200
 	self.bNeedClip = true
-	self.CanDrag = true
+	self.CanDrag = false
+	self.bInit = false
+	self.bFullPanel = true
 	
 	self.Left = 0
 	self.Right = self.ChildWidth
 	self.MoveX = 0
 	self.bDragging = false	
-    print("[UGC][MovingPanelUtil]:ctor")
+	self.bAutoRestore = false
+	
+	self.DragStartTime = 0
+
+	self.MoveType = ScrollType.FastInAndStay
+	self.FastInTime = 0.5
+	self.StayTime = 10
+	self.bStayState = true
+	self.StayIndex = 1  -- 停留的节点
+	self.CurrentStayTime = 2  -- 当前节点需要停留的时长
 end
 
 function MovingPanelUtil.New(...)
@@ -25,8 +45,7 @@ function MovingPanelUtil.New(...)
 	return instance	
 end
 
-function MovingPanelUtil:Init(ParentView, MovingPanel, Panel_Childs, ItemClass, ChildNum, ChildWidth, ChildHeight, Speed, ChildGap, bNeedClip)
-    print("[UGC][MovingPanelUtil]:Init")
+function MovingPanelUtil:Init(ParentView, MovingPanel, Panel_Childs, ItemClass, ChildNum, ChildWidth, ChildHeight, ChildGap, bNeedClip)
 	self.ParentView = ParentView
 	self.MovingPanel = MovingPanel
 	self.Panel_Childs = Panel_Childs
@@ -35,19 +54,34 @@ function MovingPanelUtil:Init(ParentView, MovingPanel, Panel_Childs, ItemClass, 
 	self.ChildNum = ChildNum
 	self.ChildWidth = ChildWidth
 	self.ChildHeight = ChildHeight
-	self.Speed = Speed
 	self.ChildGap = ChildGap
 	self.bNeedClip = bNeedClip
+	self.bInit = true
+	self.CanDrag = true
+	self.bFullPanel = true
+	self.bAutoRestore = false
 
 	self:OnInitChilds()
 end
 
+-- 设置平滑移动模式
+function MovingPanelUtil:SetLinearMovementMode(Speed)
+	self.MoveType = ScrollType.LinearMovement
+	self.Speed = Speed
+end
+
+-- 设置快速进入并停留一会的模式
+function MovingPanelUtil:SetFastInStayMode(FastInTime, StayTime)
+	self.MoveType = ScrollType.FastInAndStay
+	self.FastInTime = FastInTime or 0.5
+	self.StayTime = StayTime or 2
+end
+
 function MovingPanelUtil:OnInitChilds()
-    print("[UGC][MovingPanelUtil]:OnInitChilds")
 	self.bDragging = false	
 	self.Panel_Childs:ClearChildren()
 	self.ChildWidthEx = self.ChildWidth + self.ChildGap
-	self.TotalWidth = self.ChildWidthEx * self.ChildNum
+	self.TotalWidth = self.ChildWidthEx * self.ChildNum	
 	if self.bNeedClip then
 		self.Left = self.ChildWidthEx * -1.0
 	else
@@ -56,7 +90,7 @@ function MovingPanelUtil:OnInitChilds()
 	self.Right = self.Left + self.TotalWidth
 
 	-- UKismetSystemLibrary::LoadClassAsset_Blocking
-	local BPClass = UClass.Load(self.ItemClass)
+	local BPClass = UE4.UClass.Load(self.ItemClass)
 	for i = 1, self.ChildNum do		
 		local BPWidget = UE4.UWidgetBlueprintLibrary.Create(self:GetWorld(), BPClass, nil)
 		local PanelSlot = self.Panel_Childs:AddChild(BPWidget)
@@ -67,20 +101,100 @@ function MovingPanelUtil:OnInitChilds()
 		InOffset.Bottom = self.ChildHeight
 		PanelSlot:SetOffsets(InOffset)
 	end
-
 	self.UpdateDeltaTime = 0
+
+	self.CurrentStayTime = self.StayTime	
+	-- 重新计算移动速度
+	if self.MoveType == ScrollType.FastInAndStay then
+		self.Speed = self.ChildWidth / self.FastInTime
+	end
+	self.InitSpeed = self.Speed
+end
+
+function MovingPanelUtil:AdjustChildSize()
+	if not self.bFullPanel then
+		return 
+	end
+	if self.ChildWidth + 1 > self.PanelWidth then
+		return 
+	end
+	local MinChildNum = self.ChildNum
+	if MinChildNum < 2 then
+		MinChildNum = 2
+	end
+
+	self.ChildWidth = self.PanelWidth
+	self.ChildHeight = self.PanelHeight
+	self.ChildWidthEx = self.ChildWidth + self.ChildGap
+	self.TotalWidth = self.ChildWidthEx * MinChildNum	
+	if self.bNeedClip then
+		self.Left = self.ChildWidthEx * -1.0
+	else
+		self.Left = 0
+	end
+	self.Right = self.Left + self.TotalWidth
+	
+	local ChildCount = self.Panel_Childs:GetChildrenCount()
+	for i = 1, ChildCount do		
+		local Child = self.Panel_Childs:GetChildAt(i-1)
+		local PanelSlot = Child.Slot
+		local InOffset = UE4.FMargin()
+		InOffset.Left = self.ChildWidthEx * (i - 1)
+		InOffset.Top = 0
+		InOffset.Right = self.ChildWidth
+		InOffset.Bottom = self.ChildHeight
+		PanelSlot:SetOffsets(InOffset)
+	end
+	
+	-- 重新计算移动速度
+	if self.MoveType == ScrollType.FastInAndStay then
+		self.Speed = self.ChildWidth / self.FastInTime
+	end
 end
 
 function MovingPanelUtil:UpdateMove(DeltaTime)
+	if not self.bInit then
+		return 
+	end
 	if not self.bDragging then
-		self.MoveX = self.MoveX - self.Speed * DeltaTime
+		-- 如果需要停留
+		if self.MoveType == ScrollType.FastInAndStay then
+			-- 停留阶段
+			if self.bStayState then
+				if self.ChildNum > 1 then
+					self.CurrentStayTime = self.CurrentStayTime - DeltaTime
+	
+					if self.CurrentStayTime < 0 then
+						self.bStayState = false
+						self.CurrentStayTime = 0
+					end
+				end
+			else
+				-- 移动阶段
+				self.MoveX = self.MoveX - self.Speed * DeltaTime
+			end
+		else
+			-- 总是平滑移动
+			self.MoveX = self.MoveX - self.Speed * DeltaTime
+		end
+		if self.ChildNum < 2 and not self.bAutoRestore then
+			self.MoveX = 0
+		end
 	end
 	self.MoveX = math.fmod(self.MoveX, self.TotalWidth)
 
 	self:RefreshDragPos()
+	local UpdateDeltaTime = self.UpdateDeltaTime + DeltaTime
+	if UpdateDeltaTime > 1.0 then
+		self.bInitPanelSize = false		
+	end
+	self.UpdateDeltaTime = UpdateDeltaTime
 end
 
 function MovingPanelUtil:RefreshDragPos()
+	if not self.bInit then
+		return 
+	end
 	-- 计算自己的大小
 	if not self.bInitPanelSize then
 		local PanelGeometry = self.MovingPanel:GetCachedGeometry()
@@ -91,12 +205,15 @@ function MovingPanelUtil:RefreshDragPos()
 				self.PanelWidth = LocalSize.X
 				self.PanelHeight = LocalSize.Y
 				self.HalfPanelWidth = self.PanelWidth / 2
+				self:AdjustChildSize()
 			end
 		end
 	end
 	local HalfWidth = self.HalfPanelWidth or 100
 	local PanelCx = HalfWidth
 	local HalfChildWidth = self.ChildWidth * 0.5
+
+	local bNeedCheckStayIndex = not self.bStayState and not self.bDragging and self.MoveType == ScrollType.FastInAndStay
 
 	local VisiableIndex = 1
 	local MinDx = 10000
@@ -107,7 +224,31 @@ function MovingPanelUtil:RefreshDragPos()
 		X = self:ClipMove(X)
 		
 		local PanelSlot = Child.Slot
-		-- local OldOffset = PanelSlot:GetOffsets()
+		if bNeedCheckStayIndex then
+			local OldOffset = PanelSlot:GetOffsets()
+			local OldX = OldOffset.Left
+			local bNeedStay = false
+			-- 从右向左移动
+			if self.Speed > 0 and X < 0 and OldX > 0 and OldX < self.ChildWidth then
+				bNeedStay = true
+			elseif self.Speed < 0 and OldX < 0 and X > 0 then
+				-- 从左向右移动
+				bNeedStay = true
+			end
+			-- 需要在当前节点停留
+			if bNeedStay then
+				self.bAutoRestore = false
+				self.bStayState = true
+				self.StayIndex = i  -- 停留的节点
+				self.CurrentStayTime = self.StayTime  -- 当前节点需要停留的时长
+				self.Speed = self.InitSpeed
+				
+				VisiableIndex = i
+				self.MoveX = -self.ChildWidthEx * (i - 1)
+				X = 0
+			end
+		end		
+
 		local InOffset = UE4.FMargin()
 		InOffset.Left = X
 		InOffset.Top = 0
@@ -136,7 +277,6 @@ function MovingPanelUtil:OnEnterItem(ChildWiget, Index)
 		local OldWidget = self.EnterItem
 		self.EnterIndex = Index
 		self.EnterItem = ChildWiget
-		print("[UGC][MovingPanelUtil]OnEnterItem, Index=", Index, ",PanelWidth=", self.PanelWidth)
 		if OldWidget and self.ParentView.OnLeaveItem then
 			self.ParentView:OnLeaveItem(OldWidget, OldEnterIndex)
 		end
@@ -165,7 +305,6 @@ function MovingPanelUtil:IsDragRange(MyGeometry, MouseEvent)
 	local ScreenPos = UE4.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)
 	local LocalPos = UE4.USlateBlueprintLibrary.AbsoluteToLocal(PanelGeometry, ScreenPos)
 	local LocalSize = UE4.USlateBlueprintLibrary.GetLocalSize(PanelGeometry)
-	-- print("[UGC][MovingPanelUtil],LocalPos:", LocalPos, ",LocalSize:", LocalSize)
 	local X = LocalPos.X
 	local Y = LocalPos.Y
 	local W = LocalSize.X
@@ -181,7 +320,6 @@ function MovingPanelUtil:GetWorld()
 end
 
 function MovingPanelUtil:OnDragStart(MyGeometry, MouseEvent)
-    print("[UGC][MovingPanelUtil]:OnDragStart, CanDrag=", self.CanDrag)
 	if not self.CanDrag then
 		return
 	end
@@ -200,7 +338,6 @@ function MovingPanelUtil:OnDragging(MyGeometry, MouseEvent)
 	if not self.bDragging then
 		return 
 	end
-    -- print("[UGC][MovingPanelUtil]:OnDragging, bDragging=", self.bDragging)
 	local LastLocalPos = self.LastLocalPos
 	local ScreenPos = UE4.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)
 	local CurLocalPos = UE4.USlateBlueprintLibrary.AbsoluteToLocal(MyGeometry, ScreenPos)
@@ -214,6 +351,10 @@ function MovingPanelUtil:OnDragging(MyGeometry, MouseEvent)
 	if Abs_X > Abs_Y then
 		self.MoveX = self.MoveX + MoveX
 		self.MoveX = math.fmod(self.MoveX, self.TotalWidth)
+		
+		self.bStayState = false
+		self.CurrentStayTime = 0  -- 当前节点需要停留的时长
+
 		if self.bNeedClip then
 			self:RefreshDragPos()
 		else
@@ -226,6 +367,31 @@ end
 
 function MovingPanelUtil:OnDragEnd(MyGeometry, MouseEvent)
 	self.bDragging = false
+	-- 自动靠齐功能，检查当前的位置
+	local Child = self.Panel_Childs:GetChildAt(self.StayIndex-1)
+	local PanelSlot = Child.Slot
+	local Offset = PanelSlot:GetOffsets()
+	local X = Offset.Left	
+	if self.ChildNum == 1 then
+		self.bAutoRestore = true
+		if X > 0 then
+			self.Speed = self.InitSpeed
+		else
+			self.Speed = -self.InitSpeed
+		end
+	else
+		self.bAutoRestore = false
+		if self.InitSpeed > 0 then
+			if X > self.HalfPanelWidth then
+				self.Speed = -self.InitSpeed
+			end
+		else
+			if X < self.HalfPanelWidth then
+				self.Speed = -self.InitSpeed
+			end
+		end
+	end
+
 	local NowTime = UE4.UGameplayStatics.GetTimeSeconds(self:GetWorld())
 	if self.DragStartTime + 0.2 > NowTime then
 		-- click事件

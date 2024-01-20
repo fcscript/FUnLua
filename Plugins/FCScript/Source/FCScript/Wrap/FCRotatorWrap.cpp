@@ -246,7 +246,7 @@ int FCRotatorWrap::SetRoll_wrap(lua_State* L)
 }
 int FCRotatorWrap::tostring_wrap(lua_State* L)
 {
-    FRotator* A = (FRotator*)VectorBase_GetAddr(L, 1);
+    FRotator* A = (FRotator*)VectorBase_GetAddr(L, 1, "FRotator");
     if (A)
     {
         FString  Str = FString::Printf(TEXT("%p(P=%f,Y=%f,R=%f)"), A, A->Pitch, A->Yaw, A->Roll);

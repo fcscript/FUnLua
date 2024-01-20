@@ -39,6 +39,7 @@ int FCVector3Wrap::LibOpen_wrap(lua_State* L)
 
         { "ToRotator", Vector_ToOrientationRotator_Wrap<FVector> },
         { "ToQuat", Vector_ToOrientationQuat_Wrap<FVector> },
+        { "PointPlaneProject", PointPlaneProject_wrap},
         { nullptr, nullptr }
     };
     const LuaRegAttrib LibAttrib[] =
@@ -92,6 +93,25 @@ int FCVector3Wrap::double_div_wrap(lua_State* L)
 int FCVector3Wrap::num_wrap(lua_State* L)
 {
     return Vector_unm_Wrap<FVector>(L, "FVector");
+}
+
+int FCVector3Wrap::PointPlaneProject_wrap(lua_State* L)
+{
+    FVector* A = (FVector*)VectorBase_GetAddr(L, 1, "FVector");
+    FPlane* B = (FPlane*)VectorBase_GetAddr(L, 2, "FPlane");
+    FVector Result;
+    if(A && B)
+    {
+        Result = FVector::PointPlaneProject(*A, *B);
+    }
+    FCScript::SetArgValue(L, Result);
+
+    //FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUClass("FVector");
+    //int64 ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
+    //FVector* V = (FVector*)FCGetObj::GetIns()->GetPropertyAddr(ObjID);
+    //*V = Result;
+    //FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
+    return 1;
 }
 
 int FCVector3Wrap::tostring_wrap(lua_State* L)

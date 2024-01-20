@@ -13,6 +13,7 @@
 #include "FCVector2Wrap.h"
 #include "FCVector3Wrap.h"
 #include "FCVector4Wrap.h"
+#include "FCPlaneWrap.h"
 #include "FCColorWrap.h"
 #include "FCIntPointWrap.h"
 #include "FCIntVectorWrap.h"
@@ -47,6 +48,7 @@ void FCInitWrap::Register(lua_State* L)
 	FCVector2Wrap::Register(L);
 	FCVector3Wrap::Register(L);
 	FCVector4Wrap::Register(L);
+    FCPlaneWrap::Register(L);
 	FCColorWrap::Register(L);
 	FCIntPointWrap::Register(L);
 	FCIntVectorWrap::Register(L);
