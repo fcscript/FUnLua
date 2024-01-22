@@ -57,6 +57,8 @@ UFunction* FindOrDumpFunction(UFunction* SrcFunction, UClass* OuterClass, const 
         LuaFunction->StaticLink(true);
 
         OuterClass->AddFunctionToFunctionMap(LuaFunction, NewFuncName);
+
+        GetScriptContext()->AddOverridenFunction(OuterClass, LuaFunction);
     }
 
     // 如果当前函数与来源的函数参数不一样，修复一下

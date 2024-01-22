@@ -153,6 +153,11 @@ void UFCTest::CallClicked()
 	OnClicked.Broadcast();
 }
 
+void UFCTest::CallDoubleClicked()
+{
+    OnDoubleClicked.Broadcast();
+}
+
 void UFCTest::SetActor(AActor* Actor)
 {
     if(Actor)

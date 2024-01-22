@@ -113,6 +113,7 @@ public:
 	FCDynamicOverrideFunction *RegisterOverrideFunc(UObject *InObject, int64 InScriptID, const char *InFuncName);
 	FCDynamicOverrideFunction *ToOverrideFunction(UObject *InObject, UFunction *InFunction, FNativeFuncPtr InFuncPtr, int InNativeBytecodeIndex);
 	FCDynamicOverrideFunction *FindOverrideFunction(UObject *InObject, UFunction *InFunction);
+    void DeleteOverrideFunction(UFunction* InFunction);
     int64 FindOverrideScriptIns(UObject *InObject, UFunction *InFunction);
 
 	// 执行原生的调用

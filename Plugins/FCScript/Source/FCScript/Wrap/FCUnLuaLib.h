@@ -19,5 +19,7 @@ public:
     static int Class_wrap(lua_State* L);
     static int DebugBreak_wrap(lua_State* L);
     static int DebugCheck_wrap(lua_State* L);
+    static int GetUObjectPtr_wrap(lua_State* L);
+    static int GetObjRefID_wrap(lua_State* L);
     static void RegisterGlobalIndex(lua_State* L);
 };

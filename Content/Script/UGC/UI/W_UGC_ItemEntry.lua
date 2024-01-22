@@ -33,7 +33,7 @@ function M:SelectListEntry(bSelect)
 end
 
 function M:AutoCreateDragItem(screenPos)
-    local UGC_DragInfo = require("UGC.UI.UGC_DragInfo")
+    local UGC_DragInfo = _G.UGC.DragInfo
     local LineTraceUtil = require("UGC.Util.LineTraceUtil")
     local pickPos = LineTraceUtil:GetPickupPosition(self, screenPos, UGC_DragInfo.WorldItem)
 
@@ -48,20 +48,19 @@ function M:AutoCreateDragItem(screenPos)
         local transform = UE.FTransform(initRotation:ToQuat(), pickPos)
         local moduleName = nil
         local world = self:GetWorld()
-        local UGC_SceneObjects = require("UGC.UI.UGC_SceneObjects")
 
-        local ObjNextIDs = UGC_SceneObjects.ObjNextIDs
+        local ObjNextIDs = _G.UGC.SceneObjects.ObjNextIDs
         local nextID = ObjNextIDs[self.Item.Name] or 0
         nextID = nextID + 1
         ObjNextIDs[self.Item.Name] = nextID
 
         local objName = self.Item.Name .. "_" .. tostring(nextID)
         UGC_DragInfo.WorldItem = world:SpawnActor(itemBpClass, transform, UE.ESpawnActorCollisionHandlingMethod.AlwaysSpawn, nil, nil, moduleName, nil, nil, objName)
-        local SceneObjcts = UGC_SceneObjects.Objects
+        local SceneObjcts = _G.UGC.SceneObjects.Objects
         SceneObjcts[#SceneObjcts + 1] = UGC_DragInfo.WorldItem
         -- 通知UI刷新, 发送消息
-        local UGC_EventManager = require("UGC.Event.UGC_EventManager")
-        UGC_EventManager:SendUGCMessage("UGC.Event.AddObject", UGC_DragInfo.WorldItem)
+        _G.UGC.EventManager:SendUGCMessage("UGC.Event.AddObject", UGC_DragInfo.WorldItem)
+        print("[UGC]AutoCreateDragItem, Obj:", UGC_DragInfo.WorldItem)
     elseif UE.UObject.IsValid(UGC_DragInfo.WorldItem) then
         local SweepHitResult = UE.FHitResult()
         UGC_DragInfo.WorldItem:K2_GetRootComponent():K2_SetRelativeLocation(pickPos, false, SweepHitResult, false)
@@ -86,14 +85,14 @@ function M:OnDragStarted(MyGeometry, InTouchEvent)
 
     self.PanelSize = UE4.USlateBlueprintLibrary.GetLocalSize(MyGeometry) -- 取本地Panel的大小
         
-    print("[UGC]StartScrollbarPos=", self.StartScrollbarPos, ",PanelSize=", self.PanelSize)
+    -- print("[UGC]StartScrollbarPos=", self.StartScrollbarPos, ",PanelSize=", self.PanelSize)
 end
 
 function M:OnDragMoving(MyGeometry, InTouchEvent)
     if not self.bDraging then
         return 
     end
-    local UGC_DragInfo = require("UGC.UI.UGC_DragInfo")
+    local UGC_DragInfo = _G.UGC.DragInfo
     local MainRoot = UGC_DragInfo.MainRoot
     local ListView = self.CustomInfo.ListView
     local RootPanel = self.CustomInfo.RootPanel
@@ -115,9 +114,9 @@ function M:OnDragMoving(MyGeometry, InTouchEvent)
     local realScreenPos = UE.FVector2D(screenPos.X - selfScreenPos.X, screenPos.Y - selfScreenPos.Y)
 
     -- 滚动条的范围 = (单个节点的高度 * 总的节点的数 - 列表的高度) / 单个节点的高度
-    -- print("[UGC]localPos:", localPos, ",screenPos:", screenPos, ",selfScreenPos:", selfScreenPos)
+    -- print("[UGC]localPos:", localPos, ",screenPos:", screenPos, ",selfScreenPos:", selfScreenPos, ",panelPos:", panelPos)
     -- 小于0，就是超出窗口了    
-    if localPos.X < -10 or UGC_DragInfo.WorldItem ~= nil then
+    if panelPos.X < -10 or UGC_DragInfo.WorldItem ~= nil then
         self:AutoCreateDragItem(realScreenPos)
         return
     end
@@ -127,8 +126,7 @@ end
 
 function M:OnDragEnd(MyGeometry, InTouchEvent)
     self.bDraging = false
-    local UGC_DragInfo = require("UGC.UI.UGC_DragInfo")
-    UGC_DragInfo.WorldItem = nil
+    _G.UGC.DragInfo.WorldItem = nil
 end
 
 function M:OnTouchStarted(MyGeometry, InTouchEvent)

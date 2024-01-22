@@ -206,16 +206,6 @@ void   FCDynamicDelegateManager::Clear()
     ReleasePtrMap(m_DynamicProperyMap);
 }
 
-void  FCDynamicDelegateManager::TryRemoveClassFunction(UClass* Class, UFunction* Func)
-{
-    CUFunction2DelegateListMap::iterator itDeletageList = m_UFunction2DelegateListMap.find(Func);
-    if(itDeletageList != m_UFunction2DelegateListMap.end())
-    {
-        return ;
-    }
-    Class->RemoveFunctionFromFunctionMap(Func);
-}
-
 FCDynamicOverrideFunction* FCDynamicDelegateManager::GetDynamicFunction(UFunction* Function)
 {
     CAdr2DynamicFuncMap::iterator itFunc = m_DynamicFuncMap.find(Function);
@@ -316,12 +306,13 @@ void  FCDynamicDelegateManager::DeleteLuaDelegate(FCLuaDelegate* Delegate)
         UFunction* FindFunc = Delegate->OuterClass->FindFunctionByName(Delegate->DynamicFunc->Name);
         if (FindFunc && FindFunc == Delegate->Function)
         {
-            Delegate->OuterClass->RemoveFunctionFromFunctionMap(Delegate->Function);
+            //Delegate->OuterClass->RemoveFunctionFromFunctionMap(Delegate->Function);
+            GetScriptContext()->RemoveOverideFunction(Delegate->OuterClass, Delegate->Function);
         }
         else
         {
             check(false);
-            UE_LOG(LogTemp, Warning, TEXT("[FCDynamicDelegateManager]DeleteLuaDelegate, invalid function[%s]"), UTF8_TO_TCHAR(Delegate->DynamicFunc->Name));
+            UE_LOG(LogTemp, Warning, TEXT("[FCDynamicDelegateManager]DeleteLuaDelegate, invalid function[%s], DeletateCount=%d"), UTF8_TO_TCHAR(Delegate->DynamicFunc->Name), DeletateCount);
         }
     }
 

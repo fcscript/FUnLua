@@ -2,6 +2,7 @@
 #include "FCTemplateType.h"
 #include "FCCallScriptFunc.h"
 #include "FCObjectUseFlag.h"
+#include "FCRefObjCache.h"
 
 FCGetObj* FCGetObj::s_Ins = nullptr;
 
@@ -481,6 +482,8 @@ void   FCGetObj::NotifyDeleteUObject(const class UObjectBase* Object, int32 Inde
 	if (itObj != m_ObjMap.end())
 	{
 		FCObjRef *ObjRef = itObj->second;
+        int nSubRef = FCRefObjCache::GetIns()->OnDestoryObjRef(ObjRef->PtrIndex);
+        ObjRef->Ref -= nSubRef;
 		DestroyChildRef(ObjRef);
 	}
 }

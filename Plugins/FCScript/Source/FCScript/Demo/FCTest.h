@@ -140,6 +140,9 @@ public:
 	UFUNCTION(BlueprintCallable, meta = (DisplayName = "CallClicked"))
 	void CallClicked();
 
+    UFUNCTION(BlueprintCallable, meta = (DisplayName = "CallDoubleClicked"))
+    void CallDoubleClicked();
+
     UFUNCTION(BlueprintCallable, meta = (DisplayName = "SetActor"))
     void SetActor(AActor *Actor);
 
@@ -205,6 +208,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Button|Event")
 	FOnButtonClickedEvent OnClicked;
+
+    UPROPERTY(BlueprintAssignable, Category = "Button|Event")
+    FOnButtonClickedEvent OnDoubleClicked;
 	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	FOnHttpResponseMessage OnResponseMessage;

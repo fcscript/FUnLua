@@ -271,6 +271,17 @@ FCDynamicOverrideFunction * FFCObjectdManager::FindOverrideFunction(UObject *InO
 	return NULL;
 }
 
+void FFCObjectdManager::DeleteOverrideFunction(UFunction* InFunction)
+{
+    COverrideFunctionMap::iterator itFunc = m_OverrideFunctionMap.find(InFunction);
+    if (itFunc != m_OverrideFunctionMap.end())
+    {
+        FCDynamicOverrideFunction *pDynamicOverrideFunction = itFunc->second;
+        m_OverrideFunctionMap.erase(itFunc);
+        delete pDynamicOverrideFunction;
+    }    
+}
+
 int64 FFCObjectdManager::FindOverrideScriptIns(UObject *InObject, UFunction *InFunction)
 {
     FScriptOverrideKey  Key(InObject, InFunction);
@@ -351,6 +362,12 @@ void  FFCObjectdManager::RegisterScriptDelegate(UObject *InObject, const FCDynam
     //    FuncName = NameBuffer.GetString();
     //    Func = FindOrDumpFunction(Func, InObject->GetClass(), FuncName);
     //}
+
+    // 因为同一个Class存在同类型的多个属性变量, 所以需要保证这个是唯一的, 但这个需要注意释放的问题，不然可能会Crash
+    FCStringBuffer128  NameBuffer;
+    NameBuffer << InDynamicProperty->GetFieldName() << "__lua_Delegate";  // 增加一个后缀，以免与变量重名
+    FuncName = NameBuffer.GetString();
+    Func = FindOrDumpFunction(Func, InObject->GetClass(), FuncName);
 
 	FCDynamicOverrideFunction *DynamicFunc = this->ToOverrideFunction(InObject, Func, FCDynamicOverrideDelegate, EX_CallFCDelegate);
 
@@ -463,12 +480,12 @@ void  FFCObjectdManager::ClearScriptDelegate(UObject* InObject, const FCDynamicP
 	{
 		return;
 	}
-	UFunction* Func = InDynamicProperty->GetSignatureFunction();
-	if (!Func)
+	UFunction* InFunc = InDynamicProperty->GetSignatureFunction();
+	if (!InFunc)
 	{
 		return;
 	}
-	FCDynamicOverrideFunction * DynamicFunc = this->FindOverrideFunction(InObject, Func);
+	FCDynamicOverrideFunction * DynamicFunc = this->FindOverrideFunction(InObject, InFunc);
 	if (!DynamicFunc)
 	{
 		return;
@@ -477,9 +494,9 @@ void  FFCObjectdManager::ClearScriptDelegate(UObject* InObject, const FCDynamicP
 	for (int i = DelegateList.Delegates.size() - 1; i >= 0; --i)
 	{
 		const FCDelegateInfo& DelegateInfo = DelegateList.Delegates[i];
-		if (DelegateInfo.DynamicFunc == DynamicFunc)
+		if (DelegateInfo.DynamicProperty == InDynamicProperty && DelegateInfo.DynamicFunc == DynamicFunc)
 		{
-			Func = DelegateInfo.DynamicFunc->Function;
+            UFunction *Func = DelegateInfo.DynamicFunc->Function;
 			int Ref = m_DelegateRefMap[Func];
 			m_DelegateRefMap[Func] = Ref - 1;
 			if (0 == Ref)
@@ -579,7 +596,8 @@ void  FFCObjectdManager::RemoveDelegateFromClass(FCDynamicOverrideFunction *InDy
     }
 
 	//InClass->RemoveFunctionFromFunctionMap(Function);
-    FCDynamicDelegateManager::GetIns().TryRemoveClassFunction(InClass, Function);
+    GetScriptContext()->RemoveOverideFunction(InClass, Function);
+    // DeleteOverrideFunction(Function); // 这里不能删除，因为Lua可能还在引用这个，即使要删除，也需要记录Lua的引用计数，完全释放后再删除
     // 因为m_OverrideFunctionMap还在引用这个Function, 然后InDynamicFunc有可能还在LUA中引用，所以暂时不能从Class中移除不然UFunction会GC掉
     // 这个数量有限，保留这个不会有太多的内存开销，所以不必从Class中移除
 
@@ -656,7 +674,7 @@ void  FFCObjectdManager::ClearAllDynamicFunction()
             if(DynamicFunc->m_BindClass)
             {   
                 //DynamicFunc->m_BindClass->RemoveFunctionFromFunctionMap(DynamicFunc->Function);
-                FCDynamicDelegateManager::GetIns().TryRemoveClassFunction(DynamicFunc->m_BindClass, DynamicFunc->Function);
+                GetScriptContext()->RemoveOverideFunction(DynamicFunc->m_BindClass, DynamicFunc->Function);
             }
         }
 	}

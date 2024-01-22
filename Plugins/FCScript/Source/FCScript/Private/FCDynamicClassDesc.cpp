@@ -36,6 +36,13 @@ void  FCDynamicProperty::InitProperty(const FProperty *InProperty, const char* I
 #endif
 }
 
+FCDynamicProperty::~FCDynamicProperty()
+{
+#ifdef UE_BUILD_DEBUG
+    int iii = 0;
+#endif    
+}
+
 void  FCDynamicProperty::InitCppType(FCPropertyType InType, const char* InClassName, int InElementSize)
 {
     Name = "";
@@ -814,6 +821,15 @@ FDynamicEnum* FCScriptContext::RegisterEnum(const char* InEnumName)
     return ScriptEnumDesc;
 }
 
+void FCScriptContext::AddOverridenFunction(UClass* InClass, UFunction* Func)
+{
+    FNativeOverridenFnctionInfo Info;
+    Info.Class = InClass;
+    Info.Function = Func;
+    m_OveridenFunctionList.push_back(Info);
+    m_ManualObjectReference->Add(Func);
+}
+
 int FCScriptContext::GetMemSize() const
 {
     int MemSize = 0;
@@ -866,6 +882,8 @@ void FCScriptContext::Clear()
     m_Ticker = nullptr;
     m_DelegateObject = nullptr;
 
+    ClearAllOvrridenFunction();
+
 	ReleasePtrMap(m_ClassNameMap);
     ReleasePtrMap(m_EnumNameMap);
 	m_StructMap.clear();
@@ -891,6 +909,22 @@ void FCScriptContext::Clear()
         delete m_CopyFromWrapFunc;
         m_CopyFromWrapFunc = nullptr;
     }
+}
+
+void FCScriptContext::ClearAllOvrridenFunction()
+{
+    for(int i = 0; i< m_OveridenFunctionList.size(); ++i)
+    {
+        FNativeOverridenFnctionInfo &Info = m_OveridenFunctionList[i];
+        Info.Class->RemoveFunctionFromFunctionMap(Info.Function);
+    }
+    m_OveridenFunctionList.clear();
+}
+
+void FCScriptContext::RemoveOverideFunction(UClass* InClass, UFunction* Func)
+{
+    // 不能直接删除这个函数，需要删除全局的DynamicFunction,再去除GC引用
+    //InClass->RemoveFunctionFromFunctionMap(Func);
 }
 
 void FCScriptContext::ClearNoneRefField()

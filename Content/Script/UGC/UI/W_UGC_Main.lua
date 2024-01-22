@@ -2,9 +2,8 @@
 local M = {}
 
 function M:Construct()
-    print("[UGC][Construct]W_UGC_Main")    
-    local UGC_DragInfo = require("UGC.UI.UGC_DragInfo")
-    UGC_DragInfo.MainRoot = self.MainRoot
+    print("[UGC][Construct]W_UGC_Main")
+    _G.UGC.DragInfo.MainRoot = self.MainRoot
 end
 
 function M:Destruct()    

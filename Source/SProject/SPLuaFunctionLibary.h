@@ -4,6 +4,7 @@
 #include "CoreMinimal.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/PostProcessVolume.h"
+#include "GameFramework/PlayerController.h"
 #include "SPLuaFunctionLibary.generated.h"
 
 UCLASS()
@@ -26,4 +27,13 @@ public:
 
     UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "SPLuaFunctionLibary"))
     static APostProcessVolume*  CreatePostProcessActor(const FPostProcessSettings &PostProcessSettings);
+
+    UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "SPLuaFunctionLibary"))
+    static bool ProjectWorldToScreen(APlayerController const* Player, const FVector& WorldPosition, FVector2D& ScreenPosition, bool bPlayerViewportRelative);
+
+    UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "SPLuaFunctionLibary"))
+    static int GetClientViewWidth();
+
+    UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "SPLuaFunctionLibary"))
+    static int GetClientViewHeight();
 };

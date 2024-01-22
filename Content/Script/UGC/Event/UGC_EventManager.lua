@@ -55,9 +55,9 @@ function M:UnListenUGCMessageByPtr(msgKey, thisPtr)
 end
 
 function M:SendUGCMessage(msgKey, ...)
-    print("[UGC][SendUGCMessage]msgKey=", msgKey)
     local msgListens = self.MsgListens[msgKey]
     if msgListens then
+        -- print("[UGC][SendUGCMessage]msgKey=", msgKey, ",listen count=", #msgListens)
         for i = 1, #msgListens do
             local node = msgListens[i]
             if node.ThisPtr then
@@ -66,6 +66,8 @@ function M:SendUGCMessage(msgKey, ...)
                 node.Cb(...)
             end
         end
+    else
+        -- print("[UGC][SendUGCMessage]msgKey=", msgKey, ",none listen")
     end
 end
 

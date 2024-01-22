@@ -17,7 +17,7 @@ function M:OnMouseButtonDown(MyGeometry, MouseEvent)
     if selectActor then
         -- self:SetSelectEffect(selectActor)
         -- UE.USPLuaFunctionLibary.SetActorSelectEffect(selectActor)
-        self:ShowAxisActor(selectActor)
+        _G.UGC.OperatorMrg:SelectObjectFromScene(selectActor)
     end    
     -- local LineTraceUtil = require("UGC.Util.LineTraceUtil")
     -- local pickPos, hitResult = LineTraceUtil:GetPickupPosition(self, panelPos)
@@ -50,7 +50,7 @@ function M:OnMouseMove(MyGeometry, MouseEvent)
     return UE.UWidgetBlueprintLibrary.Unhandled()
 end
 
-function M:OnMouseButtonUp(MyGeometry, MouseEvent)      
+function M:OnMouseButtonUp(MyGeometry, MouseEvent)
     local bMouseLD = self:IsLeftMouseDown(MouseEvent)
     self.bMouseDown = false
     if bMouseLD then
@@ -72,6 +72,13 @@ function M:OnDraging(MyGeometry, MouseEvent)
     local WorldPosition = self:ScreenToWorld(screenPos)
     local CameraPos = self:CalcCameraMove(MouseEvent)
     
+    -- 如果有选择的对象，并且当前是托动模式    
+    if _G.UGC.SelectInfo.Transfrom_Mode ~= _G.UGC.OperatorType.Tf_None then
+        local SelectObjects = _G.UGC.SelectInfo.SelectObjects
+        if #SelectObjects > 0 then
+        end
+    end
+
     self:SetCameraPos(CameraPos)
 
     self.StartCameraPos = CameraPos    
@@ -136,32 +143,12 @@ function M:ScreenToWorld(ScreenPosition)
     return ProjectPos
 end
 
-function M:CreateAxisObject(Location)    
-    local world = self:GetWorld()
-    local ActorClass = UE.AAxisActor    
-    local objName = "AxisActor"
-    local initRotation = UE.FRotator(0, 0, 0)
-    local transform = UE.FTransform(initRotation:ToQuat(), Location)
-    local moduleName = nil
-    self.AxisActor = world:SpawnActor(ActorClass, transform, UE.ESpawnActorCollisionHandlingMethod.AlwaysSpawn, nil, nil, moduleName, nil, nil, objName)    
-end
-
-function M:ShowAxisActor(selectActor)
-	local Location = selectActor:K2_GetActorLocation()
-    if self.AxisActor == nil then
-        self:CreateAxisObject(Location)
-    end
-    local SweepHitResult = UE.FHitResult()
-    self.AxisActor:K2_GetRootComponent():K2_SetRelativeLocation(Location, false, SweepHitResult, false)
-end
-
 function M:FindNearActor(screenPos)
     local playerControler = UE.UGameplayStatics.GetPlayerController(self:GetWorld(), 0)
     local sx = screenPos.X
     local sy = screenPos.Y
 
-    local UGC_SceneObjects = require("UGC.UI.UGC_SceneObjects")
-    local objects = UGC_SceneObjects.Objects    
+    local objects = UGC.SceneObjects.Objects    
     local distMin = 1000000
     local findActor = nil
     for i = 1, #objects do
@@ -170,7 +157,7 @@ function M:FindNearActor(screenPos)
         local actorScreenPosition = UE.FVector2D()
         local bSuc = UE.UGameplayStatics.ProjectWorldToScreen(playerControler, WorldPosition, actorScreenPosition, false)
         if bSuc then
-            print("[UGC][FindNearActor]actorScreenPosition:", actorScreenPosition, ",screenPos:", screenPos, ",name:", obj:GetName())
+            -- print("[UGC][FindNearActor]actorScreenPosition:", actorScreenPosition, ",screenPos:", screenPos, ",name:", obj:GetName())
             local dx = sx - actorScreenPosition.X
             local dy = sy - actorScreenPosition.Y
             local dist = dx * dx + dy * dy

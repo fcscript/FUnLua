@@ -91,6 +91,7 @@ struct FCDynamicProperty : public FCDynamicPropertyBase
 	FCDynamicProperty():m_WriteScriptFunc(nullptr), m_ReadScriptFunc(nullptr), m_CopyScriptValue(nullptr)
 	{
 	}
+    ~FCDynamicProperty();
 
 	void  InitProperty(const FProperty *InProperty, const char *InName = nullptr);
     void  InitCppType(FCPropertyType InType, const char *InClassName, int InElementSize);
@@ -467,6 +468,13 @@ struct FDynamicWaitInfo
     float   WaitTime = 0;
 };
 
+struct FNativeOverridenFnctionInfo
+{
+    UClass   *Class;
+    UFunction *Function;
+    FNativeOverridenFnctionInfo():Class(nullptr), Function(nullptr){}
+};
+
 typedef std::unordered_map<const char *, FCDynamicClassDesc*, FCStringHash, FCStringEqual>   CDynamicClassNameMap;
 typedef std::unordered_map<std::string, FDynamicEnum*>   CDynamicEnumNameMap;
 typedef std::unordered_map<int, FCDynamicClassDesc*>   CDynamicClassIDMap;
@@ -475,6 +483,7 @@ typedef std::unordered_map<FProperty*, FCDynamicClassDesc*>   CDynamicPropertyMa
 typedef std::unordered_map<lua_State*, int32>   ThreadToRefMap;
 typedef std::unordered_map<int32, lua_State*>   RefToThreadMap;
 typedef std::vector<FDynamicWaitInfo>  CDynamicWaitInfoList;
+typedef std::vector<FNativeOverridenFnctionInfo>  COverridenFunctionList;
 
 struct FCScriptContext
 {
@@ -495,6 +504,7 @@ struct FCScriptContext
     CDynamicWaitInfoList  m_WaitList;
 
     FCObjectReferencer    *m_ManualObjectReference;
+    COverridenFunctionList   m_OveridenFunctionList;
 
     FCDynamicWrapLibFunction  *m_CopyWrapFunc;
     FCDynamicWrapLibFunction  *m_CopyFromWrapFunc;
@@ -512,10 +522,13 @@ struct FCScriptContext
 	FCDynamicClassDesc*  RegisterUStruct(UStruct *Struct);
     FCDynamicClassDesc*  RegisterByProperty(FProperty *Property);
     FDynamicEnum*        RegisterEnum(const char *InEnumName);
+    void AddOverridenFunction(UClass* InClass, UFunction *Func);
     int GetMemSize() const;
     int GetClassMemSize(const char *InClassName) const;
     void Init();
 	void Clear();
+    void ClearAllOvrridenFunction();
+    void RemoveOverideFunction(UClass* InClass, UFunction* Func);
     void ClearNoneRefField();
 };
 

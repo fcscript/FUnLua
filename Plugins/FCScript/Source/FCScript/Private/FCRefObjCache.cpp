@@ -65,18 +65,52 @@ void  FCRefObjCache::CheckGC(float DeltaTime)
 		FRefCacheInfo* first = m_CacheList.front_ptr();
 		if (first)
 		{
-			m_CacheList.pop_front();
-			luaL_unref(L, LUA_REGISTRYINDEX, first->LuaRef);
+            m_CacheList.pop_front();
+            if(ObjMng->GetUObject(first->ObjID) != nullptr)
+            {
+                FRefCacheInfo* CacheInfo = first;
+                CacheInfo->m_pLast = nullptr;
+                CacheInfo->m_pNext = nullptr;
+                m_CacheList.push_back(CacheInfo);                
+            }
+            else
+            {
+                luaL_unref(L, LUA_REGISTRYINDEX, first->LuaRef);
 
-			if(first->Ref > 0)
-				ObjMng->ReleaseCacheRef(first->ObjID, first->Ref);
-			m_ID2CacheMap.erase(first->ObjID);
+                if (first->Ref > 0)
+                    ObjMng->ReleaseCacheRef(first->ObjID, first->Ref);
+                m_ID2CacheMap.erase(first->ObjID);
 
-			first->m_pLast = nullptr;
-			first->m_pNext = nullptr;
-			m_InvalidList.push_back(first);
+                first->m_pLast = nullptr;
+                first->m_pNext = nullptr;
+                m_InvalidList.push_back(first);
+            }
 		}
 	}
+}
+
+int  FCRefObjCache::OnDestoryObjRef(int64 ObjID)
+{
+    CRefID2LuaCacheMap::iterator itFind = m_ID2CacheMap.find(ObjID);
+    if (itFind != m_ID2CacheMap.end())
+    {
+        FCScriptContext* ScriptContext = GetScriptContext();
+        lua_State* L = ScriptContext->m_LuaState;
+
+        FRefCacheInfo* CacheInfo = itFind->second;
+        m_ID2CacheMap.erase(ObjID);
+        luaL_unref(L, LUA_REGISTRYINDEX, CacheInfo->LuaRef);
+
+        m_CacheList.erase(m_CacheList.MakeIterator(CacheInfo));
+        CacheInfo->m_pLast = nullptr;
+        CacheInfo->m_pNext = nullptr;
+        m_InvalidList.push_back(CacheInfo);
+        if(CacheInfo->Ref > 0)
+            return CacheInfo->Ref - 1;
+        else
+            return 0;
+    }
+    return 0;
 }
 
 void  FCRefObjCache::PushBindLuaValue(lua_State* L, int64 ObjID, const char* ClassName)
@@ -85,7 +119,7 @@ void  FCRefObjCache::PushBindLuaValue(lua_State* L, int64 ObjID, const char* Cla
 	if (itFind != m_ID2CacheMap.end())
 	{
 		FRefCacheInfo* CacheInfo = itFind->second;
-		CacheInfo->Ref++;
+        CacheInfo->Ref++;
 		lua_rawgeti(L, LUA_REGISTRYINDEX, CacheInfo->LuaRef);
 
 		m_CacheList.erase(m_CacheList.MakeIterator(CacheInfo));

@@ -31,6 +31,8 @@ int FCUnLuaWrap::LibOpen_wrap(lua_State* L)
         {"Class", Class_wrap},
         {"DebugBreak", DebugBreak_wrap},
         {"DebugCheck", DebugCheck_wrap},
+        {"GetUObjectPtr", GetUObjectPtr_wrap},
+        {"GetObjRefID", GetObjRefID_wrap},
         {NULL, NULL}
     };
     const char* ClassName = lua_tostring(L, 1);
@@ -203,6 +205,20 @@ int FCUnLuaWrap::DebugCheck_wrap(lua_State* L)
     UObject* Object = FCScript::GetUObject(L, 1);
     UE_DEBUG_BREAK();
     return 0;
+}
+
+int FCUnLuaWrap::GetUObjectPtr_wrap(lua_State* L)
+{
+    UObject* Object = FCScript::GetUObject(L, 1);
+    lua_pushinteger(L, (lua_Integer)Object);
+    return 1;
+}
+
+int FCUnLuaWrap::GetObjRefID_wrap(lua_State* L)
+{
+    int64 ObjID = FC_GetArgObjID(L, 1);
+    lua_pushinteger(L, ObjID);
+    return 1;
 }
 
 void FCUnLuaWrap::RegisterGlobalIndex(lua_State* L)

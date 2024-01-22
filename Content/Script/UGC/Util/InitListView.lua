@@ -11,6 +11,7 @@ local function RequireListViewCache(ListView)
             Widget2Item = {},
             SelectItem = nil,
             CustomInfo = nil,
+            ListView = ListView,
         }
         ListMapInfos[ListView] = ListInfo
     end
@@ -45,10 +46,11 @@ end
 -- 通知列列的刷新
 local function NotifyInitializedWidget(ListView, Item, Widget)
     -- 单行选中
-    local selectItem = ListView:BP_GetSelectedItem()
+    local ListInfo = ListMapInfos[ListView] or {}
+    local selectItem = ListInfo.SelectItem
+    -- local selectItem = ListView:BP_GetSelectedItem()
     local bSelect = selectItem == Item
     if Widget.RefreshListEntry then
-        local ListInfo = ListMapInfos[ListView] or {}
         Widget:RefreshListEntry(ListInfo.CustomInfo, Item, bSelect)
     end
 end
@@ -68,6 +70,10 @@ end
 
 -- 列表的双击事件
 local function  OnItemDoubleClicked(ListView, Item)
+    local entry = FindListEntry(ListView, Item)
+    if entry and entry.OnDoubleClicked then
+        entry:OnDoubleClicked()
+    end
 end
 
 -- 列表的鼠标敏感事件(鼠标滑入)
@@ -77,10 +83,12 @@ end
 -- 列表的选中事件
 local function  OnItemSelectionChanged(ListView, Item, bIsSelected)
     local ListInfo = RequireListViewCache(ListView)
-    local oldSelectItem = ListInfo.SelectItem
-    ListInfo.SelectItem = Item
-    NotifyItemSelect(ListInfo, oldSelectItem, false)
-    NotifyItemSelect(ListInfo, Item, true)
+    if bIsSelected then
+        local oldSelectItem = ListInfo.SelectItem
+        ListInfo.SelectItem = Item
+        NotifyItemSelect(ListInfo, oldSelectItem, false)
+        NotifyItemSelect(ListInfo, Item, true)
+    end
 end
 
 -- 列表滑动后刷新事件
@@ -105,7 +113,7 @@ local function BindListView(ListView)
         ListInfo.bBindEvent = true
         BindListViewDelegate(ListView, ListView.BP_OnEntryInitialized, OnEntryInitialized)    
         BindListViewDelegate(ListView, ListView.BP_OnItemClicked, OnItemClicked)
-        BindListViewDelegate(ListView, ListView.BP_OnItemDoubleClicked, OnItemDoubleClicked)
+        BindListViewDelegate(ListView, ListView.BP_OnItemDoubleClicked, OnItemDoubleClicked)        
         BindListViewDelegate(ListView, ListView.BP_OnItemIsHoveredChanged, OnItemIsHoveredChanged)
         BindListViewDelegate(ListView, ListView.BP_OnItemSelectionChanged, OnItemSelectionChanged)
         BindListViewDelegate(ListView, ListView.BP_OnItemScrolledIntoView, OnItemScrolledIntoView)
@@ -113,7 +121,7 @@ local function BindListView(ListView)
     end
 end
 
-function _G.GlbListViewGetAnyWidget(ListView)    
+function _G.GlbListViewGetAnyWidget(ListView)   
     local ListInfo = ListMapInfos[ListView]
     if ListInfo then
         for Widget, item in pairs(ListInfo.Widget2Item) do
@@ -123,8 +131,15 @@ function _G.GlbListViewGetAnyWidget(ListView)
     return nil
 end
 
+function _G.GlbViewAllListItem(ListView, cb)
+    local ListItems = ListView.ListItems
+    for _idx, Item in pairs(ListItems) do
+        cb(ListView, Item)
+    end
+end
+
 function _G.GlbSelectListViewItem(ListView, Item)
-    OnItemSelectionChanged(ListView, Item, true)    
+    OnItemSelectionChanged(ListView, Item, true)
 end
 
 -- 通用的列表刷新事件
@@ -134,9 +149,7 @@ end
 ---@param entryBindScript String @ script file name
 ---@param entyrSources TArray<any> @Source item info list, entrySource can also be lua Table
 ---@param copyObjectCb Callback @copy source object info to list litem,  copyObjectCb(item, sourceInfo, index)
-function _G.GlbRefreshListView(customInfo, ListView, entryItemClass, entryBindScript, entyrSources, copyObjectCb)    
-    BindListView(ListView)
-
+function _G.GlbRefreshListView(customInfo, ListView, entryItemClass, entryBindScript, entyrSources, copyObjectCb)
     local worldContext = ListView:GetWorld()
     local sourceNum = #entyrSources
     local ListItems = ListView.ListItems
@@ -146,8 +159,8 @@ function _G.GlbRefreshListView(customInfo, ListView, entryItemClass, entryBindSc
             local entryObject = NewObject(entryItemClass, worldContext, nil, entryBindScript)
             ListItems:Add(entryObject)
         end
-    else
-        for i = curEntryCount, sourceNum + 1, -1 do
+    elseif curEntryCount > sourceNum then
+        for i = curEntryCount, sourceNum, -1 do
             ListItems:Remove(i)
         end
     end
@@ -159,9 +172,14 @@ function _G.GlbRefreshListView(customInfo, ListView, entryItemClass, entryBindSc
             copyObjectCb(entryObject, entyrSources[i], i)
         end
     end
-    ListMapInfos[ListView] = nil
+    BindListView(ListView)
+
     local ListInfo = RequireListViewCache(ListView)
+    ListInfo.Item2Widget = {}
+    ListInfo.Widget2Item = {}
     ListInfo.CustomInfo = customInfo
+    ListInfo.SelectItem = nil
+    ListView:BP_ClearSelection()
     ListView:RequestRefresh()
     ListView:RegenerateAllEntries()
 end

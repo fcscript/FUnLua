@@ -48,18 +48,46 @@ function M:OnTest()
 end
 
 function M:OnMoveMode()
+    _G.UGC.SelectInfo.Transfrom_Mode = _G.UGC.OperatorType.Tf_Move
+    _G.UGC.EventManager:SendUGCMessage("UGC.Event.ChangeTransfromMode", _G.UGC.SelectInfo.Transfrom_Mode)
 end
 
 function M:OnRotationMode()
+    _G.UGC.SelectInfo.Transfrom_Mode = _G.UGC.OperatorType.Tf_Rotaion
+    _G.UGC.EventManager:SendUGCMessage("UGC.Event.ChangeTransfromMode", _G.UGC.SelectInfo.Transfrom_Mode)
 end
 
 function M:OnScaleMode()
+    _G.UGC.SelectInfo.Transfrom_Mode = _G.UGC.OperatorType.Tf_Scale
+    _G.UGC.EventManager:SendUGCMessage("UGC.Event.ChangeTransfromMode", _G.UGC.SelectInfo.Transfrom_Mode)
 end
 
-function M:OnDeleteSelect()    
+function M:OnDeleteSelect()
+    local SelectObjcts = _G.UGC.SelectInfo.SelectObjects
+    local AllObjects = _G.UGC.SceneObjects.Objects or {}
+    local OldCount = #AllObjects
+    _G.UGC.SelectInfo.SelectObjects = {}
+    for _idx, Object in pairs(SelectObjcts) do
+        Object:K2_DestroyActor()
+        for i = #AllObjects, 1, -1 do
+            if AllObjects[i] == Object then
+                table.remove(AllObjects, i)
+                break
+            end
+        end
+    end
+    _G.UGC.SceneObjects.Objects = AllObjects
+    print("[UGC]DeleteSelect, OldCount=", OldCount, ",CurCount=", #AllObjects)
+    _G.UGC.EventManager:SendUGCMessage("UGC.Event.DeleteSelects", SelectObjcts)
 end
 
-function M:OnDeleteAll()    
+function M:OnDeleteAll()
+    local AllObjects = _G.UGC.SceneObjects.Objects or {}
+    _G.UGC.SceneObjects.Objects = {}
+    for _idx, Object in pairs(AllObjects) do
+        Object:K2_DestroyActor()
+    end
+    _G.UGC.EventManager:SendUGCMessage("UGC.Event.DeleteSelects", AllObjects)
 end
 
 return M

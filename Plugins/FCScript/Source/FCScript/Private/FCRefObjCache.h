@@ -34,5 +34,6 @@ public:
 public:
 	void  Clear();
 	void  CheckGC(float DeltaTime);
+    int  OnDestoryObjRef(int64 ObjID);
 	void  PushBindLuaValue(lua_State* L, int64 ObjID, const char* ClassName);
 };

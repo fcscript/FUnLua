@@ -46,7 +46,7 @@ function M:OnComponentBeginOverlap_Sphere(OverlappedComponent, OtherActor, Other
 	local PlayerCharacter = OtherActor:Cast(BP_PlayerCharacter)
 	if PlayerCharacter then
 		local Controller = self:GetController()
-		-- UE.UGameplayStatics.ApplyDamage(PlayerCharacter, self.Damage, Controller, self, self.DamageType)
+		UE.UGameplayStatics.ApplyDamage(PlayerCharacter, self.Damage, Controller, self, self.DamageType)
 	end
 end
 
