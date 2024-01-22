@@ -11,6 +11,7 @@ public:
     static int PlaneDot_wrap(lua_State* L);
     static int GetOrigin_wrap(lua_State* L);
     static int GetNormal_wrap(lua_State* L);
+    static int IntersectLine_wrap(lua_State* L);
 
     static int tostring_wrap(lua_State* L);
     static int obj_New(lua_State* L);

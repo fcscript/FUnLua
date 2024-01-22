@@ -29,6 +29,7 @@ int FCPlaneWrap::LibOpen_wrap(lua_State* L)
         { "PlaneDot", PlaneDot_wrap },
         { "GetOrigin", GetOrigin_wrap },
         { "GetNormal", GetNormal_wrap },
+        { "IntersectLine", IntersectLine_wrap },
         { nullptr, nullptr }
     };
     const LuaRegAttrib LibAttrib[] =
@@ -109,6 +110,26 @@ int FCPlaneWrap::GetNormal_wrap(lua_State* L)
     if (A)
     {
         Result = A->GetNormal();
+    }
+    FCScript::SetArgValue(L, Result);
+    return 1;
+}
+
+int FCPlaneWrap::IntersectLine_wrap(lua_State* L)
+{
+    // FVector3 FPlane::IntersectLine(const FVector3 *pBegin, const FVector3 *pRayDir)
+    FPlane* A = (FPlane*)VectorBase_GetAddr(L, 1, "FPlane");
+    FVector* B = (FVector*)VectorBase_GetAddr(L, 2, "FVector"); // StartPos
+    FVector* C = (FVector*)VectorBase_GetAddr(L, 3, "FVector"); // RayDir
+    FVector Result;
+    if (A && B && C)
+    {
+        FVector Normal = A->GetNormal();
+        float t2 = Normal.Dot(*C);
+        if (t2 == 0)
+            return false;
+        float t = -(Normal.Dot(*B) + A->W) / t2;
+        Result = *B + (*C * t);
     }
     FCScript::SetArgValue(L, Result);
     return 1;

@@ -32,6 +32,7 @@ function M:OnMouseButtonDown(MyGeometry, MouseEvent)
     self.bMouseDown = bMouseLD
     self.StartWorldPos = self:ScreenToWorld(screenPos)
     self.StartCameraPos = self:GetCameraPos()
+    self.StartPickUpPos = self:GetPickUpPos(MouseEvent)
     
     -- print("[UGC]OnMouseButtonDown, bMouseDown=", self.bMouseDown, ",StartCameraPos=", self.StartCameraPos)
     if self.bMouseDown then
@@ -70,22 +71,74 @@ end
 function M:OnDraging(MyGeometry, MouseEvent)    
     local screenPos = UE4.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)  -- 取屏幕坐标
     local WorldPosition = self:ScreenToWorld(screenPos)
-    local CameraPos = self:CalcCameraMove(MouseEvent)
     
     -- 如果有选择的对象，并且当前是托动模式    
     if _G.UGC.SelectInfo.Transfrom_Mode ~= _G.UGC.OperatorType.Tf_None then
         local SelectObjects = _G.UGC.SelectInfo.SelectObjects
         if #SelectObjects > 0 then
+            self:OnTransformSelectObjects(MouseEvent)
+        else
+            self:OnDragCamera(MouseEvent)
         end
+    else
+        self:OnDragCamera(MouseEvent)
     end
 
-    self:SetCameraPos(CameraPos)
-
-    self.StartCameraPos = CameraPos    
     self.StartWorldPos = WorldPosition
     self.MouseDownPos = screenPos
     
     -- print("[UGC]OnDragingMove, CameraPos=", CameraPos, ",moveOffset=", moveOffset)
+end
+
+function M:OnTransformSelectObjects(MouseEvent)    
+    local Dir, Right = self:CalcMoveInfo(MouseEvent)    
+    local NewObjPos = self:GetPickUpPos(MouseEvent)
+    local MoveOffset = NewObjPos - self.StartPickUpPos
+
+    local SelectObjects = _G.UGC.SelectInfo.SelectObjects
+    for i = 1, #SelectObjects do
+        local Obj = SelectObjects[i]
+        local OldPos = Obj:K2_GetActorLocation()
+        local NewPos = OldPos + MoveOffset
+            
+        local sweepHitResult = UE4.FHitResult()
+        Obj:K2_SetActorLocation(NewPos, false, sweepHitResult, false)
+    end    
+    local CameraPos = self.StartCameraPos - Dir + Right
+    -- local CameraPos = self.StartCameraPos + MoveOffset
+    self:SetCameraPos(CameraPos)
+    self.StartCameraPos = CameraPos
+
+    NewObjPos = self:GetPickUpPos(MouseEvent)
+    self.StartPickUpPos = NewObjPos
+
+    _G.UGC.EventManager:SendUGCMessage("UGC.Event.TransformSelectObject")
+end
+
+function M:OnDragCamera(MouseEvent)
+    local CameraPos = self:CalcCameraMove(MouseEvent)
+    self:SetCameraPos(CameraPos)
+    self.StartCameraPos = CameraPos
+end
+
+function M:GetPickUpPos(MouseEvent)
+    local SelectObjects = _G.UGC.SelectInfo.SelectObjects
+    local FirstSelectObj = SelectObjects[1]
+    
+    local LastObjPos = UE.FVector()
+    if FirstSelectObj then
+        LastObjPos = FirstSelectObj:K2_GetActorLocation()
+    end
+    local TerrainPlane = UE.FPlane(LastObjPos, UE.FVector(0, 0, 1))
+    
+    local WorldPosition = UE.FVector()
+    local WorldDirection = UE.FVector()
+    local localPlayerControler = _G.UGameplayStatics.GetPlayerController(self, 0)
+    local ScreenPosition = UE4.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)  -- 取屏幕坐标
+    UE.UGameplayStatics.DeprojectScreenToWorld(localPlayerControler, ScreenPosition, WorldPosition, WorldDirection)
+    local NewObjPos = TerrainPlane:IntersectLine(WorldPosition, WorldDirection)
+
+    return NewObjPos
 end
 
 function M:GetCameraPos()
@@ -103,7 +156,7 @@ function M:SetCameraPos(CameraPos)
     PlayPawn:K2_SetActorLocation(CameraPos, false, sweepHitResult, false)
 end
 
-function M:CalcCameraMove(MouseEvent)
+function M:CalcMoveInfo(MouseEvent, fScale)
     local ScreenPosition = UE4.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)  -- 取屏幕坐标
     local MoveX = ScreenPosition.X - self.MouseDownPos.X
     local MoveY = ScreenPosition.Y - self.MouseDownPos.Y
@@ -120,8 +173,15 @@ function M:CalcCameraMove(MouseEvent)
     CameraDir.Z = 0
     CameraDir:Normalize()
 
-    local Dir = CameraDir * (MoveY * 0.5)
-    local Right = CameraRight * (MoveX * 0.5)
+    fScale = fScale or 0.5
+    local Dir = CameraDir * (MoveY * fScale)
+    local Right = CameraRight * (MoveX * fScale)
+
+    return Dir, Right
+end
+
+function M:CalcCameraMove(MouseEvent)
+    local Dir, Right = self:CalcMoveInfo(MouseEvent)
     local CameraPos = self.StartCameraPos + Dir - Right
     return CameraPos
 end
@@ -145,13 +205,38 @@ end
 
 function M:FindNearActor(screenPos)
     local playerControler = UE.UGameplayStatics.GetPlayerController(self:GetWorld(), 0)
+    local objects = UGC.SceneObjects.Objects    
+    local TotalCount = #objects
+
+    -- 增加轮选功能
+    local SelectObjects = _G.UGC.SelectInfo.SelectObjects
+    local StartIndex = 1
+    if #SelectObjects == 1 then
+        local SelectObj = SelectObjects[1]
+        for i = 1, TotalCount do
+            if objects[i] == SelectObj then
+                StartIndex = i + 1
+                if StartIndex > TotalCount then
+                    StartIndex = 1
+                end
+                break
+            end
+        end
+    end
+
+    local findActor = self:InnerFindNearActor(playerControler, StartIndex, objects, screenPos)
+    if findActor == nil then
+        findActor = self:InnerFindNearActor(playerControler, 1, objects, screenPos)
+    end
+    return findActor
+end
+
+function M:InnerFindNearActor(playerControler, StartIndex, objects, screenPos)
     local sx = screenPos.X
     local sy = screenPos.Y
-
-    local objects = UGC.SceneObjects.Objects    
     local distMin = 1000000
     local findActor = nil
-    for i = 1, #objects do
+    for i = StartIndex, #objects do
         local obj = objects[i]
         local WorldPosition = obj:K2_GetActorLocation()
         local actorScreenPosition = UE.FVector2D()
