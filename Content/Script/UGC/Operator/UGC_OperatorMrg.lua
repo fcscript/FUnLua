@@ -107,6 +107,18 @@ function M:ShowAxisActor(selectActor)
     self.AxisActor:SetActorHiddenInGame(false)
     local SweepHitResult = UE.FHitResult()
     self.AxisActor:K2_GetRootComponent():K2_SetRelativeLocation(Location, false, SweepHitResult, false)
+    self:RefreshAxisRadius()
+end
+
+function M:RefreshAxisRadius()
+    local SelectObjects = _G.UGC.SelectInfo.SelectObjects
+    for i = 1, #SelectObjects do
+        local Object = SelectObjects[i]
+        -- FBoxSphereBounds
+        -- UMeshComponent
+        -- local MeshComponent = Object:GetComponentByClass(UE.UMeshComponent)
+        -- local Bounds = SelectObject.RootComponent:CalcLocalBounds()
+    end
 end
 
 function M:HideAxisActor()

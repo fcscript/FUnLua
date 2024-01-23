@@ -31,16 +31,19 @@ AAxisActor::AAxisActor()
 
     UAxisRotationComponent *RotationComponent = CreateDefaultSubobject<UAxisRotationComponent>(TEXT("RotaitonX"));
     RotationComponent->Normal = FVector(1, 0, 0);
+    RotationComponent->Color = FLinearColor(0, 0.13286, 1, 1);
     RotationComponentX = RotationComponent;
     RotationComponentX->SetupAttachment(SceneComponent);
 
     RotationComponent = CreateDefaultSubobject<UAxisRotationComponent>(TEXT("RotaitonY"));
     RotationComponent->Normal = FVector(0, 1, 0);
+    RotationComponent->Color = FLinearColor(0.337497, 0.594882, 1, 1);
     RotationComponentY = RotationComponent;
     RotationComponentY->SetupAttachment(SceneComponent);
 
     RotationComponent = CreateDefaultSubobject<UAxisRotationComponent>(TEXT("RotaitonZ"));
     RotationComponent->Normal = FVector(0, 0, 1);
+    RotationComponent->Color = FLinearColor(1, 0, 0, 1);
     RotationComponentZ = RotationComponent;
     RotationComponentZ->SetupAttachment(SceneComponent);
 }
