@@ -55,43 +55,34 @@ function M:ChangeTransfromMode()
     local Transfrom_Mode = _G.UGC.SelectInfo.Transfrom_Mode
     local OperatorType = _G.UGC.OperatorType
 
+    local bShowMove = false
+    local bShowBox = false
+    local bShowRotation = false
     -- 平移
     if Transfrom_Mode == OperatorType.Tf_Move then
         -- 隐藏旋转
-        self.AxisActor.RotationComponent.bRenderVisibility = false
-        self.AxisActor.BoxComponent.bRenderVisibility = false
-        
-        self.AxisActor.TransfromComponentX.bRenderVisibility = true
-        self.AxisActor.TransfromComponentY.bRenderVisibility = true
-        self.AxisActor.TransfromComponentZ.bRenderVisibility = true
-
+        bShowMove = true
         self.AxisActor.TransfromComponentX.Length = 200
         self.AxisActor.TransfromComponentY.Length = 200
         self.AxisActor.TransfromComponentZ.Length = 200
     elseif Transfrom_Mode == OperatorType.Tf_Rotaion then
         -- 旋转
-        self.AxisActor.RotationComponent.bRenderVisibility = true
-        self.AxisActor.BoxComponent.bRenderVisibility = false
-
-        self.AxisActor.TransfromComponentX.bRenderVisibility = false
-        self.AxisActor.TransfromComponentY.bRenderVisibility = false
-        self.AxisActor.TransfromComponentZ.bRenderVisibility = false
+        bShowRotation = true
     elseif Transfrom_Mode == OperatorType.Tf_Scale then
         -- 缩放
-        self.AxisActor.RotationComponent.bRenderVisibility = false
-        self.AxisActor.BoxComponent.bRenderVisibility = false
-
-        self.AxisActor.TransfromComponentX.bRenderVisibility = true
-        self.AxisActor.TransfromComponentY.bRenderVisibility = true
-        self.AxisActor.TransfromComponentZ.bRenderVisibility = true
-    else        
-        self.AxisActor.RotationComponent.bRenderVisibility = false
-        self.AxisActor.BoxComponent.bRenderVisibility = true
-
-        self.AxisActor.TransfromComponentX.bRenderVisibility = false
-        self.AxisActor.TransfromComponentY.bRenderVisibility = false
-        self.AxisActor.TransfromComponentZ.bRenderVisibility = false
+        bShowMove = true
+    else
+        bShowBox = true
     end
+    self.AxisActor.BoxComponent.bRenderVisibility = bShowBox
+    
+    self.AxisActor.TransfromComponentX.bRenderVisibility = bShowMove
+    self.AxisActor.TransfromComponentY.bRenderVisibility = bShowMove
+    self.AxisActor.TransfromComponentZ.bRenderVisibility = bShowMove
+    
+    self.AxisActor.RotationComponentX.bRenderVisibility = bShowRotation
+    self.AxisActor.RotationComponentY.bRenderVisibility = bShowRotation
+    self.AxisActor.RotationComponentZ.bRenderVisibility = bShowRotation
 end
 
 function M:GetWorld()
