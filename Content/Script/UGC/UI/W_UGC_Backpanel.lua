@@ -13,11 +13,14 @@ function M:OnMouseButtonDown(MyGeometry, MouseEvent)
     -- 真实的屏幕坐标 = 当前屏幕坐标 - 左上角的屏幕坐标
     local realScreenPos = UE.FVector2D(screenPos.X - selfScreenPos.X, screenPos.Y - selfScreenPos.Y)
     local selectActor = self:FindNearActor(realScreenPos)
+    local bSelectAxis = _G.UGC.OperatorMrg:TrySelectAxis(MouseEvent)
 
     if selectActor then
         -- self:SetSelectEffect(selectActor)
         -- UE.USPLuaFunctionLibary.SetActorSelectEffect(selectActor)
-        _G.UGC.OperatorMrg:SelectObjectFromScene(selectActor)
+        if not bSelectAxis then
+            _G.UGC.OperatorMrg:SelectObjectFromScene(selectActor)
+        end
     end    
     -- local LineTraceUtil = require("UGC.Util.LineTraceUtil")
     -- local pickPos, hitResult = LineTraceUtil:GetPickupPosition(self, panelPos)
@@ -33,6 +36,7 @@ function M:OnMouseButtonDown(MyGeometry, MouseEvent)
     self.StartWorldPos = self:ScreenToWorld(screenPos)
     self.StartCameraPos = self:GetCameraPos()
     self.StartPickUpPos = self:GetPickUpPos(MouseEvent)
+    self.FirstBoundBoxInfo = _G.UGC.OperatorMrg:GetFirstSelectBoundBoxInfo()
     
     -- print("[UGC]OnMouseButtonDown, bMouseDown=", self.bMouseDown, ",StartCameraPos=", self.StartCameraPos)
     if self.bMouseDown then
@@ -91,7 +95,20 @@ function M:OnDraging(MyGeometry, MouseEvent)
 end
 
 function M:OnTransformSelectObjects(MouseEvent)    
-    local Dir, Right = self:CalcMoveInfo(MouseEvent)    
+    local Transfrom_Mode = _G.UGC.SelectInfo.Transfrom_Mode
+    local OperatorType = _G.UGC.OperatorType
+    if Transfrom_Mode == OperatorType.Tf_Move then
+        self:OnMoveSelectObjects(MouseEvent)
+    elseif Transfrom_Mode == OperatorType.Tf_Scale then
+        self:ScaleSelectObjects(MouseEvent)
+    elseif Transfrom_Mode == OperatorType.Tf_Rotaion then
+        self:RotationSelectObjects(MouseEvent)
+    end
+end
+
+-- 平移物体
+function M:OnMoveSelectObjects(MouseEvent)
+    local Dir, Right = self:CalcMoveInfo(MouseEvent)
     local NewObjPos = self:GetPickUpPos(MouseEvent)
     local MoveOffset = NewObjPos - self.StartPickUpPos
 
@@ -115,12 +132,73 @@ function M:OnTransformSelectObjects(MouseEvent)
     _G.UGC.EventManager:SendUGCMessage("UGC.Event.TransformSelectObject")
 end
 
+-- 缩放物体
+function M:ScaleSelectObjects(MouseEvent)  
+    local NewObjPos = self:GetPickUpPos(MouseEvent)
+    local MoveOffset = NewObjPos - self.StartPickUpPos
+
+    local Dist = MoveOffset:Size()
+    if Dist < 0.1 then
+        return 
+    end
+    
+    local OldBoundBoxInfo = self.FirstBoundBoxInfo
+    local CurBoundBoxInfo = _G.UGC.OperatorMrg:GetFirstSelectBoundBoxInfo()
+
+    local OldSize_X = OldBoundBoxInfo.BoxExtent.X
+    local OldSize_Y = OldBoundBoxInfo.BoxExtent.Y
+    local OldSize_Z = OldBoundBoxInfo.BoxExtent.Z
+
+    local Scale = CurBoundBoxInfo.Scale
+
+    local SelectAxis = _G.UGC.SelectInfo.SelectAxis
+    if SelectAxis == _G.UGC.AxisType.Axis_X then
+        Scale.X = (OldSize_X + MoveOffset.X) * OldBoundBoxInfo.Scale.X / OldSize_X
+        Scale.X = self:AdjustScale(Scale.X)
+    elseif SelectAxis == _G.UGC.AxisType.Axis_Y then
+        Scale.Y = (OldSize_Y + MoveOffset.Y) * OldBoundBoxInfo.Scale.Y / OldSize_Y
+        Scale.Y = self:AdjustScale(Scale.Y)
+    elseif SelectAxis == _G.UGC.AxisType.Axis_Z then
+        Scale.Z = (OldSize_Z + MoveOffset.Z) * OldBoundBoxInfo.Scale.Z / OldSize_Z
+        Scale.Z = self:AdjustScale(Scale.Z)
+    else
+        Scale.X = (OldSize_X + MoveOffset.X) * OldBoundBoxInfo.Scale.X / OldSize_X
+        Scale.Y = (OldSize_Y + MoveOffset.Y) * OldBoundBoxInfo.Scale.Y / OldSize_Y
+        Scale.Z = (OldSize_Z + MoveOffset.Z) * OldBoundBoxInfo.Scale.Z / OldSize_Z
+        Scale.X = self:AdjustScale(Scale.X)
+        Scale.Y = self:AdjustScale(Scale.Y)
+        Scale.Z = self:AdjustScale(Scale.Z)
+    end
+    
+    local SelectObjects = _G.UGC.SelectInfo.SelectObjects
+    for i = 1, #SelectObjects do
+        local Obj = SelectObjects[i]
+        Obj:SetActorScale3D(Scale)
+    end
+
+    -- print("[UGC]ScaleSelectObjects, Dist=", Dist, ", Scale=", Scale, ",MoveOffset=", MoveOffset, ",CurBox:", CurBoundBoxInfo.BoxExtent)
+    
+    _G.UGC.EventManager:SendUGCMessage("UGC.Event.TransformSelectObject")
+end
+
+function M:AdjustScale(NewScale)
+    if NewScale < 0.001 then
+        NewScale = 0.001
+    end
+    return NewScale
+end
+
+-- 旋转物体
+function M:RotationSelectObjects(MouseEvent)
+end
+
 function M:OnDragCamera(MouseEvent)
     local CameraPos = self:CalcCameraMove(MouseEvent)
     self:SetCameraPos(CameraPos)
     self.StartCameraPos = CameraPos
 end
 
+-- 获得拾取的地面位置
 function M:GetPickUpPos(MouseEvent)
     local SelectObjects = _G.UGC.SelectInfo.SelectObjects
     local FirstSelectObj = SelectObjects[1]

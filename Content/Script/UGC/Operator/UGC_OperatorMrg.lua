@@ -24,10 +24,16 @@ function M:SelectObject(SelectObj)
 end
 
 function M:SelectObjectFromScene(SelectObj)
-    self:ShowAxisActor(SelectObj)
-    _G.UGC.SelectInfo.SelectObjects = { SelectObj }
-    self:ChangeTransfromMode()
-    _G.UGC.EventManager:SendUGCMessage("UGC.Event.SelectObjectFromScene", SelectObj)
+    if SelectObj then
+        self:ShowAxisActor(SelectObj)
+        _G.UGC.SelectInfo.SelectObjects = { SelectObj }
+        self:ChangeTransfromMode()
+        _G.UGC.EventManager:SendUGCMessage("UGC.Event.SelectObjectFromScene", SelectObj)
+    else
+        self:HideAxisActor()
+        _G.UGC.SelectInfo.SelectObjects = {}
+        _G.UGC.EventManager:SendUGCMessage("UGC.Event.SelectObject", _G.UGC.SelectInfo.SelectObjects)
+    end
 end
 
 function M:TransformSelectObject()
@@ -48,6 +54,22 @@ function M:TransformSelectObject()
     end
 end
 
+-- 得到第一个选中对象的包围盒信处
+function M:GetFirstSelectBoundBoxInfo()
+    -- GetActorBounds
+    local Origin = UE.FVector()
+    local BoxExtent = UE.FVector()
+    local Scale = UE.FVector(1, 1, 1)
+    local SelectObjects = _G.UGC.SelectInfo.SelectObjects
+    local FirstObject = SelectObjects[1]
+    if FirstObject then
+        FirstObject:GetActorBounds(true, Origin, BoxExtent, true)
+        Scale = FirstObject:GetActorScale3D()
+    end
+    local Info = { Origin = Origin, BoxExtent = BoxExtent, Scale = Scale }
+    return Info
+end
+
 function M:ChangeTransfromMode()
     if self.AxisActor == nil then
         return 
@@ -65,12 +87,36 @@ function M:ChangeTransfromMode()
         self.AxisActor.TransfromComponentX.Length = 200
         self.AxisActor.TransfromComponentY.Length = 200
         self.AxisActor.TransfromComponentZ.Length = 200
+
+        self.AxisActor.TransfromComponentX.Color = UE.FLinearColor(0, 0, 1, 1)
+        self.AxisActor.TransfromComponentY.Color = UE.FLinearColor(0, 1, 0, 1)
+        self.AxisActor.TransfromComponentZ.Color = UE.FLinearColor(1, 0, 0, 1)
+        
+        self.AxisActor.TransfromComponentX.Thickness = 2
+        self.AxisActor.TransfromComponentY.Thickness = 2
+        self.AxisActor.TransfromComponentZ.Thickness = 2
     elseif Transfrom_Mode == OperatorType.Tf_Rotaion then
         -- 旋转
         bShowRotation = true
+
+        self.AxisActor.RotationComponentX.Thickness = 2
+        self.AxisActor.RotationComponentY.Thickness = 2
+        self.AxisActor.RotationComponentZ.Thickness = 2
     elseif Transfrom_Mode == OperatorType.Tf_Scale then
         -- 缩放
         bShowMove = true
+
+        self.AxisActor.TransfromComponentX.Length = 200
+        self.AxisActor.TransfromComponentY.Length = 200
+        self.AxisActor.TransfromComponentZ.Length = 200
+        
+        self.AxisActor.TransfromComponentX.Color = UE.FLinearColor(0, 0.2, 0.8, 1)
+        self.AxisActor.TransfromComponentY.Color = UE.FLinearColor(0.2, 0.8, 0, 1)
+        self.AxisActor.TransfromComponentZ.Color = UE.FLinearColor(0.8, 0, 0.2, 1)
+
+        self.AxisActor.TransfromComponentX.Thickness = 4
+        self.AxisActor.TransfromComponentY.Thickness = 4
+        self.AxisActor.TransfromComponentZ.Thickness = 4
     else
         bShowBox = true
     end
@@ -83,6 +129,69 @@ function M:ChangeTransfromMode()
     self.AxisActor.RotationComponentX.bRenderVisibility = bShowRotation
     self.AxisActor.RotationComponentY.bRenderVisibility = bShowRotation
     self.AxisActor.RotationComponentZ.bRenderVisibility = bShowRotation
+
+    _G.UGC.SelectInfo.SelectAxis = _G.UGC.AxisType.Axis_None
+end
+
+function M:TrySelectAxis(MouseEvent)
+    local SelectObjects = _G.UGC.SelectInfo.SelectObjects
+    if #SelectObjects == 0 then
+        return false
+    end
+    if self.AxisActor == nil then
+        return false
+    end
+
+    local World = self:GetWorld()
+    local ScreenPosition = UE.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)  -- 取屏幕坐标(这个是屏幕坐标噢，不是当前窗口的坐标）
+    local ViewportPosition = UE.UUGCFunctionLibary.ScreenToWindow(ScreenPosition) -- 转换成当前的视图坐标(这个才是窗口的相对坐标)
+
+    local localPlayerControler = _G.UGameplayStatics.GetPlayerController(World, 0)
+    -- K2_LineTraceComponent
+    local Transfrom_Mode = _G.UGC.SelectInfo.Transfrom_Mode
+    local OperatorType = _G.UGC.OperatorType
+    local AxisType = _G.UGC.AxisType
+    
+    local DefaultThickness = 2
+    local AxisComponents = {}
+    local AxisTypes = { AxisType.Axis_X, AxisType.Axis_Y, AxisType.Axis_Z }
+    if Transfrom_Mode == OperatorType.Tf_Move then
+        -- 平移
+        AxisComponents[1] = self.AxisActor.TransfromComponentX
+        AxisComponents[2] = self.AxisActor.TransfromComponentY
+        AxisComponents[3] = self.AxisActor.TransfromComponentZ
+    elseif Transfrom_Mode == OperatorType.Tf_Rotaion then
+        -- 旋转
+        AxisComponents[1] = self.AxisActor.RotationComponentX
+        AxisComponents[2] = self.AxisActor.RotationComponentY
+        AxisComponents[3] = self.AxisActor.RotationComponentZ
+    elseif Transfrom_Mode == OperatorType.Tf_Scale then
+        -- 缩放
+        AxisComponents[1] = self.AxisActor.TransfromComponentX
+        AxisComponents[2] = self.AxisActor.TransfromComponentY
+        AxisComponents[3] = self.AxisActor.TransfromComponentZ
+        DefaultThickness = 4
+    else
+    end
+    
+    for i = 1, #AxisComponents do
+        local Component = AxisComponents[i]
+        Component.Thickness = DefaultThickness
+    end
+
+    local bFind = false
+    for i = 1, #AxisComponents do
+        local Component = AxisComponents[i]
+        local bSuc = Component:IsPick(localPlayerControler, ViewportPosition, 10)
+        if bSuc then
+            Component.Thickness = 10
+            _G.UGC.SelectInfo.SelectAxis = AxisTypes[i]
+            bFind = true
+            break
+        end
+    end
+
+    return bFind
 end
 
 function M:GetWorld()

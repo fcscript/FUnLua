@@ -77,4 +77,7 @@ public:
 			bWorld = bWorldIn;
 		}
 	}
+
+    UFUNCTION()
+    bool IsPick(APlayerController const* Player, const FVector2D& ScreenPos, float fDist);
 };

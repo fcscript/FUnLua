@@ -19,7 +19,7 @@ function M:InitButtonList()
     local buttonBpClass = UE.UClass.Load(buttonBpClassPath)
     self.ButtonBpClass = buttonBpClass
     self.HB_FuncButtonList:ClearChildren()
-    self:AddButton("Test", M.OnTest)
+    self:AddButton("取消选中", M.OnCancelMode)
     
     self:AddButton("移动", M.OnMoveMode)
     self:AddButton("旋转", M.OnRotationMode)
@@ -35,16 +35,9 @@ function M:AddButton(title, cb)
     Widget.LB_ButtonName:SetText(title)
 end
 
-function M:OnTest()    
-    local initRotation = UE.FRotator(0, 0, 0)
-    local quat = initRotation:ToQuat()
-    local hitResult = UE.FHitResult()
-    hitResult.Location.X = 100
-    hitResult.Location.Y = 105
-    hitResult.Location.Z = 190
-    local hitPos = hitResult.Location
-    local transform = UE.FTransform(quat, hitPos)
-    print("[UGC]hitResult.Location:", hitResult.Location, ",transform:", transform)
+function M:OnCancelMode()
+    _G.UGC.SelectInfo.Transfrom_Mode = _G.UGC.OperatorType.Tf_None
+    _G.UGC.EventManager:SendUGCMessage("UGC.Event.ChangeTransfromMode", _G.UGC.SelectInfo.Transfrom_Mode)
 end
 
 function M:OnMoveMode()

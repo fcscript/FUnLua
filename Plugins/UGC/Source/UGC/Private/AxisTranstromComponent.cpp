@@ -6,8 +6,8 @@
 #include "MaterialShared.h"
 #include "SceneManagement.h"
 
+#include "Kismet/GameplayStatics.h"
 #include "AxisGizmoRenderingUtil.h"
-
 
 class FAxisTranstromComponentSceneProxy final : public FPrimitiveSceneProxy
 {
@@ -104,6 +104,9 @@ public:
 
 				FVector StartPoint = Origin + StartDist*ArrowDirection;
 				FVector EndPoint = Origin + EndDist*ArrowDirection;
+
+                AxisCompnent->RenderStartPos = StartPoint;
+                AxisCompnent->RenderEndPos = EndPoint;
 
 				PDI->DrawLine(StartPoint, EndPoint, Color, SDPG_Foreground, UseThickness, 0.0f, true);
 			}

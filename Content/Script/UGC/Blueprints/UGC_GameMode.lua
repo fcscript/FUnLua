@@ -10,6 +10,7 @@ _G.UGC =
 {
     DragInfo = UGC_DragInfo,
     OperatorType = UGC_OperatorType,
+    AxisType = { Axis_None = 0, Axis_X = 1, Axis_Y = 2, Axis_Z = 3, },
     SceneObjects = UGC_SceneObjects,
     SelectInfo = UGC_SelectInfo,
     EventManager = UGC_EventManager,

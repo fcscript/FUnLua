@@ -32,6 +32,11 @@ public:
     // if true, we drew along -Direction instead of Direction, and so should hit-test accordingly
     UPROPERTY(EditAnywhere, Category = Options)
     bool bFlipped;
+
+    UPROPERTY(EditAnywhere, Category = Options)
+    FVector   RenderStartPos;
+    UPROPERTY(EditAnywhere, Category = Options)
+    FVector   RenderEndPos;
 private:
 	//~ Begin UPrimitiveComponent Interface.
 	virtual FPrimitiveSceneProxy* CreateSceneProxy() override;
