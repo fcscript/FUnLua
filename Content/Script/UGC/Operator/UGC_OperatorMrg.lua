@@ -179,7 +179,7 @@ function M:TrySelectAxis(MouseEvent)
         Component.Thickness = DefaultThickness
     end
 
-    local bFind = false
+    local bFind = _G.UGC.SelectInfo.SelectAxis == _G.UGC.AxisType.Axis_None
     for i = 1, #AxisComponents do
         local Component = AxisComponents[i]
         local bSuc = Component:IsPick(localPlayerControler, ViewportPosition, 10)
