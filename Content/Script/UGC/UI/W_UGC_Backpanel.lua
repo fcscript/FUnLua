@@ -370,23 +370,22 @@ function M:InnerFindNearActor(playerControler, StartIndex, objects, screenPos)
         local obj = objects[i]
         local WorldPosition = obj:K2_GetActorLocation()
         local actorScreenPosition = UE.FVector2D()
-        local bSuc = UE.UGameplayStatics.ProjectWorldToScreen(playerControler, WorldPosition, actorScreenPosition, false)
-        if bSuc then
-            -- print("[UGC][FindNearActor]actorScreenPosition:", actorScreenPosition, ",screenPos:", screenPos, ",name:", obj:GetName())
-            local dx = sx - actorScreenPosition.X
-            local dy = sy - actorScreenPosition.Y
-            local dist = dx * dx + dy * dy
-            if dist < distMin then
-                if self:IsCanSelect(playerControler, obj, screenPos ) then
-                    distMin = dist
-                    findActor = obj
-                end
+        UE.UUGCFunctionLibary.ProjectWorldToScreen(playerControler, WorldPosition, actorScreenPosition, false)
+        -- print("[UGC][FindNearActor]actorScreenPosition:", actorScreenPosition, ",screenPos:", screenPos, ",name:", obj:GetName())
+        local dx = sx - actorScreenPosition.X
+        local dy = sy - actorScreenPosition.Y
+        local dist = dx * dx + dy * dy
+        if dist < distMin then
+            if self:IsCanSelect(playerControler, obj, screenPos ) then
+                distMin = dist
+                findActor = obj
             end
         end
     end
     return findActor
 end
 
+-- 是否可以选中（只有在包围盒范围内的才可以选中）
 function M:IsCanSelect(playerControler, Actor, screenPos)
     local Origin = UE.FVector()
     local BoxExtent = UE.FVector()
@@ -410,8 +409,14 @@ function M:IsCanSelect(playerControler, Actor, screenPos)
 
     local V1 = Origin - BoxExtent
     local V8 = Origin + BoxExtent
+    local V2 = UE.FVector(V8.X, V1.Y, V1.Z)
+    local V3 = UE.FVector(V1.X, V1.Y, V8.Z)
+    local V4 = UE.FVector(V8.X, V1.Y, V8.Z)
+    local V5 = UE.FVector(V1.X, V8.Y, V1.Z)
+    local V6 = UE.FVector(V8.X, V8.Y, V1.Z)
+    local V7 = UE.FVector(V1.X, V8.Y, V8.Z)
     
-    local Points = { V1, V8 }
+    local Points = { V1, V8, V2, V3, V4, V5, V6, V7 }
     local S1 = UE.FVector2D()
     for i = 1, #Points do
         UE.UUGCFunctionLibary.ProjectWorldToScreen(playerControler, Points[i], S1, false)
