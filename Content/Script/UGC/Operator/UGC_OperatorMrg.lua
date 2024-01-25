@@ -20,11 +20,16 @@ function M:DeleteSelects(SelectObjects)
 end
 
 function M:SelectObject(SelectObj)
-    self:ShowAxisActor(SelectObj)
+    if SelectObj then
+        self:ShowAxisActor(SelectObj)
+        self:ChangeTransfromMode()
+    else
+        self:HideAxisActor()
+    end
 end
 
 function M:SelectObjectFromScene(SelectObj)
-    if SelectObj then
+    if UE.UObject.IsValid(SelectObj) then        
         self:ShowAxisActor(SelectObj)
         _G.UGC.SelectInfo.SelectObjects = { SelectObj }
         self:ChangeTransfromMode()
@@ -32,7 +37,7 @@ function M:SelectObjectFromScene(SelectObj)
     else
         self:HideAxisActor()
         _G.UGC.SelectInfo.SelectObjects = {}
-        _G.UGC.EventManager:SendUGCMessage("UGC.Event.SelectObject", _G.UGC.SelectInfo.SelectObjects)
+        _G.UGC.EventManager:SendUGCMessage("UGC.Event.SelectObject", nil)
     end
 end
 
@@ -41,7 +46,11 @@ function M:TransformSelectObject()
     local Location = UE.FVector()
     for i = 1, #SelectObjects do
         local SelectObject = SelectObjects[i]
-        Location = Location + SelectObject:K2_GetActorLocation()        
+        
+        local Origin = UE.FVector()
+        local BoxExtent = UE.FVector()
+        SelectObject:GetActorBounds(true, Origin, BoxExtent, true)        
+        Location = Location + Origin
     end
     local Count = #SelectObjects
     if Count > 0 then
@@ -131,6 +140,7 @@ function M:ChangeTransfromMode()
     self.AxisActor.RotationComponentZ.bRenderVisibility = bShowRotation
 
     _G.UGC.SelectInfo.SelectAxis = _G.UGC.AxisType.Axis_None
+    _G.UGC.SelectInfo.NeedClearSelectAxis = false
 end
 
 function M:TrySelectAxis(MouseEvent)
@@ -179,19 +189,80 @@ function M:TrySelectAxis(MouseEvent)
         Component.Thickness = DefaultThickness
     end
 
-    local bFind = _G.UGC.SelectInfo.SelectAxis == _G.UGC.AxisType.Axis_None
+    local bNeedClearAxis = _G.UGC.SelectInfo.NeedClearSelectAxis
+    _G.UGC.SelectInfo.NeedClearSelectAxis = true
+    local bFind = _G.UGC.SelectInfo.SelectAxis ~= _G.UGC.AxisType.Axis_None
     for i = 1, #AxisComponents do
         local Component = AxisComponents[i]
         local bSuc = Component:IsPick(localPlayerControler, ViewportPosition, 10)
         if bSuc then
             Component.Thickness = 10
+            bNeedClearAxis = false
+            _G.UGC.SelectInfo.NeedClearSelectAxis = false
             _G.UGC.SelectInfo.SelectAxis = AxisTypes[i]
             bFind = true
             break
         end
     end
 
+    if bNeedClearAxis then
+        _G.UGC.SelectInfo.SelectAxis = _G.UGC.AxisType.Axis_None
+    else
+        local Index = _G.UGC.SelectInfo.SelectAxis
+        local Component = AxisComponents[Index]
+        if Component then
+            Component.Thickness = 10
+        end
+    end
+
     return bFind
+end
+
+-- 获得拾取的地面位置
+function M:GetTerranPickPos(Origin, ScreenPosition)   
+    local world = self:GetWorld()     
+    local WorldPosition = UE.FVector()
+    local WorldDirection = UE.FVector()
+    local localPlayerControler = _G.UGameplayStatics.GetPlayerController(world, 0)
+    -- local ScreenPosition = UE4.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)  -- 取屏幕坐标
+    UE.UGameplayStatics.DeprojectScreenToWorld(localPlayerControler, ScreenPosition, WorldPosition, WorldDirection)
+    
+    local TerrainPlane = UE.FPlane(Origin, UE.FVector(0, 0, 1))
+    local NewObjPos = TerrainPlane:IntersectLine(WorldPosition, WorldDirection)
+
+    return NewObjPos
+end
+
+-- 得到摄像机方向的拾取位置
+function M:GetCameraPickPos(Origin, ScreenPosition)  
+    local world = self:GetWorld()
+    local WorldPosition = UE.FVector()
+    local WorldDirection = UE.FVector()
+    local localPlayerControler = _G.UGameplayStatics.GetPlayerController(world, 0)
+    -- local ScreenPosition = UE4.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)  -- 取屏幕坐标
+    UE.UGameplayStatics.DeprojectScreenToWorld(localPlayerControler, ScreenPosition, WorldPosition, WorldDirection)        
+    WorldDirection:Normalize()
+    
+    local CameraRatation = localPlayerControler:K2_GetActorRotation()
+    local CameraDir = CameraRatation:ToVector()
+    CameraDir:Normalize()
+
+    -- 选取摄像机的朝向做平面的法向量
+    local FacePlane = UE.FPlane(Origin, CameraDir)
+
+    local NewObjPos = FacePlane:IntersectLine(WorldPosition, WorldDirection)
+
+    return NewObjPos
+end
+
+-- 得到第一个选中对象的位置
+function M:GetFirstSelectActorPosition()
+    local FirstSelectObj = _G.UGC.SelectInfo.SelectObjects[1]    
+    local LastObjPos = UE.FVector()
+    if FirstSelectObj then
+        LastObjPos = FirstSelectObj:K2_GetActorLocation()
+    end
+    return LastObjPos
 end
 
 function M:GetWorld()
@@ -209,13 +280,15 @@ function M:CreateAxisObject(Location)
 end
 
 function M:ShowAxisActor(selectActor)
-	local Location = selectActor:K2_GetActorLocation()
+    local Origin = UE.FVector()
+    local BoxExtent = UE.FVector()
+    selectActor:GetActorBounds(true, Origin, BoxExtent, true)
     if self.AxisActor == nil then
-        self:CreateAxisObject(Location)
+        self:CreateAxisObject(Origin)
     end
     self.AxisActor:SetActorHiddenInGame(false)
     local SweepHitResult = UE.FHitResult()
-    self.AxisActor:K2_GetRootComponent():K2_SetRelativeLocation(Location, false, SweepHitResult, false)
+    self.AxisActor:K2_GetRootComponent():K2_SetRelativeLocation(Origin, false, SweepHitResult, false)
     self:RefreshAxisRadius()
 end
 

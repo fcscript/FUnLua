@@ -163,8 +163,10 @@ bool UAxisTranstromComponent::LineTraceComponent(FHitResult& OutHit, const FVect
 
 	UseDirection = (bWorld) ? UseDirection : Transform.TransformVector(UseDirection);
 	FVector UseOrigin = Transform.TransformPosition(FVector::ZeroVector);
-	FVector Point0 = UseOrigin + StartDist * UseDirection;
-	FVector Point1 = UseOrigin + EndDist * UseDirection;
+	//FVector Point0 = UseOrigin + StartDist * UseDirection;
+	//FVector Point1 = UseOrigin + EndDist * UseDirection;
+    FVector Point0 = RenderStartPos;
+    FVector Point1 = RenderEndPos;
 
 	FVector NearestArrow, NearestLine;
 	FMath::SegmentDistToSegmentSafe(Point0, Point1, Start, End, NearestArrow, NearestLine);

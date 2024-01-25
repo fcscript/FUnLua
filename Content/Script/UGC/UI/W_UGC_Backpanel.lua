@@ -21,6 +21,8 @@ function M:OnMouseButtonDown(MyGeometry, MouseEvent)
         if not bSelectAxis then
             _G.UGC.OperatorMrg:SelectObjectFromScene(selectActor)
         end
+    elseif not bSelectAxis then
+        _G.UGC.OperatorMrg:SelectObjectFromScene(nil)
     end    
     -- local LineTraceUtil = require("UGC.Util.LineTraceUtil")
     -- local pickPos, hitResult = LineTraceUtil:GetPickupPosition(self, panelPos)
@@ -115,25 +117,58 @@ end
 -- 平移物体
 function M:OnMoveSelectObjects(MouseEvent)
     local Dir, Right = self:CalcMoveInfo(MouseEvent)
-    local NewObjPos = self:GetTerranPickPos(MouseEvent)
-    local MoveOffset = NewObjPos - self.StartTerrainPickPos
+    local NewTerranPos = self:GetTerranPickPos(MouseEvent)
+    local NewFacePos = self:GetFacePickPos(MouseEvent)
+    local MoveOffset = NewTerranPos - self.StartTerrainPickPos
+    local FaceMove = NewFacePos - self.StartFacePickPos    
 
     local SelectObjects = _G.UGC.SelectInfo.SelectObjects
-    for i = 1, #SelectObjects do
-        local Obj = SelectObjects[i]
-        local OldPos = Obj:K2_GetActorLocation()
-        local NewPos = OldPos + MoveOffset
-            
-        local sweepHitResult = UE4.FHitResult()
-        Obj:K2_SetActorLocation(NewPos, false, sweepHitResult, false)
-    end    
+    local SelectAxis = _G.UGC.SelectInfo.SelectAxis
+    if SelectAxis == _G.UGC.AxisType.Axis_X then
+        for i = 1, #SelectObjects do
+            local Obj = SelectObjects[i]
+            local NewPos = Obj:K2_GetActorLocation()
+            NewPos.X = NewPos.X + MoveOffset.X
+                
+            local sweepHitResult = UE4.FHitResult()
+            Obj:K2_SetActorLocation(NewPos, false, sweepHitResult, false)
+        end
+    elseif SelectAxis == _G.UGC.AxisType.Axis_Y then
+        for i = 1, #SelectObjects do
+            local Obj = SelectObjects[i]
+            local NewPos = Obj:K2_GetActorLocation()
+            NewPos.Y = NewPos.Y + MoveOffset.Y
+                
+            local sweepHitResult = UE4.FHitResult()
+            Obj:K2_SetActorLocation(NewPos, false, sweepHitResult, false)
+        end
+    elseif SelectAxis == _G.UGC.AxisType.Axis_Z then
+        for i = 1, #SelectObjects do
+            local Obj = SelectObjects[i]
+            local NewPos = Obj:K2_GetActorLocation()
+            NewPos.Z = NewPos.Z + FaceMove.Z
+                
+            local sweepHitResult = UE4.FHitResult()
+            Obj:K2_SetActorLocation(NewPos, false, sweepHitResult, false)
+        end
+    else
+        for i = 1, #SelectObjects do
+            local Obj = SelectObjects[i]
+            local OldPos = Obj:K2_GetActorLocation()
+            local NewPos = OldPos + MoveOffset
+                
+            local sweepHitResult = UE4.FHitResult()
+            Obj:K2_SetActorLocation(NewPos, false, sweepHitResult, false)
+        end    
+    end
+
     local CameraPos = self.StartCameraPos - Dir + Right
     -- local CameraPos = self.StartCameraPos + MoveOffset
     self:SetCameraPos(CameraPos)
     self.StartCameraPos = CameraPos
 
-    NewObjPos = self:GetTerranPickPos(MouseEvent)
-    self.StartTerrainPickPos = NewObjPos
+    self.StartTerrainPickPos = self:GetTerranPickPos(MouseEvent)
+    self.StartFacePickPos = self:GetFacePickPos(MouseEvent)
 
     _G.UGC.EventManager:SendUGCMessage("UGC.Event.TransformSelectObject")
 end
@@ -145,7 +180,6 @@ function M:ScaleSelectObjects(MouseEvent)
     local MoveOffset = NewTerranPos - self.StartTerrainPickPos
     local FaceMove = NewFacePos - self.StartFacePickPos    
 
-    local FaceDist = FaceMove:Size()
     local Dist = MoveOffset:Size()
     if Dist < 0.1 then
         return 
@@ -210,52 +244,16 @@ end
 
 -- 获得拾取的地面位置
 function M:GetTerranPickPos(MouseEvent)
-    local SelectObjects = _G.UGC.SelectInfo.SelectObjects
-    local FirstSelectObj = SelectObjects[1]
-    
-    local LastObjPos = UE.FVector()
-    if FirstSelectObj then
-        LastObjPos = FirstSelectObj:K2_GetActorLocation()
-    end
-    local TerrainPlane = UE.FPlane(LastObjPos, UE.FVector(0, 0, 1))
-    
-    local WorldPosition = UE.FVector()
-    local WorldDirection = UE.FVector()
-    local localPlayerControler = _G.UGameplayStatics.GetPlayerController(self, 0)
+    local Origin = _G.UGC.OperatorMrg:GetFirstSelectActorPosition()
     local ScreenPosition = UE4.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)  -- 取屏幕坐标
-    UE.UGameplayStatics.DeprojectScreenToWorld(localPlayerControler, ScreenPosition, WorldPosition, WorldDirection)
-    local NewObjPos = TerrainPlane:IntersectLine(WorldPosition, WorldDirection)
-
-    return NewObjPos
+    return _G.UGC.OperatorMrg:GetTerranPickPos(Origin, ScreenPosition)
 end
 
 -- 获得正面拾取的位置
 function M:GetFacePickPos(MouseEvent)    
-    local WorldPosition = UE.FVector()
-    local WorldDirection = UE.FVector()
-    local localPlayerControler = _G.UGameplayStatics.GetPlayerController(self, 0)
+    local Origin = _G.UGC.OperatorMrg:GetFirstSelectActorPosition()
     local ScreenPosition = UE4.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)  -- 取屏幕坐标
-    UE.UGameplayStatics.DeprojectScreenToWorld(localPlayerControler, ScreenPosition, WorldPosition, WorldDirection)
-    
-    local SelectObjects = _G.UGC.SelectInfo.SelectObjects
-    local FirstSelectObj = SelectObjects[1]
-    
-    local LastObjPos = UE.FVector()
-    if FirstSelectObj then
-        LastObjPos = FirstSelectObj:K2_GetActorLocation()
-    end
-    WorldDirection:Normalize()
-    
-    local CameraRatation = localPlayerControler:K2_GetActorRotation()
-    local CameraDir = CameraRatation:ToVector()
-    CameraDir:Normalize()
-
-    -- 选取摄像机的朝向做平面的法向量
-    local FacePlane = UE.FPlane(LastObjPos, CameraDir)
-
-    local NewObjPos = FacePlane:IntersectLine(WorldPosition, WorldDirection)
-
-    return NewObjPos
+    return _G.UGC.OperatorMrg:GetCameraPickPos(Origin, ScreenPosition)
 end
 
 function M:GetCameraPos()
@@ -379,12 +377,52 @@ function M:InnerFindNearActor(playerControler, StartIndex, objects, screenPos)
             local dy = sy - actorScreenPosition.Y
             local dist = dx * dx + dy * dy
             if dist < distMin then
-                distMin = dist
-                findActor = obj
+                if self:IsCanSelect(playerControler, obj, screenPos ) then
+                    distMin = dist
+                    findActor = obj
+                end
             end
         end
     end
     return findActor
+end
+
+function M:IsCanSelect(playerControler, Actor, screenPos)
+    local Origin = UE.FVector()
+    local BoxExtent = UE.FVector()
+    Actor:GetActorBounds(true, Origin, BoxExtent, true)
+
+    local S0 = UE.FVector2D()
+    UE.UUGCFunctionLibary.ProjectWorldToScreen(playerControler, Origin, S0, false)
+    local Left = S0.X
+    local Right = S0.X
+    local Top = S0.Y
+    local Bottom = S0.Y
+
+    ----      V7 ----- V8
+    ----     /        / | 
+    ---     /        /  |
+    ----   V5 ----- V6  |
+    ----   |        |   |
+    ----   |  V3    | V4
+    ----   | /      | /
+    ----   V1 ----- V2 
+
+    local V1 = Origin - BoxExtent
+    local V8 = Origin + BoxExtent
+    
+    local Points = { V1, V8 }
+    local S1 = UE.FVector2D()
+    for i = 1, #Points do
+        UE.UUGCFunctionLibary.ProjectWorldToScreen(playerControler, Points[i], S1, false)
+        Left = math.min(Left, S1.X)
+        Right = math.max(Right, S1.X)
+        Top = math.min(Top, S1.Y)
+        Bottom = math.max(Bottom, S1.Y)
+    end
+    local X = screenPos.X
+    local Y = screenPos.Y
+    return X > Left and X < Right and Y > Top and Y < Bottom
 end
 
 function M:SetSelectEffect(selectActor)    
