@@ -32,6 +32,8 @@ function M:OnMouseButtonDown(MyGeometry, MouseEvent)
     --     print("[UGC]Find HitResult, hitActor:", hitActor)
     -- end
 
+    print("[UGC]OnMouseButtonDown, bMouseDown=", self.bMouseDown, ",selectActor=", selectActor, ",bSelectAxis=", bSelectAxis)
+
     local bMouseLD = self:IsLeftMouseDown(MouseEvent)
     self.MouseDownPos = UE.FVector2D(screenPos.X, screenPos.Y)
     self.bMouseDown = bMouseLD
@@ -41,6 +43,8 @@ function M:OnMouseButtonDown(MyGeometry, MouseEvent)
     self.StartTerrainPickPos = self:GetTerranPickPos(MouseEvent)
     self.StartFacePickPos = self:GetFacePickPos(MouseEvent)
     self.FirstBoundBoxInfo = _G.UGC.OperatorMrg:GetFirstSelectBoundBoxInfo()
+
+    _G.UGC.OperatorMrg:HideDebugLine()
    
     -- print("[UGC]OnMouseButtonDown, bMouseDown=", self.bMouseDown, ",StartCameraPos=", self.StartCameraPos)
     if self.bMouseDown then
@@ -92,11 +96,12 @@ function M:OnDraging(MyGeometry, MouseEvent)
         else
             self:OnDragCamera(MouseEvent)
         end
+        _G.UGC.SelectInfo.NeedClearSelectAxis = false
     else
         self:OnDragCamera(MouseEvent)
     end
 
-    self.StartWorldPos = WorldPosition
+    -- self.StartWorldPos = WorldPosition
     self.MouseDownPos = screenPos
     
     -- print("[UGC]OnDragingMove, CameraPos=", CameraPos, ",moveOffset=", moveOffset)
@@ -234,6 +239,27 @@ end
 
 -- 旋转物体
 function M:RotationSelectObjects(MouseEvent)
+    -- 计算两个屏幕拾取点在X0Y地平面的搞影点与球心的夹角
+    local ScreenPosition = UE4.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)  -- 取屏幕坐标
+    local NewTerranPos = self:GetTerranPickPos(MouseEvent)
+    local MoveOffset = NewTerranPos - self.StartTerrainPickPos
+    local Dist = MoveOffset:Size()
+    if Dist < 0.1 then
+        return 
+    end
+    local OldBoundBoxInfo = self.FirstBoundBoxInfo
+    local Origin = OldBoundBoxInfo.Origin
+    local DirA = self.StartTerrainPickPos - Origin
+    local DirB = NewTerranPos - Origin
+    DirA:Normalize()
+    DirB:Normalize()
+    local fAngle = UE.FVector.Dot(DirA, DirB)
+    fAngle = math.acos(fAngle)
+    local fDegree = fAngle * 180.0 / math.pi
+
+    _G.UGC.OperatorMrg:ShowDebugLine(self.StartTerrainPickPos, NewTerranPos)
+
+    print("[UGC]Rotaion, Degree=", fDegree, ",fAngle=", fAngle)
 end
 
 function M:OnDragCamera(MouseEvent)
@@ -244,15 +270,17 @@ end
 
 -- 获得拾取的地面位置
 function M:GetTerranPickPos(MouseEvent)
-    local Origin = _G.UGC.OperatorMrg:GetFirstSelectActorPosition()
+    local Origin = _G.UGC.OperatorMrg:GetFirstSelectOrigin()
     local ScreenPosition = UE4.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)  -- 取屏幕坐标
+    ScreenPosition = UE.UUGCFunctionLibary.ScreenToWindow(ScreenPosition)
     return _G.UGC.OperatorMrg:GetTerranPickPos(Origin, ScreenPosition)
 end
 
 -- 获得正面拾取的位置
 function M:GetFacePickPos(MouseEvent)    
-    local Origin = _G.UGC.OperatorMrg:GetFirstSelectActorPosition()
+    local Origin = _G.UGC.OperatorMrg:GetFirstSelectOrigin()
     local ScreenPosition = UE4.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)  -- 取屏幕坐标
+    ScreenPosition = UE.UUGCFunctionLibary.ScreenToWindow(ScreenPosition)
     return _G.UGC.OperatorMrg:GetCameraPickPos(Origin, ScreenPosition)
 end
 

@@ -16,7 +16,7 @@ bool USPLuaFunctionLibary::GetRenderTextureColors(TArray<FColor>& OutColors, UTe
 FVector2D  USPLuaFunctionLibary::GetLastMousePosition()
 {
     FVector2D  MousePosition;
-    if(GEngine && !GEngine->GameViewport.IsNull())
+    if(GEngine && GEngine->GameViewport)
     {
         GEngine->GameViewport->GetMousePosition(MousePosition);
     }

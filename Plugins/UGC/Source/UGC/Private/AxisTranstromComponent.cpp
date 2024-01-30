@@ -108,7 +108,7 @@ public:
                 AxisCompnent->RenderStartPos = StartPoint;
                 AxisCompnent->RenderEndPos = EndPoint;
 
-				PDI->DrawLine(StartPoint, EndPoint, Color, SDPG_Foreground, UseThickness, 0.0f, true);
+				PDI->DrawLine(StartPoint, EndPoint, Color, AxisCompnent->SceneDepthGroup, UseThickness, 0.0f, true);
 			}
 		}
 	}

@@ -59,6 +59,9 @@ public:
     // world/local coordinates state
     UPROPERTY(EditAnywhere, Category = Options)
     bool bWorld = false;
+
+    UPROPERTY(EditAnywhere, Category = Options)
+    TEnumAsByte<ESceneDepthPriorityGroup>  SceneDepthGroup;
 public:
 	UFUNCTION()
 	void UpdateHoverState(bool bHoveringIn)

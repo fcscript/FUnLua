@@ -32,4 +32,7 @@ public:
     UAxisBaseComponent* RotationComponentY;
     UPROPERTY(EditAnywhere, Category = Options)
     UAxisBaseComponent* RotationComponentZ;
+
+    UPROPERTY(EditAnywhere, Category = Options)
+    UActorComponent* DebugLineComponent;
 };

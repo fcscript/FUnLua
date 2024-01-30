@@ -26,30 +26,58 @@ public:
         }
 
         const FLinearColor& Color = AxisCompnent->Color;
-        const float Width = AxisCompnent->Width;
-        const float Height = AxisCompnent->Height;
-        const float Length = AxisCompnent->Length;
         const float Thickness = AxisCompnent->Thickness;
         const float HoverThicknessMultiplier = AxisCompnent->HoverSizeMultiplier;
 
         bool& bExternalRenderVisibility = AxisCompnent->bExternalRenderVisibility;
-        float RY = Width * 0.5f;
-        float RZ = Height * 0.5f;
-        float RX = Length * 0.5f;
+        const FSceneView* FocusedView = AxisGizmoRenderingUtil::FindFocusedEditorSceneView(Views, ViewFamily, VisibilityMap);
+        bool& bExternalHoverState = AxisCompnent->bHovering;
 
-        FVector  V[8] = 
+        //const FMatrix& LocalToWorldMatrix = GetLocalToWorld();
+        //FVector Origin = LocalToWorldMatrix.TransformPosition(FVector::ZeroVector);
+
+        bExternalRenderVisibility = true;
+        ESceneDepthPriorityGroup DepthType = AxisCompnent->SceneDepthGroup;
+
+        for (int32 ViewIndex = 0; ViewIndex < Views.Num(); ViewIndex++)
+        {
+            if (VisibilityMap & (1 << ViewIndex))
+            {
+                const FSceneView* View = Views[ViewIndex];
+                FPrimitiveDrawInterface* PDI = Collector.GetPDI(ViewIndex);
+                for(int32 i = 0; i< AxisCompnent->Boxs.Num(); ++i)
+                {
+                    DrawBox(PDI, AxisCompnent->Boxs[i], Color, DepthType, Thickness);
+                }
+
+                if(AxisCompnent->Boxs.Num() > 1 && AxisCompnent->bShowBigBox)
+                {
+                    DrawBox(PDI, AxisCompnent->BigBox, Color, DepthType, Thickness);
+                }
+            }
+        }
+    }
+    void  DrawBox(FPrimitiveDrawInterface* PDI, const FBox &Box, const FLinearColor& Color, ESceneDepthPriorityGroup DepthType, float Thickness) const
+    {
+        FVector Center = Box.GetCenter();
+        FVector Extent = Box.GetExtent();
+        float RY = Extent.Y;
+        float RZ = Extent.Z;
+        float RX = Extent.X;
+
+        FVector  V[8] =
         {
             FVector(-RX,  RY, -RZ),   // v0
             FVector(-RX, -RY, -RZ),   // v1
-            FVector( RX, -RY, -RZ),   // v2
-            FVector( RX,  RY, -RZ),   // v3
+            FVector(RX, -RY, -RZ),   // v2
+            FVector(RX,  RY, -RZ),   // v3
 
             FVector(-RX,  RY,  RZ),   // v4
             FVector(-RX, -RY,  RZ),   // v5
-            FVector( RX, -RY,  RZ),   // v6
-            FVector( RX,  RY,  RZ),   // v7
+            FVector(RX, -RY,  RZ),   // v6
+            FVector(RX,  RY,  RZ),   // v7
         };
-        int  Indics[24] = {0, 1, 0, 3, 1, 2, 2, 3, 2, 6, 6, 7, 3, 7, 1, 5, 5, 4, 0, 4, 4, 7, 5, 6 };
+        const int  Indics[24] = { 0, 1, 0, 3, 1, 2, 2, 3, 2, 6, 6, 7, 3, 7, 1, 5, 5, 4, 0, 4, 4, 7, 5, 6 };
         //      v4------v7
         //     /        /|
         //    v0------v3 |
@@ -58,32 +86,14 @@ public:
         //    |       |/         | / 
         //    v1------v2         0 ---- x
 
-        const FSceneView* FocusedView = AxisGizmoRenderingUtil::FindFocusedEditorSceneView(Views, ViewFamily, VisibilityMap);
-
-        const FMatrix& LocalToWorldMatrix = GetLocalToWorld();
-        FVector Origin = LocalToWorldMatrix.TransformPosition(FVector::ZeroVector);
-
-        bExternalRenderVisibility = true;
-
-        for (int32 ViewIndex = 0; ViewIndex < Views.Num(); ViewIndex++)
+        for (int i = 0; i < 24;)
         {
-            if (VisibilityMap & (1 << ViewIndex))
-            {
-                const FSceneView* View = Views[ViewIndex];
-                FPrimitiveDrawInterface* PDI = Collector.GetPDI(ViewIndex);
-                bool bIsFocusedView = (FocusedView != nullptr && View == FocusedView);
-                bool bIsOrtho = !View->IsPerspectiveProjection();
+            FVector  V1 = V[Indics[i++]];
+            FVector  V2 = V[Indics[i++]];
+            V1 += Center;
+            V2 += Center;
 
-                for (int i = 0; i < 24;)
-                {
-                    FVector  V1 = V[Indics[i++]];
-                    FVector  V2 = V[Indics[i++]];
-                    V1 = LocalToWorldMatrix.TransformPosition(V1);
-                    V2 = LocalToWorldMatrix.TransformPosition(V2);
-
-                    PDI->DrawLine(V1, V2, Color, SDPG_Foreground, Thickness, 0.0f, true);
-                }
-            }
+            PDI->DrawLine(V1, V2, Color, DepthType, Thickness, 0.0f, true);
         }
     }
 
@@ -133,9 +143,30 @@ bool UAxisBoxComponent::LineTraceComponent(FHitResult& OutHit, const FVector Sta
     return true;
 }
 
+void UAxisBoxComponent::UpdateBounds()
+{
+    if(Boxs.Num() > 0)
+    {
+        BigBox = Boxs[0];
+    }
+    else
+    {
+        BigBox = FBox();
+    }
+    for(int32 i = 1; i<Boxs.Num(); ++i)
+    {
+        const FBox &Box = Boxs[i];
+        BigBox += Box;
+    }
+}
+
 FBoxSphereBounds UAxisBoxComponent::CalcBounds(const FTransform& LocalToWorld) const
 {
-    float Radius = Width < Height ? Height :Width;
-    Radius = Radius < Length ? Length : Radius;
-    return FBoxSphereBounds(FSphere(FVector::ZeroVector, Radius).TransformBy(LocalToWorld));
+    //return FBoxSphereBounds(BigBox.TransformBy(LocalToWorld));
+    FVector Size = BigBox.GetSize();
+    float Radius = FMath::Max3(Size.X, Size.Y, Size.Z);
+    Radius = FMath::Max(Radius, 1.0f);
+    Radius *= 2.0f;
+    //return FBoxSphereBounds(FSphere(FVector::ZeroVector, Radius).TransformBy(LocalToWorld));
+    return FBoxSphereBounds(BigBox);
 }

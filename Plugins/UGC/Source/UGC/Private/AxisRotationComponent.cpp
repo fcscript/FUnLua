@@ -107,7 +107,7 @@ public:
                         float DeltaY = FMath::Sin(AngleDelta * (SideIndex + 1));
                         const FVector DeltaVector = WorldPlaneX * DeltaX + WorldPlaneY * DeltaY;
                         const FVector Vertex = WorldOrigin + UseRadius * DeltaVector;
-                        PDI->DrawLine(LastVertex, Vertex, Color, SDPG_Foreground, UseThickness, 0.0f, true);
+                        PDI->DrawLine(LastVertex, Vertex, Color, AxisCompnent->SceneDepthGroup, UseThickness, 0.0f, true);
                         //AAuroraTransformGizmoActor::DrawLine_RenderThread(View, MeshBuilder, LineIdx++, LastVertex, Vertex, UseThickness, Color);
 
                         LastVertex = Vertex;

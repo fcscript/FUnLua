@@ -36,4 +36,13 @@ public:
 
     UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "UGCFunctionLibary"))
     static int GetClientViewHeight();
+
+    UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "UGCFunctionLibary"))
+    static bool LineBoxIntersection(const FBox& Box, const FVector& Start, const FVector& End, const FVector& Direction);
+
+    UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "UGCFunctionLibary"))
+    static bool LineSphereIntersection(const FVector& Start, const FVector& Dir, float Length, const FVector& Origin, float Radius);
+
+    UFUNCTION(BlueprintCallable, meta = (DeterminesOutputType = "UGCFunctionLibary"))
+    static bool SphereIntersection(FVector &OutHit, const FVector& Start, const FVector& Dir, const FVector& Origin, float Radius);
 };

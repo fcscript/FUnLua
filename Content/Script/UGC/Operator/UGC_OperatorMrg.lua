@@ -128,6 +128,24 @@ function M:ChangeTransfromMode()
         self.AxisActor.TransfromComponentZ.Thickness = 4
     else
         bShowBox = true
+        
+        self.AxisActor.BoxComponent.Boxs:Clear()
+        
+        local SelectObjects = _G.UGC.SelectInfo.SelectObjects
+        local Origin = UE.FVector()
+        local BoxExtent = UE.FVector()
+
+        local Box = UE.FBox()
+        Box.IsValid = true
+        for _idx, SelectObj in pairs(SelectObjects) do
+            SelectObj:GetActorBounds(true, Origin, BoxExtent, true)
+            Box.Min = Origin - BoxExtent
+            Box.Max = Origin + BoxExtent
+            self.AxisActor.BoxComponent.Boxs:Add(Box)
+        end
+        self.AxisActor.BoxComponent.bShowBigBox = true
+        self.AxisActor.BoxComponent:UpdateBounds()        
+        print("[UGC]ChangeTransfromMode, Transfrom_Mode=", Transfrom_Mode, ",bShowBox=", bShowBox, ",#SelectObjects=", #SelectObjects)
     end
     self.AxisActor.BoxComponent.bRenderVisibility = bShowBox
     
@@ -151,6 +169,11 @@ function M:TrySelectAxis(MouseEvent)
     if self.AxisActor == nil then
         return false
     end
+    local Transfrom_Mode = _G.UGC.SelectInfo.Transfrom_Mode
+    local OperatorType = _G.UGC.OperatorType
+    if Transfrom_Mode == OperatorType.Tf_None then
+        return false
+    end
 
     local World = self:GetWorld()
     local ScreenPosition = UE.UKismetInputLibrary.PointerEvent_GetScreenSpacePosition(MouseEvent)  -- 取屏幕坐标(这个是屏幕坐标噢，不是当前窗口的坐标）
@@ -158,8 +181,6 @@ function M:TrySelectAxis(MouseEvent)
 
     local localPlayerControler = _G.UGameplayStatics.GetPlayerController(World, 0)
     -- K2_LineTraceComponent
-    local Transfrom_Mode = _G.UGC.SelectInfo.Transfrom_Mode
-    local OperatorType = _G.UGC.OperatorType
     local AxisType = _G.UGC.AxisType
     
     local DefaultThickness = 2
@@ -265,6 +286,17 @@ function M:GetFirstSelectActorPosition()
     return LastObjPos
 end
 
+-- 得到第一个选中对象的中心位置
+function M:GetFirstSelectOrigin()
+    local FirstSelectObj = _G.UGC.SelectInfo.SelectObjects[1]    
+    local Origin = UE.FVector()
+    local BoxExtent = UE.FVector()
+    if FirstSelectObj then
+        FirstSelectObj:GetActorBounds(true, Origin, BoxExtent, true)
+    end
+    return Origin
+end
+
 function M:GetWorld()
     return self.GameInstance:GetWorld()
 end
@@ -306,6 +338,24 @@ end
 function M:HideAxisActor()
     if self.AxisActor then
         self.AxisActor:SetActorHiddenInGame(true)
+    end    
+end
+
+function M:ShowDebugLine(StartPt, EndPt)
+    if self.AxisActor then
+        self.SplineComponent = self.AxisActor.DebugLineComponent
+        local Points = self.SplineComponent.Points
+        Points:Clear()
+        Points:Add(StartPt)
+        Points:Add(EndPt)
+
+        self.SplineComponent.bRenderVisibility = true
+    end
+end
+
+function M:HideDebugLine()
+    if self.SplineComponent then
+        self.SplineComponent.bRenderVisibility = false
     end    
 end
 

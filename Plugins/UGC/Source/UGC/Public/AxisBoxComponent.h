@@ -21,13 +21,18 @@ public:
 
 public:
     UPROPERTY(EditAnywhere, Category = Options)
-    float Width = 200.0f;
-    UPROPERTY(EditAnywhere, Category = Options)
-    float Height = 200.0f;
-    UPROPERTY(EditAnywhere, Category = Options)
-    float Length = 200.0f;
-    UPROPERTY(EditAnywhere, Category = Options)
     float Thickness = 2.0f;
+
+    UPROPERTY(EditAnywhere, Category = Options)
+    TArray<FBox>        Boxs;
+    UPROPERTY(EditAnywhere, Category = Options)
+    FBox                BigBox;
+
+    UPROPERTY(EditAnywhere, Category = Options)
+    bool                bShowBigBox = false;
+public:
+    UFUNCTION()
+    void UpdateBounds();
 private:
     //~ Begin UPrimitiveComponent Interface.
     virtual FPrimitiveSceneProxy* CreateSceneProxy() override;

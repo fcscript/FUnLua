@@ -3,6 +3,7 @@
 #include "SceneView.h"
 #include "Engine/LocalPlayer.h"
 #include "Slate/SGameLayerManager.h"
+#include "Math/UnrealMathUtility.h"
 
 
 bool UUGCFunctionLibary::GetRenderTextureColors(TArray<FColor>& OutColors, UTextureRenderTarget2D* SourceRenderTarget)
@@ -18,7 +19,7 @@ bool UUGCFunctionLibary::GetRenderTextureColors(TArray<FColor>& OutColors, UText
 FVector2D  UUGCFunctionLibary::GetLastMousePosition()
 {
     FVector2D  MousePosition;
-    if(GEngine && !GEngine->GameViewport.IsNull())
+    if(GEngine && GEngine->GameViewport)
     {
         GEngine->GameViewport->GetMousePosition(MousePosition);
     }
@@ -133,4 +134,35 @@ int UUGCFunctionLibary::GetClientViewHeight()
         return ViewportSize.Y;
     }
     return 0;
+}
+
+bool UUGCFunctionLibary::LineBoxIntersection(const FBox& Box, const FVector& Start, const FVector& End, const FVector& Direction)
+{
+    return FMath::LineBoxIntersection(Box, Start, End, Direction);
+}
+
+bool UUGCFunctionLibary::LineSphereIntersection(const FVector& Start, const FVector& Dir, float Length, const FVector& Origin, float Radius)
+{
+    return FMath::LineSphereIntersection<double>(Start, Dir, Length, Origin, Radius);
+}
+
+bool UUGCFunctionLibary::SphereIntersection(FVector& OutHit, const FVector& Start, const FVector& Dir, const FVector& Origin, float Radius)
+{
+    FVector   v = Start;   // v = vBegin - m_vCenter;
+    v -= Origin;
+
+    float     b = 2.0f * Dir.Dot(v);
+    float     c = v.Dot(v) - Radius * Radius;
+    float  fDis = (b * b) - (4.0f * c);
+
+    if (fDis < 0.0f)
+        return false;
+    fDis = FMath::Sqrt(fDis);
+    float  fFar = (-b + fDis) * 0.5f;
+    float  fNear = (-b - fDis) * 0.5f;
+    if (fFar < 0.0f || fNear < 0.0f)
+        return false;
+    OutHit = Start;
+    OutHit += Dir * fNear;
+    return true;
 }
