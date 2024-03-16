@@ -155,6 +155,9 @@ public:
     UFUNCTION(BlueprintCallable)
     void RegisterUIActionBindingByTag(FName InTagName, FOnExecuteActionCallback InOnExecuteAction);
 
+    UFUNCTION(BlueprintCallable)
+    void CheckBool();
+
 	//UPROPERTY()
 	//TSharedPtr<UFCTest> SharedPtr;  // 这个是不支持的
 
@@ -187,6 +190,31 @@ public:
 	int ID;
     UPROPERTY()
     FString NameValue;
+
+    UPROPERTY()
+    uint8 bUseFlag1 : 1;
+    UPROPERTY()
+    uint8 bUseFlag2 : 1;
+    UPROPERTY()
+    uint8 bUseFlag3 : 1;
+    UPROPERTY()
+    uint8 bUseFlag4 : 1;
+    UPROPERTY()
+    uint8 bUseFlag5 : 1;
+    UPROPERTY()
+    uint8 bUseFlag6 : 1;
+    UPROPERTY()
+    uint8 bUseFlag7 : 1;
+    UPROPERTY()
+    uint8 bUseFlag8 : 1;
+
+    UPROPERTY()
+    bool  bSetFlag1;
+    UPROPERTY()
+    bool  bSetFlag2;
+    UPROPERTY()
+    bool  bSetFlag3;
+
 	UPROPERTY()
 	float HP;
 	UPROPERTY()

@@ -22,7 +22,10 @@ void  PushScriptDefault(lua_State* L, const FCDynamicPropertyBase *DynamicProper
 }
 void  PushScriptBool(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
-	lua_pushboolean(L, *((bool*)ValueAddr));
+    FBoolProperty* Property = (FBoolProperty*)DynamicProperty->SafePropertyPtr->Property;
+    bool Value = Property->GetPropertyValue(ValueAddr);
+    lua_pushboolean(L, Value);
+	//lua_pushboolean(L, *((bool*)ValueAddr));
 }
 void  PushScriptInt8(lua_State* L, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
@@ -478,7 +481,10 @@ void  ReadScriptDefault(lua_State* L, int ValueIdx, const FCDynamicPropertyBase 
 
 void  ReadScriptBool(lua_State* L, int ValueIdx, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)
 {
-	*((bool*)ValueAddr) = lua_toboolean(L, ValueIdx) != 0;
+    FBoolProperty *Property = (FBoolProperty*)DynamicProperty->SafePropertyPtr->Property;
+    bool bValue = lua_toboolean(L, ValueIdx) != 0;
+    Property->SetPropertyValue(ValueAddr, bValue);
+	//*((bool*)ValueAddr) = lua_toboolean(L, ValueIdx) != 0;
 }
 
 void  ReadScriptInt8(lua_State* L, int ValueIdx, const FCDynamicPropertyBase *DynamicProperty, uint8  *ValueAddr, UObject *ThisObj, void* ObjRefPtr)

@@ -249,7 +249,7 @@ int FCQuatWrap::ToRotator_wrap(lua_State* L)
 
 int FCQuatWrap::tostring_wrap(lua_State* L)
 {
-    FQuat* A = (FQuat*)VectorBase_GetAddr(L, 1);
+    FQuat* A = (FQuat*)VectorBase_GetAddr(L, 1, "FQuat");
     if (A)
     {
         FString  Str = FString::Printf(TEXT("%p(X=%f,Y=%f,Z=%f,W=%f)"), A, A->X, A->Y, A->Z, A->W);
@@ -267,10 +267,38 @@ int FCQuatWrap::obj_New(lua_State* L)
     FCDynamicClassDesc* ClassDesc = GetScriptContext()->RegisterUClass("FQuat");
     int64 ObjID = FCGetObj::GetIns()->PushNewStruct(ClassDesc);
     FQuat* V = (FQuat*)FCGetObj::GetIns()->GetPropertyAddr(ObjID);
-    V->X = lua_tonumber(L, 2);
-    V->Y = lua_tonumber(L, 3);
-    V->Z = lua_tonumber(L, 4);
-    V->W = lua_tonumber(L, 5);
+    if(ParamCount > 4)
+    {
+        V->X = lua_tonumber(L, 2);
+        V->Y = lua_tonumber(L, 3);
+        V->Z = lua_tonumber(L, 4);
+        V->W = lua_tonumber(L, 5);
+    }
+    else if(ParamCount == 3)
+    {
+        // FQuat(TVector Axis, float AngleRad);    
+        FVector* A = (FVector*)VectorBase_GetAddr(L, 2, "FVector");
+        float B = lua_tonumber(L, 3);
+        *V = FQuat(*A, B);
+    }
+    else if(ParamCount == 2)
+    {
+        // TQuat(const TRotator<T>& R);
+        // TQuat(const TMatrix<T>& M);
+        FRotator* A = (FRotator*)VectorBase_GetAddr(L, 2, "FRotator");
+        if(A)
+        {
+            *V = FQuat(*A);
+        }
+        else
+        {
+            FMatrix* B = (FMatrix*)VectorBase_GetAddr(L, 2, "FMatrix");
+            if(B)
+            {
+                *V = FQuat(*B);
+            }
+        }
+    }
     FCScript::PushBindObjRef(L, ObjID, ClassDesc->m_UEClassName);
     return 1;
 }

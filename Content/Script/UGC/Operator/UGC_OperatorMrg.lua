@@ -31,12 +31,13 @@ end
 function M:SelectObjectFromScene(SelectObj)
     if UE.UObject.IsValid(SelectObj) then        
         self:ShowAxisActor(SelectObj)
-        _G.UGC.SelectInfo.SelectObjects = { SelectObj }
+        _G.UGC.SelectInfo.SelectObjects = { SelectObj }        
         self:ChangeTransfromMode()
         _G.UGC.EventManager:SendUGCMessage("UGC.Event.SelectObjectFromScene", SelectObj)
     else
         self:HideAxisActor()
         _G.UGC.SelectInfo.SelectObjects = {}
+        _G.UGC.SelectInfo.SelectRotations = {}
         _G.UGC.EventManager:SendUGCMessage("UGC.Event.SelectObject", nil)
     end
 end
@@ -145,7 +146,7 @@ function M:ChangeTransfromMode()
         end
         self.AxisActor.BoxComponent.bShowBigBox = true
         self.AxisActor.BoxComponent:UpdateBounds()        
-        print("[UGC]ChangeTransfromMode, Transfrom_Mode=", Transfrom_Mode, ",bShowBox=", bShowBox, ",#SelectObjects=", #SelectObjects)
+        -- print("[UGC]ChangeTransfromMode, Transfrom_Mode=", Transfrom_Mode, ",bShowBox=", bShowBox, ",#SelectObjects=", #SelectObjects)
     end
     self.AxisActor.BoxComponent.bRenderVisibility = bShowBox
     
@@ -159,6 +160,17 @@ function M:ChangeTransfromMode()
 
     _G.UGC.SelectInfo.SelectAxis = _G.UGC.AxisType.Axis_None
     _G.UGC.SelectInfo.NeedClearSelectAxis = false
+
+    local SelectObjects = _G.UGC.SelectInfo.SelectObjects
+    local SelectRotations = {}
+    local SelectTransforms = {}
+    for i = 1, #SelectObjects do
+        local Obj = SelectObjects[i]
+        local Rotation = Obj:K2_GetActorRotation()
+        SelectRotations[#SelectRotations + 1] = Rotation
+        SelectTransforms[#SelectTransforms + 1] = Obj:GetTransform()
+    end
+    _G.UGC.SelectInfo.SelectRotations = SelectRotations
 end
 
 function M:TrySelectAxis(MouseEvent)

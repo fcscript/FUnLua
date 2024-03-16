@@ -64,7 +64,15 @@ function _G.PrintStructList(List)
 	end
 end
 
-function FCMainPanel:OnButtonCppCallLuaClicked()
+function FCMainPanel:OnButtonCppCallLuaClicked()	
+    local AvatarClass = UClass.Load("UFCTest")
+    local obj = NewObject(AvatarClass)
+	obj.bUseFlag2 = 1
+	obj.bUseFlag1 = 1
+	obj:CheckBool()
+	obj.bUseFlag1 = 1
+	obj:CheckBool()
+
 	-- local Map = UE.TMap(_G.int32, _G.FString)
 	-- Map:Add(1, "a1")
 	-- Map:Add(2, "a2")

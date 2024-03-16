@@ -188,3 +188,8 @@ void UFCTest::RegisterUIActionBindingByTag(FName InTagName, FOnExecuteActionCall
         OnExecuteAction.Execute(InTagName);
     }
 }
+
+void UFCTest::CheckBool()
+{
+    bool b1 = bSetFlag1;
+}

@@ -225,7 +225,7 @@ function M:ScaleSelectObjects(MouseEvent)
     end
 
     -- print("[UGC]ScaleSelectObjects, Dist=", Dist, ", Scale=", Scale, ",MoveOffset=", MoveOffset, ",CurBox:", CurBoundBoxInfo.BoxExtent)
-    -- print("[UGC]FaceMove:", FaceMove, ",FaceDist=", FaceDist, ",SelectAxis=", SelectAxis)
+    -- print("[UGC]FaceMove:", FaceMove, ",SelectAxis=", SelectAxis)
     
     _G.UGC.EventManager:SendUGCMessage("UGC.Event.TransformSelectObject")
 end
@@ -257,9 +257,46 @@ function M:RotationSelectObjects(MouseEvent)
     fAngle = math.acos(fAngle)
     local fDegree = fAngle * 180.0 / math.pi
 
+    -- if MoveOffset.Z < 0 then
+    --     fAngle = -fAngle
+    -- end
+
     _G.UGC.OperatorMrg:ShowDebugLine(self.StartTerrainPickPos, NewTerranPos)
 
-    print("[UGC]Rotaion, Degree=", fDegree, ",fAngle=", fAngle)
+    
+    local SelectObjects = _G.UGC.SelectInfo.SelectObjects
+    local SelectRotations = _G.UGC.SelectInfo.SelectRotations
+    local SelectAxis = _G.UGC.SelectInfo.SelectAxis
+    if SelectAxis == _G.UGC.AxisType.Axis_X then
+        for i = 1, #SelectObjects do
+            local Obj = SelectObjects[i]
+            local InitRotation = SelectRotations[i]
+            local CurAxis = InitRotation:GetForwardVector()
+            local DeltaRotation = UE.FQuat(CurAxis, fAngle)
+            local NewRotation = DeltaRotation * InitRotation:ToQuat()
+            Obj:K2_SetActorRotation(NewRotation:ToRotator(), true)
+        end
+    elseif SelectAxis == _G.UGC.AxisType.Axis_Y then
+        -- GetRightVector
+        -- for i = 1, #SelectObjects do
+        --     local Obj = SelectObjects[i]
+        --     local NewRotation = Obj:K2_GetActorRotation()
+        --     NewRotation.Roll = NewRotation.Roll + fAngle
+        --     Obj:K2_SetActorRotation(NewRotation, true)
+        -- end
+    elseif SelectAxis == _G.UGC.AxisType.Axis_Z then
+        -- GetUpVector
+        -- for i = 1, #SelectObjects do
+        --     local Obj = SelectObjects[i]
+        --     local NewRotation = Obj:K2_GetActorRotation()
+        --     NewRotation.Pitch = NewRotation.Pitch + fAngle
+        --     Obj:K2_SetActorRotation(NewRotation, true)
+        -- end
+    end
+
+    -- self.StartTerrainPickPos = NewTerranPos
+
+    print("[UGC]Rotaion, Degree=", fDegree, ",fAngle=", fAngle, ",MoveOffset=", MoveOffset)
 end
 
 function M:OnDragCamera(MouseEvent)
