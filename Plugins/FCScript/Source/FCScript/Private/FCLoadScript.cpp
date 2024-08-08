@@ -45,7 +45,17 @@ bool  LoadFCScript(FCScriptContext *Context, const FString  &ScriptPath)
 	}
 	Context->m_bInit = true;
 
+
+#if PLATFORM_WINDOWS
+    // 防止类似AppleProResMedia插件忘了恢复Dll查找目录
+    // https://github.com/Tencent/UnLua/issues/534
+    const auto Dir = FPaths::ConvertRelativePathToFull(FPaths::ProjectDir() / TEXT("Binaries/Win64"));
+    FPlatformProcess::PushDllDirectory(*Dir);
     Context->m_LuaState = lua_newstate(LuaAllocator, nullptr);       // create main Lua thread
+    FPlatformProcess::PopDllDirectory(*Dir);
+#else
+    Context->m_LuaState = lua_newstate(LuaAllocator, nullptr);       // create main Lua thread
+#endif
     lua_State* L = Context->m_LuaState;
     luaL_openlibs(L);
 
